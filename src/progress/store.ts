@@ -7,6 +7,7 @@
  */
 
 import { seedFromName } from '../model/rng'
+import type { Plan } from '../model/plan'
 
 export type TaskProgress = {
   solved: boolean
@@ -20,6 +21,8 @@ export type Progress = {
   seed: number
   updatedAt: string
   tasks: Record<string, TaskProgress>
+  /** Drawn networks, one per build task. */
+  plans: Record<string, Plan>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -35,6 +38,7 @@ export function emptyProgress(studentName: string): Progress {
     seed: seedFromName(studentName),
     updatedAt: new Date().toISOString(),
     tasks: {},
+    plans: {},
   }
 }
 
@@ -47,7 +51,12 @@ export function load(studentName: string): Progress {
     if (!parsed || typeof parsed !== 'object' || !parsed.tasks) {
       return emptyProgress(studentName)
     }
-    return { ...emptyProgress(studentName), ...parsed, tasks: parsed.tasks }
+    return {
+      ...emptyProgress(studentName),
+      ...parsed,
+      tasks: parsed.tasks,
+      plans: parsed.plans ?? {},
+    }
   } catch {
     return emptyProgress(studentName)
   }
@@ -126,4 +135,12 @@ export function exportProgress(progress: Progress): void {
   a.download = `netzwerk-trainer-${safeName}.json`
   a.click()
   URL.revokeObjectURL(url)
+}
+
+export function loadPlan(progress: Progress, taskId: string): Plan | undefined {
+  return progress.plans[taskId]
+}
+
+export function savePlan(progress: Progress, taskId: string, plan: Plan): Progress {
+  return { ...progress, plans: { ...progress.plans, [taskId]: plan } }
 }

@@ -1,4 +1,4 @@
-import type { Lesson, Task } from '../model/types'
+import type { QuizLesson, Task } from '../model/types'
 import { checkKeywords, checkToBinary, checkToDecimal, toBinary } from '../model/check'
 import { distinctInts, rng } from '../model/rng'
 
@@ -70,7 +70,8 @@ function toDecimalTask(id: string, value: number): Task {
   }
 }
 
-export const m4Binaer: Lesson = {
+export const m4Binaer: QuizLesson = {
+  kind: 'quiz',
   id: 'm4',
   module: 'M4',
   title: 'Binärzahlen',

@@ -51,7 +51,7 @@ export type Task = {
   helper?: { type: 'stellenwert'; value: number; direction: 'toBinary' | 'toDecimal' }
 }
 
-export type Lesson = {
+type LessonBase = {
   id: string
   /** "M4" */
   module: string
@@ -60,6 +60,35 @@ export type Lesson = {
   intro: { heading: string; body: string[] }
   /** Why this matters for the Quali. */
   quali: string
+}
+
+/** Question-and-answer modules: M4, M8. */
+export type QuizLesson = LessonBase & {
+  kind: 'quiz'
   /** Built per student, so the numbers differ between them. */
   buildTasks: (seed: number) => Task[]
 }
+
+/**
+ * Modules where the student draws a network and rules judge the drawing.
+ * The task is passed when every rule comes back clean.
+ */
+export type BuildTask = {
+  id: string
+  title: string
+  /** What to build, in one or two sentences. */
+  brief: string
+  /** Goals the student can tick off as they work. */
+  ziele: string[]
+  rules: import('./rules').Rule[]
+  hints: Hints
+  /** Devices already on the canvas when the task opens. */
+  starter?: import('./plan').Plan
+}
+
+export type BuildLesson = LessonBase & {
+  kind: 'build'
+  tasks: BuildTask[]
+}
+
+export type Lesson = QuizLesson | BuildLesson

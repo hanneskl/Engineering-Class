@@ -14,7 +14,10 @@ export function Home({
   const cards = useMemo(
     () =>
       lessons.map((lesson) => {
-        const ids = lesson.buildTasks(progress.seed).map((t) => t.id)
+        const ids =
+          lesson.kind === 'build'
+            ? lesson.tasks.map((t) => t.id)
+            : lesson.buildTasks(progress.seed).map((t) => t.id)
         return { lesson, stats: moduleStats(progress, ids) }
       }),
     [lessons, progress],
@@ -62,8 +65,8 @@ export function Home({
       <section className="soon">
         <h3>Kommt später dazu</h3>
         <p>
-          Netzwerk zeichnen, IP-Adressen vergeben, ping und tracert, und der Weg einer
-          Internetseite von der Adresse bis zum Bildschirm.
+          ping und tracert an deinem eigenen Netz, der Weg einer Internetseite von der
+          Adresse bis zum Bildschirm, und welche Spuren du dabei hinterlässt.
         </p>
       </section>
 

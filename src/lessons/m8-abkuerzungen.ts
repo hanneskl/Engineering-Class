@@ -1,4 +1,4 @@
-import type { Lesson, Task } from '../model/types'
+import type { QuizLesson, Task } from '../model/types'
 import { checkChoice, checkKeywords } from '../model/check'
 import { rng, shuffle } from '../model/rng'
 import type { Keywords } from '../model/check'
@@ -209,7 +209,8 @@ function seededFor(seed: number, id: string): () => number {
   return rng(h >>> 0)
 }
 
-export const m8Abkuerzungen: Lesson = {
+export const m8Abkuerzungen: QuizLesson = {
+  kind: 'quiz',
   id: 'm8',
   module: 'M8',
   title: 'Begriffe & Abkürzungen',

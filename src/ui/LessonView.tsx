@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { Lesson } from '../model/types'
+import type { QuizLesson } from '../model/types'
 import { TaskCard } from './TaskCard'
 import { taskProgress, withTask, type Progress } from '../progress/store'
 
@@ -9,7 +9,7 @@ export function LessonView({
   onProgress,
   onBack,
 }: {
-  lesson: Lesson
+  lesson: QuizLesson
   progress: Progress
   onProgress: (next: Progress) => void
   onBack: () => void
