@@ -6,7 +6,20 @@ internet works, and have the tool *verify that they did the work themselves*.
 
 This document is the **curriculum analysis and task inventory**. It answers one
 question: *what exactly do the kids have to be able to do for the Quali in
-Informatik?* No implementation yet — this is the spec the tool has to cover.
+Informatik?* [ARCHITECTURE.md](ARCHITECTURE.md) covers how the tool is built.
+
+## Running it
+
+```bash
+npm install
+npm run dev      # local development
+npm test         # checker logic
+npm run build    # production build into dist/
+```
+
+Pushing to `main` deploys to GitHub Pages. **Built so far:** M4 (Binärzahlen)
+and M8 (Begriffe & Abkürzungen) — the two modules that need no network engine.
+Everything else in §4 is still to come.
 
 ---
 
