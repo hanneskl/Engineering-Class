@@ -41,7 +41,7 @@ function groupsHit(text: string, keywords: Keywords): number {
   ).length
 }
 
-export function checkKeywords(raw: string, keywords: Keywords, answer: string): CheckResult {
+export function checkKeywords(raw: string, keywords: Keywords): CheckResult {
   const text = normalize(raw)
   if (!text) {
     return {
@@ -56,11 +56,13 @@ export function checkKeywords(raw: string, keywords: Keywords, answer: string): 
   if (hits === keywords.length) return { ok: true }
 
   if (hits > 0) {
+    // Deliberately does not name the missing part: that is what the hint
+    // ladder is for, and handing it over here would skip both rungs.
     return {
       code: 'PARTIAL',
       ok: false,
       message: 'Du bist auf dem richtigen Weg, aber es fehlt noch etwas.',
-      why: `Die vollständige Antwort lautet: ${answer}`,
+      why: 'Ein Teil stimmt schon. Probier es noch einmal — oder hol dir einen Hinweis.',
     }
   }
 

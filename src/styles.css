@@ -16,8 +16,12 @@
   color-scheme: light dark;
 }
 
+/* Dark tokens are defined twice on purpose. The media query covers the common
+   case (no explicit choice, dark OS) but is guarded so a host that stamps
+   data-theme="light" still wins; the attribute rule covers an explicit dark
+   choice on a light OS. Components only ever read the tokens. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #10151d;
     --surface: #182029;
     --ink: #e8edf4;
@@ -32,6 +36,22 @@
     --hint-bg: #2e2712;
     --hint-line: #7d6a2c;
   }
+}
+
+:root[data-theme='dark'] {
+  --bg: #10151d;
+  --surface: #182029;
+  --ink: #e8edf4;
+  --muted: #9aabbf;
+  --line: #2a3542;
+  --accent: #6098f5;
+  --accent-ink: #0b1017;
+  --good: #6ddaa4;
+  --good-bg: #14311f;
+  --bad: #ffa593;
+  --bad-bg: #3a1a15;
+  --hint-bg: #2e2712;
+  --hint-line: #7d6a2c;
 }
 
 * { box-sizing: border-box; }

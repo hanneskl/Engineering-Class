@@ -2,7 +2,9 @@ import { useState } from 'react'
 import type { CheckResult, Task } from '../model/types'
 import { Stellenwert } from './Stellenwert'
 
-const HINT_LABELS = ['Stups', 'Hinweis', 'Lösung zeigen'] as const
+// Used both as the label above a revealed hint and inside "… anzeigen" on the
+// button, so these must read correctly in both places.
+const HINT_LABELS = ['Stups', 'Hinweis', 'Lösung'] as const
 
 export function TaskCard({
   task,

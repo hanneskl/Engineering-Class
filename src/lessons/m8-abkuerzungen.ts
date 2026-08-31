@@ -102,7 +102,7 @@ function abbreviationTask(spec: AbbrSpec): Task {
     prompt: `Wofür steht die Abkürzung ${spec.abbr}?`,
     answer: spec.answer,
     hints: { stups: spec.stups, hinweis: spec.hinweis, loesung: spec.answer },
-    check: (raw) => checkKeywords(raw, spec.keywords, spec.answer),
+    check: (raw) => checkKeywords(raw, spec.keywords),
   }
 }
 

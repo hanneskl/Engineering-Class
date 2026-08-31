@@ -77,16 +77,23 @@ describe('checkKeywords', () => {
   const ip = [['internet'], ['protocol', 'protokoll']]
 
   it('accepts either spelling, spaced or joined', () => {
-    expect(checkKeywords('Internet Protocol', ip, 'x').ok).toBe(true)
-    expect(checkKeywords('internetprotokoll', ip, 'x').ok).toBe(true)
+    expect(checkKeywords('Internet Protocol', ip).ok).toBe(true)
+    expect(checkKeywords('internetprotokoll', ip).ok).toBe(true)
   })
 
   it('reports a partial answer differently from a wrong one', () => {
-    const partial = checkKeywords('Internet Provider', ip, 'Internet Protocol')
+    const partial = checkKeywords('Internet Provider', ip)
     expect(partial.ok === false && partial.code).toBe('PARTIAL')
 
-    const wrong = checkKeywords('keine Ahnung', ip, 'Internet Protocol')
+    const wrong = checkKeywords('keine Ahnung', ip)
     expect(wrong.ok === false && wrong.code).toBe('WRONG')
+  })
+
+  it('never leaks the answer on a near miss — that is the hint ladder’s job', () => {
+    const partial = checkKeywords('Internet Provider', ip)
+    const text = partial.ok === false ? `${partial.message} ${partial.why ?? ''}` : ''
+    expect(text.toLowerCase()).not.toContain('protocol')
+    expect(text.toLowerCase()).not.toContain('protokoll')
   })
 })
 

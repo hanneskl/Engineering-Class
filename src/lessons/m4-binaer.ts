@@ -135,7 +135,7 @@ export const m4Binaer: Lesson = {
           loesung: 'Das Hexadezimalsystem (Basis 16).',
         },
         check: (raw) =>
-          checkKeywords(raw, [['hexadezimal', 'hexa', 'sedezimal']], 'Das Hexadezimalsystem.'),
+          checkKeywords(raw, [['hexadezimal', 'hexa', 'sedezimal']]),
       },
     ]
   },
