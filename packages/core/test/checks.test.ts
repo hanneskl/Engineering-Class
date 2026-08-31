@@ -236,3 +236,27 @@ describe('matchesSolution works against randomised data', () => {
     }
   })
 })
+
+describe('English function names surface the German hint, not a generic message', () => {
+  it('names SUMME when the student wrote SUM', () => {
+    const sheet = smvSheet()
+    sheet.setInput('B8', '=SUM(B1:B5)')
+    const message = expectFail(
+      [isFormula(), usesFunction('SUMME'), matchesSolution()],
+      ctx(sheet, 'B8', '=SUMME(B1:B5)'),
+    )
+    expect(message).toContain('englische')
+    expect(message).toContain('SUMME')
+  })
+
+  it('still gives the plain prompt when the function is simply missing', () => {
+    const sheet = smvSheet()
+    sheet.setInput('B8', '=B1+B2+B3+B4+B5')
+    const message = expectFail(
+      [isFormula(), usesFunction('SUMME'), matchesSolution()],
+      ctx(sheet, 'B8', '=SUMME(B1:B5)'),
+    )
+    expect(message).toContain('Verwende')
+    expect(message).not.toContain('englische')
+  })
+})

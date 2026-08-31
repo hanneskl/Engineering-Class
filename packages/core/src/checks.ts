@@ -6,6 +6,7 @@
  * answer.
  */
 
+import { isKnownFunction, unknownFunctionError } from './functions.js'
 import { canonical, formatNode, parseFormula, translateNode, walk, type Node } from './parser.js'
 import { expandRange, formatA1, parseA1, type RangeRef } from './refs.js'
 import { isFormulaInput, type Sheet } from './sheet.js'
@@ -89,10 +90,16 @@ export function usesFunction(...names: string[]): Check {
     if (!ast) return fail(`In ${target} steht keine gültige Formel.`)
 
     let found = false
+    let unknown: string | null = null
     walk(ast, (node) => {
-      if (node.type === 'call' && wanted.includes(node.name)) found = true
+      if (node.type !== 'call') return
+      if (wanted.includes(node.name)) found = true
+      else if (!isKnownFunction(node.name)) unknown ??= node.name
     })
     if (found) return OK
+
+    // A misremembered name deserves the specific hint — most often the English one.
+    if (unknown) return fail(unknownFunctionError(unknown).message)
 
     const list = wanted.join(' oder ')
     return fail(`Verwende in ${target} die Funktion ${list}.`)
