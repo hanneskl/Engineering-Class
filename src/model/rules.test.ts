@@ -6,6 +6,7 @@ import {
   allConnectedTo,
   evaluateTask,
   isTaskSolved,
+  noDuplicateIps,
   checkAlways,
   everyDeviceHasIp,
   ipsInSameNetwork,
@@ -248,5 +249,50 @@ describe('evaluateTask', () => {
 
   it('an empty canvas is never solved', () => {
     expect(isTaskSolved({ devices: [], links: [] }, [])).toBe(false)
+  })
+})
+
+describe('lesson content stays in step with the rules', () => {
+  it('every M2 goal is backed by at least one rule', async () => {
+    const { m2Netzwerk } = await import('../lessons/m2-netzwerk')
+    for (const task of m2Netzwerk.tasks) {
+      expect(task.ziele.length).toBeGreaterThan(0)
+      for (const ziel of task.ziele) {
+        expect(ziel.text.length).toBeGreaterThan(0)
+        expect(ziel.rules.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('an empty canvas leaves every goal of every task unticked', async () => {
+    // Most rules are vacuously true with no devices — "no address is
+    // duplicated" holds trivially. The checklist must not tick on that.
+    const { m2Netzwerk } = await import('../lessons/m2-netzwerk')
+    const { zielMet } = await import('./types')
+    const empty = { devices: [], links: [] }
+    for (const task of m2Netzwerk.tasks) {
+      const ticked = task.ziele.filter((z) => zielMet(empty, z))
+      expect(ticked.map((z) => z.text)).toEqual([])
+    }
+  })
+
+  it('ticks a goal once the plan actually satisfies it', async () => {
+    const { m2Netzwerk } = await import('../lessons/m2-netzwerk')
+    const { zielMet } = await import('./types')
+    const lan = m2Netzwerk.tasks[0]!
+    const plan = build(
+      [['router', 'r'], ['switch', 'sw'], ['pc', 'a'], ['pc', 'b'], ['pc', 'c']],
+      [['r', 'sw', 'cable'], ['sw', 'a', 'cable'], ['sw', 'b', 'cable'], ['sw', 'c', 'cable']],
+    )
+    expect(lan.ziele.every((z) => zielMet(plan, z))).toBe(true)
+  })
+
+  it('the addressing task ticks its duplicate goal off the shared rule', () => {
+    const dup = build(
+      [['pc', 'a', '192.168.1.5'], ['pc', 'b', '192.168.1.5']],
+      [],
+    )
+    expect(noDuplicateIps(dup)[0]?.code).toBe('DUPLICATE_IP')
+    expect(noDuplicateIps({ devices: [], links: [] })).toEqual([])
   })
 })

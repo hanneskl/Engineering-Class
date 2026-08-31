@@ -4,6 +4,7 @@ import {
   everyDeviceHasIp,
   ipsInSameNetwork,
   noDeviceBypassesRouter,
+  noDuplicateIps,
   requireCount,
   routerConnectsToInternet,
 } from '../model/rules'
@@ -12,9 +13,13 @@ import {
  * M2 — Netzwerk zeichnen.
  *
  * Follows the class sequence: first the classroom LAN, then the link to the
- * internet, then addresses, then their own home network. Checks are structural
- * rules, never a stored solution — the home network especially is different for
- * every student, so only plausibility can be judged (README §4, T2.4).
+ * internet, then wireless devices, then addresses, then their own home network.
+ * Checks are structural rules, never a stored solution — the home network
+ * especially is different for every student, so only plausibility can be
+ * judged (README §4, T2.4).
+ *
+ * Each goal carries the rules that tick it, so the checklist the student reads
+ * and the checks the tool runs are the same thing.
  */
 export const m2Netzwerk: BuildLesson = {
   kind: 'build',
@@ -35,7 +40,7 @@ export const m2Netzwerk: BuildLesson = {
         'selbst per WLAN hängt).',
       'Zeichne unten: links wählst du ein Gerät aus, dann verbindest du zwei Geräte, ' +
         'indem du oben "Kabel ziehen" oder "WLAN ziehen" anklickst und danach die beiden ' +
-        'Geräte. Was noch fehlt, steht immer unter dem Plan.',
+        'Geräte. Oben in der Aufgabe siehst du, was schon stimmt.',
     ],
   },
   tasks: [
@@ -45,16 +50,13 @@ export const m2Netzwerk: BuildLesson = {
       brief:
         'Baue ein kabelgebundenes Netzwerk mit einem Router, einem Switch und drei Computern.',
       ziele: [
-        'Ein Router',
-        'Ein Switch',
-        'Drei PCs',
-        'Alles hängt zusammen — kein Gerät steht allein',
-      ],
-      rules: [
-        requireCount('router', 1),
-        requireCount('switch', 1),
-        requireCount('pc', 3),
-        allConnectedTo('router'),
+        { text: 'Ein Router', rules: [requireCount('router', 1)] },
+        { text: 'Ein Switch', rules: [requireCount('switch', 1)] },
+        { text: 'Drei PCs', rules: [requireCount('pc', 3)] },
+        {
+          text: 'Alles hängt zusammen — kein Gerät steht allein',
+          rules: [allConnectedTo('router')],
+        },
       ],
       hints: {
         stups: 'Fang mit dem Router an. Er ist in jedem Netzwerk die zentrale Komponente.',
@@ -73,20 +75,20 @@ export const m2Netzwerk: BuildLesson = {
         'Erweitere das Netz: ein Modem und das Internet kommen dazu. Alle Geräte sollen ' +
         'übers Internet erreichbar sein — aber nur über den Router.',
       ziele: [
-        'Internet und Modem sind da',
-        'Der Router hängt über das Modem am Internet',
-        'Kein Gerät geht am Router vorbei',
-      ],
-      rules: [
-        requireCount('internet', 1),
-        requireCount('modem', 1),
-        requireCount('router', 1),
-        routerConnectsToInternet(),
-        noDeviceBypassesRouter(),
-        allConnectedTo('router'),
+        {
+          text: 'Internet und Modem sind eingezeichnet',
+          rules: [requireCount('internet', 1), requireCount('modem', 1)],
+        },
+        {
+          text: 'Der Router hängt über das Modem am Internet',
+          rules: [requireCount('router', 1), routerConnectsToInternet()],
+        },
+        { text: 'Kein Gerät geht am Router vorbei', rules: [noDeviceBypassesRouter()] },
+        { text: 'Alles hängt zusammen', rules: [allConnectedTo('router')] },
       ],
       hints: {
-        stups: 'Die Reihenfolge nach draußen ist immer dieselbe: Gerät → Router → Modem → Internet.',
+        stups:
+          'Die Reihenfolge nach draußen ist immer dieselbe: Gerät → Router → Modem → Internet.',
         hinweis:
           'Das Modem meldet sich beim Provider an, der Router verteilt nach innen. ' +
           'Häng keinen PC direkt ans Internet — sonst wäre er ungeschützt.',
@@ -102,18 +104,19 @@ export const m2Netzwerk: BuildLesson = {
         'Bring ein Smartphone und ein Tablet ins Netz. Beide haben keine Netzwerkbuchse — ' +
         'du brauchst einen Access Point.',
       ziele: [
-        'Ein Access Point, per Kabel am Netz',
-        'Ein Smartphone und ein Tablet, per WLAN verbunden',
-        'Alles hängt zusammen',
-      ],
-      rules: [
-        requireCount('accesspoint', 1),
-        requireCount('smartphone', 1),
-        requireCount('tablet', 1),
-        allConnectedTo('router'),
+        { text: 'Ein Access Point', rules: [requireCount('accesspoint', 1)] },
+        {
+          text: 'Ein Smartphone und ein Tablet',
+          rules: [requireCount('smartphone', 1), requireCount('tablet', 1)],
+        },
+        {
+          text: 'Alles hängt am Router',
+          rules: [requireCount('router', 1), allConnectedTo('router')],
+        },
       ],
       hints: {
-        stups: 'Versuch ruhig einmal, das Smartphone per Kabel anzuschließen — der Plan sagt dir, warum das nicht geht.',
+        stups:
+          'Versuch ruhig einmal, das Smartphone per Kabel anzuschließen — der Plan sagt dir, warum das nicht geht.',
         hinweis:
           'Der Access Point selbst braucht ein Kabel zum Router oder Switch. Erst die ' +
           'Geräte danach gehen per WLAN.',
@@ -129,11 +132,14 @@ export const m2Netzwerk: BuildLesson = {
         'Jedes Gerät braucht eine eigene Adresse. Vergib IP-Adressen im selben Netz — ' +
         'zum Beispiel 192.168.178.1 für den Router und dann aufsteigend.',
       ziele: [
-        'Jedes Gerät hat eine IP-Adresse',
-        'Keine Adresse ist doppelt',
-        'Alle Adressen liegen im selben Netz',
+        { text: 'Jedes Gerät hat eine IP-Adresse', rules: [everyDeviceHasIp()] },
+        { text: 'Keine Adresse ist doppelt', rules: [noDuplicateIps] },
+        { text: 'Alle Adressen liegen im selben Netz', rules: [ipsInSameNetwork()] },
+        {
+          text: 'Alles hängt am Router',
+          rules: [requireCount('router', 1), allConnectedTo('router')],
+        },
       ],
-      rules: [everyDeviceHasIp(), ipsInSameNetwork(), allConnectedTo('router')],
       hints: {
         stups: 'Klick ein Gerät an — rechts kannst du seine Adresse eintragen.',
         hinweis:
@@ -151,32 +157,43 @@ export const m2Netzwerk: BuildLesson = {
         'Zeichne jetzt dein Netzwerk zu Hause: Router, alle Computer, Handys, Konsolen, ' +
         'der Fernseher — was bei dir eben dranhängt. Trag auch die IP-Adressen ein.',
       ziele: [
-        'Internet und Router',
-        'Mindestens fünf eigene Geräte',
-        'Alles hängt zusammen und niemand geht am Router vorbei',
-        'Jedes Gerät hat eine eigene IP-Adresse',
-      ],
-      rules: [
-        requireCount('internet', 1),
-        requireCount('router', 1),
-        routerConnectsToInternet(),
-        noDeviceBypassesRouter(),
-        allConnectedTo('router'),
-        everyDeviceHasIp(),
-        ipsInSameNetwork(),
-        (plan) => {
-          const own = plan.devices.filter(
-            (d) => !['internet', 'modem', 'router', 'switch', 'accesspoint', 'repeater'].includes(d.type),
-          )
-          if (own.length >= 5) return []
-          return [
-            {
-              code: 'TOO_FEW_DEVICES',
-              message: `Du hast erst ${own.length} eigene Geräte eingezeichnet.`,
-              why: 'Denk an alles, was bei euch ins Netz geht: Computer, Handys, Tablets, Konsole, Fernseher, Drucker.',
-              deviceIds: [],
+        {
+          text: 'Internet und Router, miteinander verbunden',
+          rules: [
+            requireCount('internet', 1),
+            requireCount('router', 1),
+            routerConnectsToInternet(),
+          ],
+        },
+        {
+          text: 'Mindestens fünf eigene Geräte',
+          rules: [
+            (plan) => {
+              const own = plan.devices.filter(
+                (d) =>
+                  !['internet', 'modem', 'router', 'switch', 'accesspoint', 'repeater'].includes(
+                    d.type,
+                  ),
+              )
+              if (own.length >= 5) return []
+              return [
+                {
+                  code: 'TOO_FEW_DEVICES',
+                  message: `Du hast erst ${own.length} eigene Geräte eingezeichnet.`,
+                  why: 'Denk an alles, was bei euch ins Netz geht: Computer, Handys, Tablets, Konsole, Fernseher, Drucker.',
+                  deviceIds: [],
+                },
+              ]
             },
-          ]
+          ],
+        },
+        {
+          text: 'Alles hängt zusammen, niemand geht am Router vorbei',
+          rules: [allConnectedTo('router'), noDeviceBypassesRouter()],
+        },
+        {
+          text: 'Jedes Gerät hat seine eigene IP-Adresse',
+          rules: [everyDeviceHasIp(), noDuplicateIps, ipsInSameNetwork()],
         },
       ],
       hints: {

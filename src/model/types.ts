@@ -73,17 +73,50 @@ export type QuizLesson = LessonBase & {
  * Modules where the student draws a network and rules judge the drawing.
  * The task is passed when every rule comes back clean.
  */
+/**
+ * One goal on the task's checklist, together with the rules that decide
+ * whether it is met. Keeping the two in one place means the tick and the
+ * check can never drift apart.
+ */
+export type Ziel = {
+  text: string
+  rules: import('./rules').Rule[]
+}
+
 export type BuildTask = {
   id: string
   title: string
   /** What to build, in one or two sentences. */
   brief: string
-  /** Goals the student can tick off as they work. */
-  ziele: string[]
-  rules: import('./rules').Rule[]
+  /** The checklist. The task is done when every goal is ticked. */
+  ziele: Ziel[]
   hints: Hints
   /** Devices already on the canvas when the task opens. */
   starter?: import('./plan').Plan
+}
+
+/** Every rule a task checks, flattened out of its checklist. */
+export function taskRules(task: BuildTask): import('./rules').Rule[] {
+  return task.ziele.flatMap((z) => z.rules)
+}
+
+export function zielFindings(
+  plan: import('./plan').Plan,
+  ziel: Ziel,
+): import('./rules').Finding[] {
+  return ziel.rules.flatMap((rule) => rule(plan))
+}
+
+/**
+ * A goal is ticked only once there is something on the canvas.
+ *
+ * Most rules are vacuously satisfied by an empty plan — with no devices, no
+ * address can be duplicated and nothing is disconnected. Ticking "Alle Adressen
+ * liegen im selben Netz" before the student has drawn anything would be true
+ * and useless, so the checklist starts empty and fills up as they work.
+ */
+export function zielMet(plan: import('./plan').Plan, ziel: Ziel): boolean {
+  return plan.devices.length > 0 && zielFindings(plan, ziel).length === 0
 }
 
 export type BuildLesson = LessonBase & {

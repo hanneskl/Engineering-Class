@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import type { BuildLesson } from '../model/types'
+import { type BuildLesson, taskRules, zielFindings, zielMet } from '../model/types'
 import { emptyPlan, type Plan } from '../model/plan'
 import { NetworkEditor } from '../editor/NetworkEditor'
-import { evaluateTask, isTaskSolved } from '../model/rules'
+import { checkAlways, isTaskSolved } from '../model/rules'
 import { loadPlan, savePlan, taskProgress, withTask, type Progress } from '../progress/store'
 
 const HINT_LABELS = ['Stups', 'Hinweis', 'Lösung'] as const
@@ -32,15 +32,38 @@ export function BuildLessonView({
     () => !lesson.tasks.some((t) => taskProgress(progress, t.id).solved),
   )
 
-  // Includes the always-on rules, so a duplicate address blocks completion
-  // even when the task itself never mentioned addressing.
-  const findings = useMemo(() => evaluateTask(plan, task.rules), [task, plan])
-  const done = findings.length === 0 && plan.devices.length > 0
+  /** Each goal with whatever is currently standing in its way. */
+  const ziele = useMemo(
+    () =>
+      task.ziele.map((z) => ({
+        text: z.text,
+        findings: zielFindings(plan, z),
+        ok: zielMet(plan, z),
+      })),
+    [task, plan],
+  )
+
+  /**
+   * Faults that no goal covers — a duplicate address in a task that never
+   * mentioned addressing, a cabled phone, a switch out of ports. Filtered by
+   * code so a problem already shown under a goal is not repeated here.
+   */
+  const general = useMemo(() => {
+    const claimed = new Set(ziele.flatMap((z) => z.findings.map((f) => f.code)))
+    return checkAlways(plan).filter((f) => !claimed.has(f.code))
+  }, [plan, ziele])
+
+  const findings = useMemo(
+    () => [...ziele.flatMap((z) => z.findings), ...general],
+    [ziele, general],
+  )
+  const done = plan.devices.length > 0 && findings.length === 0
+  const isLast = index === lesson.tasks.length - 1
 
   function change(next: Plan) {
     setPlan(next)
     const saved = savePlan(progress, task.id, next)
-    const nowDone = isTaskSolved(next, task.rules)
+    const nowDone = isTaskSolved(next, taskRules(task))
     onProgress(
       nowDone && !taskProgress(saved, task.id).solved
         ? withTask(saved, task.id, { solved: true })
@@ -101,44 +124,51 @@ export function BuildLessonView({
         })}
       </ol>
 
-      <section className="brief">
+      <section className={`brief${done ? ' brief-done' : ''}`} aria-live="polite">
         <h2>{task.title}</h2>
         <p>{task.brief}</p>
+
         <ul className="ziele">
-          {task.ziele.map((z) => (
-            <li key={z}>{z}</li>
+          {ziele.map((z) => (
+            <li key={z.text} className={z.ok ? 'ziel ok' : 'ziel'}>
+              <span className="ziel-mark" aria-hidden="true">
+                {z.ok ? '✓' : ''}
+              </span>
+              <span className="ziel-body">
+                <span className="ziel-text">{z.text}</span>
+                <span className="sr-only">{z.ok ? ' — erledigt' : ' — offen'}</span>
+                {!z.ok && z.findings[0] && (
+                  <span className="ziel-why">{z.findings[0].message}</span>
+                )}
+              </span>
+            </li>
           ))}
         </ul>
-      </section>
 
-      <NetworkEditor plan={plan} onChange={change} findings={findings} />
+        {general.length > 0 && (
+          <ul className="problems">
+            {general.map((f, i) => (
+              <li key={`${f.code}-${i}`}>
+                <span className="f-message">{f.message}</span>
+                <span className="f-why">{f.why}</span>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <section className={`status ${done ? 'ok' : ''}`} aria-live="polite">
-        {plan.devices.length === 0 ? (
-          <p className="muted">Füg links ein erstes Gerät hinzu.</p>
-        ) : done ? (
-          <>
+        {done && (
+          <div className="brief-done-row">
             <strong>Geschafft — der Plan stimmt.</strong>
-            {index < lesson.tasks.length - 1 && (
+            {!isLast && (
               <button className="primary" onClick={() => openTask(index + 1)}>
                 Weiter
               </button>
             )}
-          </>
-        ) : (
-          <>
-            <strong>Das fehlt noch:</strong>
-            <ul className="findings">
-              {findings.map((f, i) => (
-                <li key={`${f.code}-${i}`}>
-                  <span className="f-message">{f.message}</span>
-                  <span className="f-why">{f.why}</span>
-                </li>
-              ))}
-            </ul>
-          </>
+          </div>
         )}
       </section>
+
+      <NetworkEditor plan={plan} onChange={change} findings={findings} />
 
       {!done && (
         <div className="hints">
