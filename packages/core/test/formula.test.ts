@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canonical, parseFormula } from '../src/parser.js'
+import { canonical, parseFormula, translateInput } from '../src/parser.js'
 import { Sheet } from '../src/sheet.js'
 import { isError, type CellValue } from '../src/values.js'
 
@@ -144,5 +144,30 @@ describe('sheet recalculation', () => {
     sheet.load({ A1: 5 })
     expect(sheet.evaluateFormula('=A1+A2')).toBe(5)
     expect(sheet.evaluateFormula('=MITTELWERT(A1:A2)')).toBe(5)
+  })
+})
+
+describe('translateInput — the primitive behind fill, drag and paste', () => {
+  it('moves relative references and pins absolute ones', () => {
+    expect(translateInput('=B3*$G$2', 1, 0)).toBe('=B4*$G$2')
+    expect(translateInput('=B3*$G$2', 3, 0)).toBe('=B6*$G$2')
+    expect(translateInput('=B3*G2', 1, 1)).toBe('=C4*H3')
+  })
+
+  it('moves only the unpinned half of a mixed reference', () => {
+    expect(translateInput('=$B3+B$3', 2, 2)).toBe('=$B5+D$3')
+  })
+
+  it('translates both ends of a range', () => {
+    expect(translateInput('=SUMME(B2:B6)', 0, 1)).toBe('=SUMME(C2:C6)')
+  })
+
+  it('copies literals unchanged, as Excel does for a single-cell drag', () => {
+    expect(translateInput('220', 5, 0)).toBe('220')
+    expect(translateInput('Lukas', 5, 0)).toBe('Lukas')
+  })
+
+  it('copies an unparseable formula verbatim rather than mangling it', () => {
+    expect(translateInput('=SUMME(B2:', 1, 0)).toBe('=SUMME(B2:')
   })
 })

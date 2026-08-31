@@ -224,7 +224,8 @@ Other tasks:
 ```bash
 npm test                               # 43 core tests
 npm run typecheck                      # all packages
-npm run drive --workspace @quali/web   # drive the UI in Chromium, writes screenshots
+npm run drive --workspace @quali/web          # walk the tasks in Chromium, writes screenshots
+npm run drive:gestures --workspace @quali/web # drag-to-fill, copy/paste, click-to-reference
 ```
 
 `npm run drive` expects the dev server to already be running. Set `SHOT_DIR` to choose where

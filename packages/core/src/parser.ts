@@ -283,3 +283,20 @@ export function canonical(input: string): string | null {
     return null
   }
 }
+
+/**
+ * Translate a cell's raw input by an offset — the operation behind fill-down, drag-to-fill
+ * and paste.
+ *
+ * Literals come back unchanged (Excel copies a dragged number rather than extrapolating it),
+ * and so does anything that fails to parse: a broken formula should be copied verbatim, not
+ * silently mangled.
+ */
+export function translateInput(input: string, dRow: number, dCol: number): string {
+  if (!input.trimStart().startsWith('=')) return input
+  try {
+    return `=${formatNode(translateNode(parseFormula(input), dRow, dCol))}`
+  } catch {
+    return input
+  }
+}
