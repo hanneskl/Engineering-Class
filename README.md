@@ -209,3 +209,24 @@ answer. The checker must:
 ## 6. Status
 
 Catalogue complete. No application code written yet.
+
+---
+
+## Running it
+
+```bash
+npm install
+npm run dev --workspace @quali/web     # → http://localhost:5173
+```
+
+Other tasks:
+
+```bash
+npm test                               # 43 core tests
+npm run typecheck                      # all packages
+npm run drive --workspace @quali/web   # drive the UI in Chromium, writes screenshots
+```
+
+`npm run drive` expects the dev server to already be running. Set `SHOT_DIR` to choose where
+screenshots land, and `CHROMIUM_PATH` if your sandbox ships a browser build Playwright did not
+download itself.
