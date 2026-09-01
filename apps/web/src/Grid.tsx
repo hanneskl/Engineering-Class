@@ -1,6 +1,12 @@
 import { colToLetters, formatValue, type Sheet } from '@quali/core'
 import { useEffect, useRef, useState } from 'react'
-import { insertReference, type EditState } from './editing.ts'
+import {
+  handlePointKey,
+  pointAt,
+  pointedRect,
+  stopPointing,
+  type EditState,
+} from './editing.ts'
 import {
   canPoint,
   cellsOf,
@@ -44,9 +50,6 @@ export function Grid(props: GridProps) {
   const { sheet, columns, rows, selection, onSelectionChange, edit, onEditChange } = props
   const [drag, setDrag] = useState<Drag>({ kind: 'none' })
   const [fillPreview, setFillPreview] = useState<Rect | null>(null)
-  // The range a formula is currently pointing at, so the student can see what they are
-  // about to reference before they let go.
-  const [pointRect, setPointRect] = useState<Rect | null>(null)
   const editorRef = useRef<HTMLInputElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
@@ -69,7 +72,6 @@ export function Grid(props: GridProps) {
       if (drag.kind === 'fill' && fillPreview) props.onFill(drag.source, fillPreview)
       setDrag({ kind: 'none' })
       setFillPreview(null)
-      setPointRect(null)
     }
     window.addEventListener('mouseup', end)
     return () => window.removeEventListener('mouseup', end)
@@ -77,7 +79,7 @@ export function Grid(props: GridProps) {
 
   function beginEdit(a1: string, initial?: string): void {
     const draft = initial ?? sheet.getInput(a1)
-    onEditChange({ a1, draft, caret: draft.length, from: 'cell' })
+    onEditChange({ a1, draft, caret: draft.length, from: 'cell', point: null })
   }
 
   function commitEdit(): void {
@@ -87,16 +89,15 @@ export function Grid(props: GridProps) {
   }
 
   function pointing(): boolean {
-    return edit !== null && canPoint(edit.draft, edit.caret)
+    return edit !== null && (edit.point !== null || canPoint(edit.draft, edit.caret))
   }
 
   function onCellMouseDown(event: React.MouseEvent, pos: Pos): void {
     if (edit && pointing()) {
       // Keep focus in the editor: a blur here would commit the half-written formula.
       event.preventDefault()
-      onEditChange(insertReference(edit, toA1(pos), true))
+      onEditChange(pointAt(edit, pos, pos))
       setDrag({ kind: 'point', anchor: pos })
-      setPointRect(rectOf(single(pos)))
       return
     }
     if (edit) commitEdit()
@@ -115,13 +116,9 @@ export function Grid(props: GridProps) {
       case 'select':
         onSelectionChange({ anchor: selection.anchor, focus: pos })
         return
-      case 'point': {
-        if (!edit) return
-        const pointed = rectOf({ anchor: drag.anchor, focus: pos })
-        setPointRect(pointed)
-        onEditChange(insertReference(edit, rectLabel(pointed), true))
+      case 'point':
+        if (edit) onEditChange(pointAt(edit, drag.anchor, pos))
         return
-      }
       case 'fill':
         setFillPreview(fillExtension(drag.source, pos))
         return
@@ -208,6 +205,7 @@ export function Grid(props: GridProps) {
                   if (isAnchor) classes.push('anchor')
                   if (fillPreview && rectContains(fillPreview, pos)) classes.push('fill-preview')
                   if (props.copiedRect && rectContains(props.copiedRect, pos)) classes.push('copied')
+                  const pointRect = pointedRect(edit)
                   if (pointRect && rectContains(pointRect, pos)) classes.push('pointing')
 
                   return (
@@ -232,11 +230,13 @@ export function Grid(props: GridProps) {
                           className="editor"
                           value={edit.draft}
                           onChange={(event) =>
-                            onEditChange({
-                              ...edit,
-                              draft: event.target.value,
-                              caret: event.target.selectionStart ?? event.target.value.length,
-                            })
+                            onEditChange(
+                              stopPointing({
+                                ...edit,
+                                draft: event.target.value,
+                                caret: event.target.selectionStart ?? event.target.value.length,
+                              }),
+                            )
                           }
                           onSelect={(event) =>
                             onEditChange({
@@ -246,6 +246,18 @@ export function Grid(props: GridProps) {
                           }
                           onBlur={commitEdit}
                           onKeyDown={(event) => {
+                            const pointed = handlePointKey(
+                              edit,
+                              event.key,
+                              event.shiftKey,
+                              toPos(edit.a1),
+                              { rows, columns },
+                            )
+                            if (pointed) {
+                              event.preventDefault()
+                              onEditChange(pointed)
+                              return
+                            }
                             if (event.key === 'Enter') { event.preventDefault(); commitEdit() }
                             if (event.key === 'Escape') { onEditChange(null); gridRef.current?.focus() }
                           }}

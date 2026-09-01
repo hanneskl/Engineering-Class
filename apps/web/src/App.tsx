@@ -2,7 +2,7 @@ import { formatValue, runChecks, translateInput, type CellStyle, type Sheet } fr
 import { SCENARIOS, scenarioById, totalPoints, type TaskDef } from '@quali/scenarios'
 import { useMemo, useState } from 'react'
 import { Grid } from './Grid.tsx'
-import { insertReference, type EditState } from './editing.ts'
+import { handlePointKey, stopPointing, type EditState } from './editing.ts'
 import {
   canPoint,
   cellsOf,
@@ -204,12 +204,15 @@ export function App() {
               value={barValue}
               placeholder="Formel eingeben, z. B. =SUMME(B2:B6)"
               onChange={(event) =>
-                setEdit({
-                  a1: activeA1,
-                  draft: event.target.value,
-                  caret: event.target.selectionStart ?? event.target.value.length,
-                  from: 'bar',
-                })
+                setEdit((previous) =>
+                  stopPointing({
+                    a1: previous?.a1 ?? activeA1,
+                    draft: event.target.value,
+                    caret: event.target.selectionStart ?? event.target.value.length,
+                    from: 'bar',
+                    point: previous?.point ?? null,
+                  }),
+                )
               }
               onSelect={(event) =>
                 setEdit((previous) =>
@@ -219,6 +222,20 @@ export function App() {
                 )
               }
               onKeyDown={(event) => {
+                if (edit) {
+                  const pointed = handlePointKey(
+                    edit,
+                    event.key,
+                    event.shiftKey,
+                    toPos(edit.a1),
+                    { rows: scenario.rows, columns: scenario.columns },
+                  )
+                  if (pointed) {
+                    event.preventDefault()
+                    setEdit(pointed)
+                    return
+                  }
+                }
                 if (event.key === 'Enter' && edit) {
                   commit(edit.a1, edit.draft)
                   setEdit(null)
@@ -289,5 +306,3 @@ export function App() {
   )
 }
 
-// Referenced by the grid's point-mode insertion; re-exported so the module graph stays flat.
-export { insertReference, toPos }

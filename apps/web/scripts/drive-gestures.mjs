@@ -136,6 +136,33 @@ expect(
 )
 await shot('16-reference-inserted')
 
+/* ------------------------------------------ 4. point with the arrow keys */
+console.log('\n4. set references with the keyboard')
+await page.getByRole('button', { name: 'Zurücksetzen' }).click()
+
+await cell('B8').click()
+await page.keyboard.type('=SUMME(')
+// First arrow steps off B8; five more walk up to B2.
+for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowUp')
+await shot('17-keyboard-pointing')
+// Shift extends the reference into a range instead of moving it.
+for (let i = 0; i < 4; i++) await page.keyboard.press('Shift+ArrowDown')
+await shot('18-keyboard-range')
+await page.keyboard.type(')')
+await page.keyboard.press('Enter')
+
+expect('B8 per Tastatur zusammengesetzt', await inputOf('B8'), '=SUMME(B2:B6)')
+expect('B8 Ergebnis', (await cell('B8').textContent()).trim(), '220')
+
+console.log('\n5. arrows still move the caret in ordinary text')
+await cell('A9').click()
+await page.keyboard.type('Hallo')
+await page.keyboard.press('ArrowLeft')
+await page.keyboard.press('ArrowLeft')
+await page.keyboard.type('XX')
+await page.keyboard.press('Enter')
+expect('Text bleibt Text', await inputOf('A9'), 'HalXXlo')
+
 console.log(errors.length ? `\nCONSOLE ERRORS:\n${errors.join('\n')}` : '\nno console errors')
 console.log(failures.length ? `\nFAILED: ${failures.join(', ')}` : '\nall gesture checks passed')
 await browser.close()
