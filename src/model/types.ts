@@ -91,6 +91,12 @@ export type BuildTask = {
   /** The checklist. The task is done when every goal is ticked. */
   ziele: Ziel[]
   hints: Hints
+  /**
+   * Where the canvas starts when the task is opened for the first time.
+   * 'previous' carries the network built in the task before forward, so a
+   * brief that says "erweitere das Netz" is telling the truth.
+   */
+  startFrom?: 'empty' | 'previous'
   /** Devices already on the canvas when the task opens. */
   starter?: import('./plan').Plan
 }

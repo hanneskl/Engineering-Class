@@ -10,6 +10,7 @@ import {
   removeDevice,
 } from '../model/plan'
 import { whyCannotLink, type Finding } from '../model/rules'
+import { assignAddresses } from '../model/dhcp'
 import { Canvas, MEDIUM_LABEL, type Tool } from './Canvas'
 import { Palette } from './Palette'
 import { Inspector } from './Inspector'
@@ -167,6 +168,13 @@ export function NetworkEditor({
           onRemoveLink={(linkId) =>
             onChange({ ...plan, links: plan.links.filter((l) => l.id !== linkId) })
           }
+          onDhcp={() => {
+            const { plan: next, assigned, prefix } = assignAddresses(plan)
+            onChange(next)
+            setNotice(
+              `Der Router hat ${assigned} Adressen im Netz ${prefix}.x vergeben — so funktioniert DHCP.`,
+            )
+          }}
         />
       </div>
     </div>

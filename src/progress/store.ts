@@ -144,3 +144,11 @@ export function loadPlan(progress: Progress, taskId: string): Plan | undefined {
 export function savePlan(progress: Progress, taskId: string, plan: Plan): Progress {
   return { ...progress, plans: { ...progress.plans, [taskId]: plan } }
 }
+
+/** Deep copy, so editing a later task never writes back into an earlier one. */
+export function clonePlan(plan: Plan): Plan {
+  return {
+    devices: plan.devices.map((d) => ({ ...d })),
+    links: plan.links.map((l) => ({ ...l })),
+  }
+}

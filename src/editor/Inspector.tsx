@@ -14,6 +14,7 @@ export function Inspector({
   onIp,
   onRemove,
   onRemoveLink,
+  onDhcp,
 }: {
   plan: Plan
   device: Device | null
@@ -21,6 +22,8 @@ export function Inspector({
   onIp: (id: string, ip: string) => void
   onRemove: (id: string) => void
   onRemoveLink: (linkId: string) => void
+  /** Hands out addresses from the selected router. */
+  onDhcp: () => void
 }) {
   if (!device) {
     return (
@@ -48,7 +51,7 @@ export function Inspector({
         onChange={(e) => onRename(device.id, e.target.value)}
       />
 
-      {device.type !== 'internet' && (
+      {spec.hasIp ? (
         <>
           <label htmlFor="insp-ip">IP-Adresse</label>
           <input
@@ -59,6 +62,24 @@ export function Inspector({
             onChange={(e) => onIp(device.id, e.target.value)}
           />
         </>
+      ) : (
+        <p className="insp-noip">
+          {device.type === 'internet'
+            ? 'Das Internet ist kein einzelnes Gerät und hat deshalb hier keine Adresse.'
+            : 'Ein Modem reicht die Daten nur durch und braucht im Heimnetz keine eigene Adresse.'}
+        </p>
+      )}
+
+      {device.type === 'router' && (
+        <div className="insp-dhcp">
+          <button className="primary wide" onClick={onDhcp}>
+            IP-Adressen automatisch vergeben
+          </button>
+          <p>
+            Genau das macht ein echter Router per <strong>DHCP</strong>: Er gibt jedem Gerät
+            im Netzwerk eine eigene Adresse.
+          </p>
+        </div>
       )}
 
       <div className="insp-links">

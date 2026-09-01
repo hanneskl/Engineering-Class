@@ -51,6 +51,13 @@ export type DeviceSpec = {
   ports: number
   /** Which media it can be connected with. */
   media: Medium[]
+  /**
+   * Whether the device carries an IP address of its own in this model.
+   * The internet is not one machine, and a modem passes traffic through
+   * without taking part in the home network — asking a student to invent
+   * addresses for either would teach the wrong thing.
+   */
+  hasIp: boolean
   /** Short explanation, shown in the inspector — the M1 learning content. */
   funktion: string
 }
@@ -67,6 +74,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'aussen',
     ports: 1,
     media: ['cable'],
+    hasIp: false,
     funktion: 'Alles außerhalb deines Heimnetzes.',
   },
   modem: {
@@ -74,6 +82,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'aussen',
     ports: 2,
     media: ['cable'],
+    hasIp: false,
     funktion:
       'Meldet sich beim Provider an und stellt die Internetverbindung her.',
   },
@@ -82,6 +91,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'netz',
     ports: 5,
     media: ['cable', 'wifi'],
+    hasIp: true,
     funktion:
       'Leitet Daten zwischen deinem Heimnetz und dem Internet weiter und vergibt die IP-Adressen (DHCP).',
   },
@@ -90,6 +100,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'netz',
     ports: 5,
     media: ['cable'],
+    hasIp: true,
     funktion: 'Verbindet mehrere Geräte über Kabel miteinander (LAN).',
   },
   accesspoint: {
@@ -97,6 +108,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'netz',
     ports: 6,
     media: ['cable', 'wifi'],
+    hasIp: true,
     funktion:
       'Bringt kabellose Geräte ins Netz. Er selbst hängt per Kabel am Router.',
   },
@@ -105,16 +117,18 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'netz',
     ports: 4,
     media: ['wifi'],
+    hasIp: true,
     funktion:
       'Verlängert das WLAN. Er ist selbst per WLAN verbunden, nicht per Kabel.',
   },
-  pc: { label: 'PC', group: 'geraete', ports: 1, media: ['cable', 'wifi'], funktion: 'Ein Computer im Netzwerk.' },
-  laptop: { label: 'Laptop', group: 'geraete', ports: 1, media: ['cable', 'wifi'], funktion: 'Ein tragbarer Computer.' },
+  pc: { label: 'PC', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Ein Computer im Netzwerk.' },
+  laptop: { label: 'Laptop', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Ein tragbarer Computer.' },
   smartphone: {
     label: 'Smartphone',
     group: 'geraete',
     ports: 1,
     media: ['wifi'],
+    hasIp: true,
     funktion: 'Geht nur über WLAN ins Netz — ein Netzwerkkabel passt nicht.',
   },
   tablet: {
@@ -122,16 +136,18 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'geraete',
     ports: 1,
     media: ['wifi'],
+    hasIp: true,
     funktion: 'Geht nur über WLAN ins Netz.',
   },
-  console: { label: 'Konsole', group: 'geraete', ports: 1, media: ['cable', 'wifi'], funktion: 'Spielkonsole.' },
-  printer: { label: 'Drucker', group: 'geraete', ports: 1, media: ['cable', 'wifi'], funktion: 'Drucker im Netzwerk.' },
-  tv: { label: 'Smart-TV', group: 'geraete', ports: 1, media: ['cable', 'wifi'], funktion: 'Fernseher mit Netzwerkanschluss.' },
+  console: { label: 'Konsole', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Spielkonsole.' },
+  printer: { label: 'Drucker', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Drucker im Netzwerk.' },
+  tv: { label: 'Smart-TV', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Fernseher mit Netzwerkanschluss.' },
   server: {
     label: 'Server',
     group: 'geraete',
     ports: 1,
     media: ['cable'],
+    hasIp: true,
     funktion: 'Stellt einen Dienst bereit, zum Beispiel Webseiten.',
   },
   nas: {
@@ -139,6 +155,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     group: 'geraete',
     ports: 1,
     media: ['cable'],
+    hasIp: true,
     funktion: 'Ein Speicher, auf den alle im Netzwerk zugreifen können.',
   },
 }

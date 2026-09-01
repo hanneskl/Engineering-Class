@@ -250,9 +250,10 @@ export function noDeviceBypassesRouter(): Rule {
   }
 }
 
-export function everyDeviceHasIp(exclude: DeviceType[] = ['internet']): Rule {
+/** Only devices that carry an address in this model are asked for one. */
+export function everyDeviceHasIp(): Rule {
   return (plan) => {
-    const missing = plan.devices.filter((d) => !exclude.includes(d.type) && !d.ip)
+    const missing = plan.devices.filter((d) => DEVICES[d.type].hasIp && !d.ip)
     if (!missing.length) return []
     return [
       {
@@ -271,7 +272,7 @@ export function everyDeviceHasIp(exclude: DeviceType[] = ['internet']): Rule {
 /** Private home networks share one prefix; mixing them is a real-world bug. */
 export function ipsInSameNetwork(): Rule {
   return (plan) => {
-    const withIp = plan.devices.filter((d) => d.ip && isValidIpv4(d.ip) && d.type !== 'internet')
+    const withIp = plan.devices.filter((d) => d.ip && isValidIpv4(d.ip) && DEVICES[d.type].hasIp)
     if (withIp.length < 2) return []
     const prefixOf = (ip: string) => ip.split('.').slice(0, 3).join('.')
     const counts = new Map<string, Device[]>()

@@ -4,6 +4,9 @@ import { DeviceIcon } from './icons'
 
 export const NODE = 64
 
+/** How far the pointer may travel before a press counts as a drag, not a click. */
+const DRAG_THRESHOLD = 5
+
 export type Tool = 'select' | 'cable' | 'wifi'
 
 /**
@@ -36,7 +39,9 @@ export function Canvas({
   onBackgroundClick: () => void
 }) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [dragging, setDragging] = useState<{ id: string; dx: number; dy: number } | null>(null)
+  const [dragging, setDragging] = useState<
+    { id: string; dx: number; dy: number; startX: number; startY: number } | null
+  >(null)
   const [moved, setMoved] = useState(false)
 
   function toSvgPoint(e: { clientX: number; clientY: number }) {
@@ -50,17 +55,25 @@ export function Canvas({
     }
   }
 
+  /**
+   * Dragging works in every tool, not just "Auswählen" — a student laying
+   * cables still wants to tidy the layout without switching back and forth.
+   * A click and a drag are told apart by distance travelled, so a wobbly
+   * trackpad press still registers as a click and starts a link.
+   */
   function startDrag(e: React.PointerEvent, d: Device) {
-    if (tool !== 'select') return
     const p = toSvgPoint(e)
-    setDragging({ id: d.id, dx: p.x - d.x, dy: p.y - d.y })
+    setDragging({ id: d.id, dx: p.x - d.x, dy: p.y - d.y, startX: p.x, startY: p.y })
     setMoved(false)
-    ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    e.currentTarget.setPointerCapture?.(e.pointerId)
   }
 
   function onPointerMove(e: React.PointerEvent) {
     if (!dragging) return
     const p = toSvgPoint(e)
+    if (!moved && Math.hypot(p.x - dragging.startX, p.y - dragging.startY) < DRAG_THRESHOLD) {
+      return
+    }
     setMoved(true)
     onMove(dragging.id, Math.round(p.x - dragging.dx), Math.round(p.y - dragging.dy))
   }
@@ -96,7 +109,7 @@ export function Canvas({
         return (
           <line
             key={l.id}
-            className={`link link-${l.medium}`}
+            className={`wire wire-${l.medium}`}
             x1={a.x}
             y1={a.y}
             x2={b.x}

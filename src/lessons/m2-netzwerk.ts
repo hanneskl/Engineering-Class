@@ -70,6 +70,7 @@ export const m2Netzwerk: BuildLesson = {
     },
     {
       id: 'm2-internet',
+      startFrom: 'previous',
       title: 'Ans Internet anschließen',
       brief:
         'Erweitere das Netz: ein Modem und das Internet kommen dazu. Alle Geräte sollen ' +
@@ -99,6 +100,7 @@ export const m2Netzwerk: BuildLesson = {
     },
     {
       id: 'm2-wlan',
+      startFrom: 'previous',
       title: 'Geräte ohne Kabel',
       brief:
         'Bring ein Smartphone und ein Tablet ins Netz. Beide haben keine Netzwerkbuchse — ' +
@@ -127,6 +129,7 @@ export const m2Netzwerk: BuildLesson = {
     },
     {
       id: 'm2-ip',
+      startFrom: 'previous',
       title: 'IP-Adressen vergeben',
       brief:
         'Jedes Gerät braucht eine eigene Adresse. Vergib IP-Adressen im selben Netz — ' +

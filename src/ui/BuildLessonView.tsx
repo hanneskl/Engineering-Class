@@ -3,9 +3,41 @@ import { type BuildLesson, taskRules, zielFindings, zielMet } from '../model/typ
 import { emptyPlan, type Plan } from '../model/plan'
 import { NetworkEditor } from '../editor/NetworkEditor'
 import { checkAlways, isTaskSolved } from '../model/rules'
-import { loadPlan, savePlan, taskProgress, withTask, type Progress } from '../progress/store'
+import {
+  clonePlan,
+  loadPlan,
+  savePlan,
+  taskProgress,
+  withTask,
+  type Progress,
+} from '../progress/store'
 
 const HINT_LABELS = ['Stups', 'Hinweis', 'Lösung'] as const
+
+/**
+ * What is on the canvas when a task opens.
+ *
+ * A saved plan always wins. Otherwise a task marked startFrom: 'previous'
+ * inherits a copy of the most recent network the student actually built —
+ * without that, briefs like "Erweitere das Netz" open on an empty canvas and
+ * the instruction reads as a lie.
+ */
+function initialPlan(progress: Progress, lesson: BuildLesson, index: number): Plan {
+  const task = lesson.tasks[index]
+  if (!task) return emptyPlan()
+
+  const saved = loadPlan(progress, task.id)
+  if (saved) return saved
+  if (task.starter) return clonePlan(task.starter)
+
+  if (task.startFrom === 'previous') {
+    for (let i = index - 1; i >= 0; i--) {
+      const earlier = loadPlan(progress, lesson.tasks[i]!.id)
+      if (earlier && earlier.devices.length > 0) return clonePlan(earlier)
+    }
+  }
+  return emptyPlan()
+}
 
 export function BuildLessonView({
   lesson,
@@ -25,9 +57,7 @@ export function BuildLessonView({
   const task = lesson.tasks[index]!
   const state = taskProgress(progress, task.id)
 
-  const [plan, setPlan] = useState<Plan>(
-    () => loadPlan(progress, task.id) ?? task.starter ?? emptyPlan(),
-  )
+  const [plan, setPlan] = useState<Plan>(() => initialPlan(progress, lesson, index))
   const [introOpen, setIntroOpen] = useState(
     () => !lesson.tasks.some((t) => taskProgress(progress, t.id).solved),
   )
@@ -72,10 +102,9 @@ export function BuildLessonView({
   }
 
   function openTask(i: number) {
-    const next = lesson.tasks[i]
-    if (!next) return
+    if (!lesson.tasks[i]) return
     setIndex(i)
-    setPlan(loadPlan(progress, next.id) ?? next.starter ?? emptyPlan())
+    setPlan(initialPlan(progress, lesson, i))
   }
 
   const hints = [task.hints.stups, task.hints.hinweis, task.hints.loesung]
