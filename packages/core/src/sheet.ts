@@ -5,12 +5,12 @@
  * rather than maintaining a dependency graph.
  */
 
-import { evaluateNode, type EvalScope } from './evaluate.js'
-import { DEFAULT_STYLE, type Cell, type CellStyle, type CfRule, type ChartSpec } from './model.js'
-import { ParseError, parseFormula, type Node } from './parser.js'
-import { TokenizeError } from './tokenizer.js'
-import { expandRange, formatA1, parseA1, refKey, type CellRef, type RangeRef } from './refs.js'
-import { err, type CellValue } from './values.js'
+import { evaluateNode, type EvalScope } from './evaluate.ts'
+import { DEFAULT_STYLE, type Cell, type CellStyle, type CfRule, type ChartSpec } from './model.ts'
+import { ParseError, parseFormula, type Node } from './parser.ts'
+import { TokenizeError } from './tokenizer.ts'
+import { expandRange, formatA1, parseA1, refKey, type CellRef, type RangeRef } from './refs.ts'
+import { err, type CellValue } from './values.ts'
 
 export function isFormulaInput(input: string): boolean {
   return input.trimStart().startsWith('=')

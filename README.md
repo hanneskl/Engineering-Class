@@ -231,3 +231,28 @@ npm run drive:gestures --workspace @quali/web # drag-to-fill, copy/paste, click-
 `npm run drive` expects the dev server to already be running. Set `SHOT_DIR` to choose where
 screenshots land, and `CHROMIUM_PATH` if your sandbox ships a browser build Playwright did not
 download itself.
+
+## Backend (optional)
+
+The trainer runs standalone with no backend — that is the default and needs no setup. Connecting
+Supabase adds sign-in, attempt logging and server-side scoring.
+
+```bash
+supabase link --project-ref <ref>
+supabase db push                       # applies supabase/migrations
+supabase functions deploy check-task   # scoring runs here, not in the browser
+```
+
+Then point the app at the project:
+
+```bash
+# apps/web/.env.local
+VITE_SUPABASE_URL=https://<ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
+```
+
+Students sign in with a nickname and a password you create; there are no self-signups and no
+email is ever sent. Create one from the Supabase dashboard (Auth → Add user) using
+`<nickname>@pupils.invalid` as the address, then insert the matching `students` row.
+
+**Keep real names out of the database.** The nickname → pupil mapping belongs on paper with you.

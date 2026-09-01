@@ -164,13 +164,26 @@ supabase/           migrations, RLS policies, edge functions
 `packages/core` having **no dependencies and no platform APIs** is a hard rule — it is what lets
 the same checker run in the browser and in a Deno Edge Function.
 
+For the same reason, imports inside `packages/` carry **`.ts` extensions**, not `.js`. Deno
+resolves specifiers literally, so `./values.js` would send it looking for a file that does not
+exist; TypeScript's `allowImportingTsExtensions` and Vite both handle `.ts` fine.
+
+### Re-seeding is a security boundary, not a convenience
+
+`gradeSubmission` rebuilds the sheet from a fresh `scenario.seed()` and applies only inputs for
+cells the seed left empty. Without that, a crafted request could rewrite the source numbers —
+and because the answer key is a formula evaluated against the same data, the key would move with
+them and any wrong answer would grade as correct.
+
 ## 7. Build order
 
-1. **Model + evaluator + checker, headless.** No UI. Tested against the `Lösung` files: assert it
+1. ~~**Model + evaluator + checker, headless.**~~ Done. Tested against the `Lösung` files: it
    accepts every real exam formula and rejects the typed-value variant of each.
-2. **`Felder berechnen` end-to-end** — grid, formula bar, four tasks, sidebar. The smallest thing
-   that proves the whole loop.
-3. Supabase auth + attempt logging + the `check-task` edge function.
+2. ~~**Scenarios end-to-end**~~ Done — grid, formula bar, task sidebar, drag-to-fill,
+   copy/paste and point mode.
+3. ~~**Supabase auth + attempt logging + the `check-task` edge function.**~~ Written. The
+   grading path is covered by tests; the deployed function and the SQL have not been run
+   against a live project yet.
 4. Formatting ribbon (the 18 features) + style checks.
 5. The remaining eight scenarios.
 6. **Charts last** — D1–D11 are the largest UI lift for the fewest exam points.

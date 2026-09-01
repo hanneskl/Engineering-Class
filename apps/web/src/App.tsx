@@ -1,6 +1,8 @@
-import { formatValue, runChecks, translateInput, type CellStyle, type Sheet } from '@quali/core'
-import { SCENARIOS, scenarioById, totalPoints, type TaskDef } from '@quali/scenarios'
-import { useMemo, useState } from 'react'
+import { formatValue, translateInput, type CellStyle, type Sheet } from '@quali/core'
+import { SCENARIOS, gradeSubmission, scenarioById, totalPoints, type TaskDef } from '@quali/scenarios'
+import { useEffect, useMemo, useState } from 'react'
+import { backend, hasBackend, signOut, submitAttempt } from './backend.ts'
+import { Login } from './Login.tsx'
 import { Grid } from './Grid.tsx'
 import { handlePointKey, stopPointing, type EditState } from './editing.ts'
 import {
@@ -21,6 +23,8 @@ type Status = 'open' | 'passed' | 'failed'
 interface TaskState {
   readonly status: Status
   readonly message: string
+  /** True while the server has not yet confirmed the browser's provisional result. */
+  readonly pending: boolean
 }
 
 interface Clipboard {
@@ -39,6 +43,20 @@ export function App() {
   const [edit, setEdit] = useState<EditState | null>(null)
   const [clipboard, setClipboard] = useState<Clipboard | null>(null)
   const [states, setStates] = useState<Record<string, TaskState>>({})
+  const [signedIn, setSignedIn] = useState(false)
+  const [authReady, setAuthReady] = useState(!hasBackend)
+
+  useEffect(() => {
+    if (!backend) return
+    backend.auth.getSession().then(({ data }) => {
+      setSignedIn(data.session !== null)
+      setAuthReady(true)
+    })
+    const { data } = backend.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(session !== null)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
 
   const rect = rectOf(selection)
   const activeA1 = toA1(selection.anchor)
@@ -156,18 +174,41 @@ export function App() {
     touch()
   }
 
-  function check(task: TaskDef): void {
-    const outcome = runChecks(task.checks, {
-      sheet,
-      target: task.target,
-      solution: task.solution,
-    })
+  /** Everything the student has entered, which is what the server re-grades. */
+  function currentInputs(): Record<string, string> {
+    const inputs: Record<string, string> = {}
+    for (const a1 of sheet.populatedCells()) inputs[a1] = sheet.getInput(a1)
+    return inputs
+  }
+
+  /**
+   * Grade locally for instant feedback, then let the server's verdict overwrite it.
+   * Both sides run the same gradeSubmission, so they should agree — but the server's answer
+   * is the one that is recorded, and the one we display once it lands.
+   */
+  async function check(task: TaskDef): Promise<void> {
+    const inputs = currentInputs()
+    const local = gradeSubmission({ scenarioId, taskId: task.id, inputs })
     setStates((previous) => ({
       ...previous,
       [task.id]: {
-        status: outcome.passed ? 'passed' : 'failed',
-        message: outcome.messages[0] ?? '',
+        status: local.passed ? 'passed' : 'failed',
+        message: local.message,
+        pending: hasBackend,
       },
+    }))
+    if (!hasBackend) return
+
+    const { grade, error } = await submitAttempt(scenarioId, task.id, inputs)
+    setStates((previous) => ({
+      ...previous,
+      [task.id]: grade
+        ? { status: grade.passed ? 'passed' : 'failed', message: grade.message, pending: false }
+        : {
+            status: previous[task.id]?.status ?? 'failed',
+            message: error ?? previous[task.id]?.message ?? '',
+            pending: false,
+          },
     }))
   }
 
@@ -176,6 +217,9 @@ export function App() {
     .reduce((sum, task) => sum + task.points, 0)
 
   const barValue = edit ? edit.draft : sheet.getInput(activeA1)
+
+  if (!authReady) return <div className="login"><p>Wird geladen …</p></div>
+  if (hasBackend && !signedIn) return <Login onSignedIn={() => setSignedIn(true)} />
 
   return (
     <div className="app">
@@ -192,6 +236,9 @@ export function App() {
           </select>
           <span className="score">{earned} / {totalPoints(scenario)} Punkte</span>
           <button className="ghost" onClick={() => reset(scenarioId)}>Zurücksetzen</button>
+          {hasBackend && (
+            <button className="ghost" onClick={() => void signOut()}>Abmelden</button>
+          )}
         </div>
       </header>
 
@@ -278,13 +325,13 @@ export function App() {
         <aside className="tasks">
           <div className="tasks-head">
             <h2>Arbeitsaufträge</h2>
-            <button onClick={() => scenario.tasks.forEach(check)}>Alles prüfen</button>
+            <button onClick={() => scenario.tasks.forEach((task) => void check(task))}>Alles prüfen</button>
           </div>
           <p className="rule">Alle Berechnungen sind mit Formeln durchzuführen!</p>
 
           <ol>
             {scenario.tasks.map((task, index) => {
-              const state = states[task.id] ?? { status: 'open' as Status, message: '' }
+              const state: TaskState = states[task.id] ?? { status: 'open', message: '', pending: false }
               return (
                 <li key={task.id} className={`task ${state.status}`}>
                   <div className="task-head">
@@ -295,7 +342,8 @@ export function App() {
                   </div>
                   <p className="prompt">{task.promptDe}</p>
                   {state.status === 'failed' && <p className="feedback">{state.message}</p>}
-                  <button className="ghost small" onClick={() => check(task)}>Prüfen</button>
+                  {state.pending && <p className="pending">wird gespeichert …</p>}
+                  <button className="ghost small" onClick={() => void check(task)}>Prüfen</button>
                 </li>
               )
             })}

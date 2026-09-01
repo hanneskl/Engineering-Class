@@ -218,3 +218,5 @@ export function scenarioById(id: string): Scenario {
 export function totalPoints(scenario: Scenario): number {
   return scenario.tasks.reduce((sum, task) => sum + task.points, 0)
 }
+
+export * from './grade.ts'

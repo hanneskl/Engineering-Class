@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { canonical, parseFormula, translateInput } from '../src/parser.js'
-import { Sheet } from '../src/sheet.js'
-import { isError, type CellValue } from '../src/values.js'
+import { canonical, parseFormula, translateInput } from '../src/parser.ts'
+import { Sheet } from '../src/sheet.ts'
+import { isError, type CellValue } from '../src/values.ts'
 
 function evalIn(sheet: Sheet, formula: string): CellValue {
   return sheet.evaluateFormula(formula)

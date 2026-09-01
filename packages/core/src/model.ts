@@ -6,7 +6,7 @@
  * exists so that the style, conditional-formatting and chart checks have something to inspect.
  */
 
-import type { RangeRef } from './refs.js'
+import type { RangeRef } from './refs.ts'
 
 export type HorizontalAlign = 'left' | 'center' | 'right'
 export type VerticalAlign = 'top' | 'middle' | 'bottom'

@@ -2,10 +2,10 @@
  * AST evaluator. Pure: everything it can see comes through EvalScope.
  */
 
-import { FUNCTIONS, isKnownFunction, unknownFunctionError, type FunctionArg } from './functions.js'
-import type { Node } from './parser.js'
-import { isOutOfBounds, type CellRef } from './refs.js'
-import { err, isError, toNumber, toText, type CellValue } from './values.js'
+import { FUNCTIONS, isKnownFunction, unknownFunctionError, type FunctionArg } from './functions.ts'
+import type { Node } from './parser.ts'
+import { isOutOfBounds, type CellRef } from './refs.ts'
+import { err, isError, toNumber, toText, type CellValue } from './values.ts'
 
 export interface EvalScope {
   getValue(ref: CellRef): CellValue

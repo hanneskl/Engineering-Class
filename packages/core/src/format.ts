@@ -5,8 +5,8 @@
  * and both the grid and any server-side rendering need the same interpretation of it.
  */
 
-import type { NumberFormat } from './model.js'
-import { isError, toText, type CellValue } from './values.js'
+import type { NumberFormat } from './model.ts'
+import { isError, toText, type CellValue } from './values.ts'
 
 /** German grouping: `1.234,56`. */
 function groupDe(value: number, decimals: number): string {

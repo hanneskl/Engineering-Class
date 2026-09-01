@@ -6,8 +6,8 @@
  * resorting to string matching on the raw input.
  */
 
-import { formatA1, parseA1, translate, type CellRef } from './refs.js'
-import { parseNumberLiteral, tokenize, type Token } from './tokenizer.js'
+import { formatA1, parseA1, translate, type CellRef } from './refs.ts'
+import { parseNumberLiteral, tokenize, type Token } from './tokenizer.ts'
 
 export type Node =
   | { readonly type: 'number'; readonly value: number }

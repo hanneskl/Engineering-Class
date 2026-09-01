@@ -14,7 +14,7 @@ import {
   toText,
   type CellError,
   type CellValue,
-} from './values.js'
+} from './values.ts'
 
 /** A scalar argument, or the flattened contents of a range. */
 export type FunctionArg = CellValue | CellValue[]

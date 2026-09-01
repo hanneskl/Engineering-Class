@@ -1,0 +1,4 @@
+project_id = "quali-excel-trainer"
+
+[functions.check-task]
+verify_jwt = true

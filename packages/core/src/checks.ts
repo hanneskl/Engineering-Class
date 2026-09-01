@@ -6,11 +6,11 @@
  * answer.
  */
 
-import { isKnownFunction, unknownFunctionError } from './functions.js'
-import { canonical, formatNode, parseFormula, translateNode, walk, type Node } from './parser.js'
-import { expandRange, formatA1, parseA1, type RangeRef } from './refs.js'
-import { isFormulaInput, type Sheet } from './sheet.js'
-import { isError, toText, type CellValue } from './values.js'
+import { isKnownFunction, unknownFunctionError } from './functions.ts'
+import { canonical, formatNode, parseFormula, translateNode, walk, type Node } from './parser.ts'
+import { expandRange, formatA1, parseA1, type RangeRef } from './refs.ts'
+import { isFormulaInput, type Sheet } from './sheet.ts'
+import { isError, toText, type CellValue } from './values.ts'
 
 export interface CheckResult {
   readonly passed: boolean
