@@ -8,6 +8,7 @@
 
 import { seedFromName } from '../model/rng'
 import type { Plan } from '../model/plan'
+import type { Flow } from '../model/flow'
 
 export type TaskProgress = {
   solved: boolean
@@ -23,6 +24,8 @@ export type Progress = {
   tasks: Record<string, TaskProgress>
   /** Drawn networks, one per build task. */
   plans: Record<string, Plan>
+  /** Drawn flowcharts, one per flow task. */
+  flows: Record<string, Flow>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -39,6 +42,7 @@ export function emptyProgress(studentName: string): Progress {
     updatedAt: new Date().toISOString(),
     tasks: {},
     plans: {},
+    flows: {},
   }
 }
 
@@ -56,6 +60,7 @@ export function load(studentName: string): Progress {
       ...parsed,
       tasks: parsed.tasks,
       plans: parsed.plans ?? {},
+      flows: parsed.flows ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -151,4 +156,12 @@ export function clonePlan(plan: Plan): Plan {
     devices: plan.devices.map((d) => ({ ...d })),
     links: plan.links.map((l) => ({ ...l })),
   }
+}
+
+export function loadFlow(progress: Progress, taskId: string): Flow | undefined {
+  return progress.flows[taskId]
+}
+
+export function saveFlow(progress: Progress, taskId: string, flow: Flow): Progress {
+  return { ...progress, flows: { ...progress.flows, [taskId]: flow } }
 }

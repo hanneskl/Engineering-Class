@@ -350,3 +350,37 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .insp-dhcp { margin-bottom: 1rem; }
 .insp-dhcp p { color: var(--muted); font-size: .82rem; margin: .45rem 0 0; }
 .primary.wide { width: 100%; }
+
+/* ---------- flowchart editor ---------- */
+
+.flow-canvas.tool-connect { cursor: crosshair; }
+
+.edge-line { stroke: var(--muted); stroke-width: 2; fill: none; }
+.edge-hit { stroke: transparent; stroke-width: 16; cursor: pointer; }
+.edge.sel .edge-line { stroke: var(--accent); stroke-width: 3; }
+.edge-label {
+  fill: var(--ink); font-size: 12px; font-weight: 700;
+  paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round;
+}
+
+.fnode { cursor: grab; }
+.fnode:focus { outline: none; }
+.fnode:focus-visible .fnode-shape { stroke: var(--accent); stroke-width: 3; }
+.fnode-shape { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+.fnode-start .fnode-shape, .fnode-end .fnode-shape { fill: var(--good-bg); stroke: var(--good); }
+.fnode-decision .fnode-shape { fill: var(--hint-bg); stroke: var(--hint-line); }
+.fnode.sel .fnode-shape { stroke: var(--accent); stroke-width: 3; }
+.fnode.linking .fnode-shape { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 5 4; }
+.fnode.faulty .fnode-shape { stroke: var(--bad); stroke-width: 3; }
+.fnode-text { fill: var(--ink); font-size: 13px; font-weight: 600; pointer-events: none; }
+
+/* Palette swatches echo the shapes on the canvas. */
+.sym { width: 18px; height: 13px; flex: none; border: 2px solid var(--line); background: var(--surface); }
+.sym-start, .sym-end { border-radius: 999px; border-color: var(--good); background: var(--good-bg); }
+.sym-process { border-radius: 3px; }
+.sym-decision {
+  border-color: var(--hint-line); background: var(--hint-bg);
+  width: 15px; height: 15px; transform: rotate(45deg);
+}
+.branch-row { margin-bottom: .9rem; }
+.branch-row .tool { flex: 1; }

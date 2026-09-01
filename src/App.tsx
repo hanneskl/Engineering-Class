@@ -4,6 +4,7 @@ import { NameGate } from './ui/NameGate'
 import { Home } from './ui/Home'
 import { LessonView } from './ui/LessonView'
 import { BuildLessonView } from './ui/BuildLessonView'
+import { FlowLessonView } from './ui/FlowLessonView'
 import { load, save, lastStudent, type Progress } from './progress/store'
 
 type View = { kind: 'home' } | { kind: 'lesson'; lessonId: string }
@@ -57,9 +58,16 @@ export function App() {
         </div>
       </header>
 
-      <main className={lesson?.kind === 'build' ? 'wide' : undefined}>
+      <main className={lesson && lesson.kind !== 'quiz' ? 'wide' : undefined}>
         {lesson ? (
-          lesson.kind === 'build' ? (
+          lesson.kind === 'flow' ? (
+            <FlowLessonView
+              lesson={lesson}
+              progress={progress}
+              onProgress={update}
+              onBack={() => setView({ kind: 'home' })}
+            />
+          ) : lesson.kind === 'build' ? (
             <BuildLessonView
               lesson={lesson}
               progress={progress}

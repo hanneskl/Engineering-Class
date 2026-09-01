@@ -130,4 +130,40 @@ export type BuildLesson = LessonBase & {
   tasks: BuildTask[]
 }
 
-export type Lesson = QuizLesson | BuildLesson
+/** Modules where the student draws a flowchart and rules judge the diagram. */
+export type FlowZiel = {
+  text: string
+  rules: import('./flowRules').FlowRule[]
+}
+
+export type FlowTask = {
+  id: string
+  title: string
+  brief: string
+  ziele: FlowZiel[]
+  hints: Hints
+  starter?: import('./flow').Flow
+}
+
+export type FlowLesson = LessonBase & {
+  kind: 'flow'
+  tasks: FlowTask[]
+}
+
+export function flowTaskRules(task: FlowTask): import('./flowRules').FlowRule[] {
+  return task.ziele.flatMap((z) => z.rules)
+}
+
+export function flowZielFindings(
+  flow: import('./flow').Flow,
+  ziel: FlowZiel,
+): import('./rules').Finding[] {
+  return ziel.rules.flatMap((rule) => rule(flow))
+}
+
+/** Like zielMet: nothing ticks while the canvas is still empty. */
+export function flowZielMet(flow: import('./flow').Flow, ziel: FlowZiel): boolean {
+  return flow.nodes.length > 0 && flowZielFindings(flow, ziel).length === 0
+}
+
+export type Lesson = QuizLesson | BuildLesson | FlowLesson

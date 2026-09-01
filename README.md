@@ -17,9 +17,12 @@ npm test         # checker logic
 npm run build    # production build into dist/
 ```
 
-Pushing to `main` deploys to GitHub Pages. **Built so far:** M4 (Binärzahlen)
-and M8 (Begriffe & Abkürzungen) — the two modules that need no network engine.
-Everything else in §4 is still to come.
+Pushing to `main` deploys to GitHub Pages —
+[hanneskl.github.io/Network-Education](https://hanneskl.github.io/Network-Education/).
+
+**Built so far:** M2 (Netzwerk zeichnen), M4 (Binärzahlen), M8 (Begriffe &
+Abkürzungen) and M9 (Flussdiagramme). Still to come: M5 (ping, tracert,
+ipconfig), M6 (der Weg einer Internetseite) and M7 (Anonymität).
 
 ---
 
@@ -287,6 +290,26 @@ Anonymität in einem Netzwerk gibt."*
   mich identifizieren (Website-Betreiber, Provider)?
   ✅ Check: free-text/MC on who can see what.
 
+### M9 — Flussdiagramme
+
+Not a networking module, but the same Quali and the same tool. Flowcharts are
+asked for every year — 3 points in 2026 (Zähneputzen), 7 in 2022
+(Spülmaschine ausräumen), 9 in 2023 (Zimmer aufräumen) — and always for an
+everyday routine rather than anything computer-related.
+
+- **T9.1 — Die vier Symbole.** Start, Aktion, Entscheidung, Ende, and what may
+  leave each: one arrow out of an action, exactly two out of a decision, none
+  out of an end, none *into* a start.
+  ✅ Check: the editor refuses an illegal arrow and says why.
+- **T9.2 — Einen Ablauf zerlegen.** Morgens aufstehen — a straight sequence
+  with no branching, to practise splitting a routine into single steps.
+- **T9.3 — Verzweigen und wiederholen.** Wäsche zusammenlegen: a decision whose
+  "Ja" branch loops back, which is how a repetition is drawn.
+- **T9.4 — Zähneputzen.** The 2026 exam task, with the final check "Fertig?"
+  looping back to more brushing.
+  ✅ Check: one start, one end, at least one decision with both branches
+  labelled, every symbol reachable, and no path that dead-ends.
+
 ### M8 — Begriffe & Abkürzungen (Quali drill)
 
 Short-answer drill, all recurring exam items:
@@ -354,5 +377,6 @@ The Quali Informatik is 90 points: Theorie 30 / Datenverarbeitung 30 /
 Programmieren 30. Only part of Theorie is networking. The rest —
 **Hardware** (CPU, RAM, Festplatte, Grafikkarte, Peripherie),
 **Excel** (absolute Bezüge `$G$2`, SUMME/MITTELWERT/MAX/MIN/WENN, Währungsformat,
-Säulen- und Kreisdiagramm), **Flussdiagramm/Aktivitätsdiagramm** and
-**Scratch** — is taught with other material and is not covered here.
+Säulen- und Kreisdiagramm) and **Scratch** — is taught with other material and
+is not covered here. *(Flussdiagramme were originally in this list; they are
+now module M9 above.)*

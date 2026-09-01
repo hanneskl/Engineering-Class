@@ -15,9 +15,9 @@ export function Home({
     () =>
       lessons.map((lesson) => {
         const ids =
-          lesson.kind === 'build'
-            ? lesson.tasks.map((t) => t.id)
-            : lesson.buildTasks(progress.seed).map((t) => t.id)
+          lesson.kind === 'quiz'
+            ? lesson.buildTasks(progress.seed).map((t) => t.id)
+            : lesson.tasks.map((t) => t.id)
         return { lesson, stats: moduleStats(progress, ids) }
       }),
     [lessons, progress],
