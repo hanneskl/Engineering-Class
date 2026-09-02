@@ -64,13 +64,19 @@ async function dragFillHandle(to) {
 }
 const tool = (title) => page.locator(`.ribbon [title="${title}"]`)
 
+/** Fill and font colours live behind the split button's chevron, as they do in Excel. */
+async function pickFill(name) {
+  await tool('Füllfarbe wählen').click()
+  await page.locator(`.menu [title="${name}"]`).click()
+}
+
 console.log('\n1. Titel: verbinden, zentrieren, hellblau füllen')
 await cell('B1').click()
 await page.keyboard.type('Familienvermögen')
 await page.keyboard.press('Enter')
 await selectRange('B1', 'H1')
 await tool('Verbinden und zentrieren').click()
-await tool('Hellblau').click()
+await pickFill('Hellblau')
 await check(0)
 await expectTask('Aufgabe 1 (F1+F2)', 0, 'task passed')
 
@@ -118,7 +124,7 @@ const msg = (await page.locator('.task').nth(5).locator('.feedback').textContent
 console.log(`     Rückmeldung: ${msg}`)
 
 await selectRange('H4', 'H8')
-await page.locator('.ribbon select').selectOption('percent:1')
+await page.locator('.ribbon .numfmt').selectOption('percent:1')
 await check(5)
 await expectTask('Aufgabe 6 mit Prozentformat', 5, 'task passed')
 expect('Anteil Hannes', (await cell('H5').textContent()).trim(), '70,3 %')

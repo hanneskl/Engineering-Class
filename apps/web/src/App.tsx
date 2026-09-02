@@ -19,7 +19,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { backend, hasBackend, signOut, submitAttempt } from './backend.ts'
 import { Login } from './Login.tsx'
 import { Grid } from './Grid.tsx'
-import { Ribbon } from './Ribbon.tsx'
+import { Ribbon, borderWeights, type BorderPreset } from './Ribbon.tsx'
 import { handlePointKey, stopPointing, type EditState } from './editing.ts'
 import {
   canPoint,
@@ -223,6 +223,27 @@ export function App() {
     applyStyle({ numberFormat })
   }
 
+  /**
+   * Borders are range-aware: „Außenrahmen" outlines the selection's perimeter rather than
+   * boxing every cell, which is what „dicke Außenlinie" in the 2025 paper asks for.
+   */
+  function applyBorders(preset: BorderPreset): void {
+    const weight = borderWeights(preset)
+    const everySide = preset === 'all' || preset === 'none'
+
+    for (const pos of cellsOf(rect)) {
+      sheet.setStyle(toA1(pos), {
+        borders: {
+          top: everySide || pos.row === rect.top ? weight : 'none',
+          bottom: everySide || pos.row === rect.bottom ? weight : 'none',
+          left: everySide || pos.col === rect.left ? weight : 'none',
+          right: everySide || pos.col === rect.right ? weight : 'none',
+        },
+      })
+    }
+    touch()
+  }
+
   /** „Verbinden und zentrieren" is one gesture in Excel, so it is one button here. */
   function toggleMerge(): void {
     const range = { start: { row: rect.top, col: rect.left, colAbs: false, rowAbs: false },
@@ -380,9 +401,9 @@ export function App() {
           </div>
           <Ribbon
             current={sheet.getStyle(activeA1)}
-            selection={rect}
             onStyle={applyStyle}
             onNumberFormat={applyNumberFormat}
+            onBorders={applyBorders}
             onMerge={toggleMerge}
             isMerged={mergedNow}
           />

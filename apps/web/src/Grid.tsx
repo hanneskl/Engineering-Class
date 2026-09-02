@@ -233,11 +233,21 @@ export function Grid(props: GridProps) {
                         fontWeight: style.bold ? 700 : undefined,
                         fontStyle: style.italic ? 'italic' : undefined,
                         textDecoration: style.underline ? 'underline' : undefined,
-                        fontFamily: style.fontFamily,
+                        // Named font first, then a sans-serif stack — Calibri and Aptos are
+                        // not installed on Linux and would otherwise fall back to a serif.
+                        fontFamily: `${style.fontFamily}, Arial, Helvetica, sans-serif`,
                         fontSize: style.fontSize,
                         color: formatted.negativeRed ? '#c00' : style.color,
                         whiteSpace: style.wrap ? 'normal' : 'nowrap',
                         verticalAlign: style.vAlign ?? undefined,
+                        borderTopWidth: borderPx(style.borders.top),
+                        borderBottomWidth: borderPx(style.borders.bottom),
+                        borderLeftWidth: borderPx(style.borders.left),
+                        borderRightWidth: borderPx(style.borders.right),
+                        borderTopColor: borderColour(style.borders.top),
+                        borderBottomColor: borderColour(style.borders.bottom),
+                        borderLeftColor: borderColour(style.borders.left),
+                        borderRightColor: borderColour(style.borders.right),
                         textAlign:
                           style.hAlign ??
                           (typeof sheet.getValue(a1) === 'number' ? 'right' : 'left'),
@@ -304,6 +314,14 @@ export function Grid(props: GridProps) {
       </table>
     </div>
   )
+}
+
+function borderPx(weight: string): string | undefined {
+  return weight === 'thick' ? '3px' : weight === 'medium' ? '2px' : undefined
+}
+
+function borderColour(weight: string): string | undefined {
+  return weight === 'none' ? undefined : '#111827'
 }
 
 /** The parent bumps this on every sheet mutation to force a re-render. */
