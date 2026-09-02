@@ -405,24 +405,27 @@ export function App() {
               className="formula-input"
               value={barValue}
               placeholder="Formel eingeben, z. B. =SUMME(B2:B6)"
-              onChange={(event) =>
+              onChange={(event) => {
+                // React clears `currentTarget` once the handler returns, and a functional
+                // updater runs later — so every DOM read has to happen here, not inside it.
+                const draft = event.target.value
+                const caret = event.target.selectionStart ?? draft.length
                 setEdit((previous) =>
                   stopPointing({
                     a1: previous?.a1 ?? activeA1,
-                    draft: event.target.value,
-                    caret: event.target.selectionStart ?? event.target.value.length,
+                    draft,
+                    caret,
                     from: 'bar',
                     point: previous?.point ?? null,
                   }),
                 )
-              }
-              onSelect={(event) =>
+              }}
+              onSelect={(event) => {
+                const caret = event.currentTarget.selectionStart
                 setEdit((previous) =>
-                  previous
-                    ? { ...previous, caret: event.currentTarget.selectionStart ?? previous.caret }
-                    : previous,
+                  previous ? { ...previous, caret: caret ?? previous.caret } : previous,
                 )
-              }
+              }}
               onKeyDown={(event) => {
                 if (edit) {
                   const pointed = handlePointKey(
