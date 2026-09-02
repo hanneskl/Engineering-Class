@@ -244,4 +244,51 @@ export function webZielMet(
   return webZielFindings(state, ziel).length === 0
 }
 
-export type Lesson = QuizLesson | BuildLesson | FlowLesson | ConsoleLesson | WebLesson
+/** Modules where the student surfs and then reads the trail they left. */
+export type TraceZiel = {
+  text: string
+  rules: import('./traceRules').TraceRule[]
+}
+
+export type TraceTask = {
+  id: string
+  title: string
+  brief: string
+  ziele: TraceZiel[]
+  hints: Hints
+  /** Show the "mark what identifies you" exercise under the server log. */
+  markieren?: boolean
+  /** Questions to ask under the logs, by id. */
+  fragen?: string[]
+}
+
+export type TraceLesson = LessonBase & {
+  kind: 'traces'
+  tasks: TraceTask[]
+}
+
+export function traceTaskRules(task: TraceTask): import('./traceRules').TraceRule[] {
+  return task.ziele.flatMap((z) => z.rules)
+}
+
+export function traceZielFindings(
+  state: import('./traceRules').TraceState,
+  ziel: TraceZiel,
+): import('./rules').Finding[] {
+  return ziel.rules.flatMap((rule) => rule(state))
+}
+
+export function traceZielMet(
+  state: import('./traceRules').TraceState,
+  ziel: TraceZiel,
+): boolean {
+  return traceZielFindings(state, ziel).length === 0
+}
+
+export type Lesson =
+  | QuizLesson
+  | BuildLesson
+  | FlowLesson
+  | ConsoleLesson
+  | WebLesson
+  | TraceLesson

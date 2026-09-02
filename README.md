@@ -21,8 +21,9 @@ Pushing to `main` deploys to GitHub Pages —
 [hanneskl.github.io/Network-Education](https://hanneskl.github.io/Network-Education/).
 
 **Built so far:** M2 (Netzwerk zeichnen), M5 (Netzwerkbefehle), M6 (der Weg
-einer Internetseite), M4 (Binärzahlen), M8 (Begriffe & Abkürzungen) and M9
-(Flussdiagramme). Still to come: M7 (Anonymität).
+einer Internetseite), M7 (Spuren im Internet), M4 (Binärzahlen), M8 (Begriffe &
+Abkürzungen) and M9 (Flussdiagramme). Still to come: M1 (Geräte & Komponenten
+— currently taught inside M2's inspector) and a Probequali mode.
 
 ---
 

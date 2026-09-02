@@ -115,8 +115,8 @@ export function Home({
       <section className="soon">
         <h3>Kommt später dazu</h3>
         <p>
-          Welche Spuren du im Internet hinterlässt: Was ein Server über dich mitschreibt,
-          was Cookies sind und wie anonym man in einem Netzwerk wirklich ist.
+          Ein Probequali: Aufgaben aus allen Bereichen gemischt, wie in der echten
+          Prüfung — mit Zeit und Punkten.
         </p>
       </section>
 

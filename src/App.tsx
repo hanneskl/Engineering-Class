@@ -7,6 +7,7 @@ import { BuildLessonView } from './ui/BuildLessonView'
 import { FlowLessonView } from './ui/FlowLessonView'
 import { ConsoleLessonView } from './ui/ConsoleLessonView'
 import { WebLessonView } from './ui/WebLessonView'
+import { TraceLessonView } from './ui/TraceLessonView'
 import { load, save, lastStudent, type Progress } from './progress/store'
 
 type View = { kind: 'home' } | { kind: 'lesson'; lessonId: string }
@@ -62,7 +63,14 @@ export function App() {
 
       <main className={lesson && lesson.kind !== 'quiz' ? 'wide' : undefined}>
         {lesson ? (
-          lesson.kind === 'web' ? (
+          lesson.kind === 'traces' ? (
+            <TraceLessonView
+              lesson={lesson}
+              progress={progress}
+              onProgress={update}
+              onBack={() => setView({ kind: 'home' })}
+            />
+          ) : lesson.kind === 'web' ? (
             <WebLessonView
               lesson={lesson}
               progress={progress}

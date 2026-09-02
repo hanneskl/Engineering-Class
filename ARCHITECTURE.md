@@ -251,4 +251,4 @@ edited without touching the simulator.
 6. **M7 Anonymität** — server logs, cookies.
 7. **Probequali mode.**
 
-Steps 1 to 5 are built and deployed; M7 is next.
+Steps 1 to 6 are built and deployed; the Probequali mode is next.

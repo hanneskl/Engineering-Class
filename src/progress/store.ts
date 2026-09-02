@@ -11,6 +11,7 @@ import type { Plan } from '../model/plan'
 import type { Flow } from '../model/flow'
 import type { Session } from '../model/console'
 import type { Walk } from '../model/web'
+import type { Traces } from '../model/traces'
 
 export type TaskProgress = {
   solved: boolean
@@ -32,6 +33,8 @@ export type Progress = {
   sessions: Record<string, Session>
   /** Packet walks, one per web task. */
   walks: Record<string, Walk>
+  /** Surfing trails, one per trace task. */
+  traces: Record<string, Traces>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -51,6 +54,7 @@ export function emptyProgress(studentName: string): Progress {
     flows: {},
     sessions: {},
     walks: {},
+    traces: {},
   }
 }
 
@@ -71,6 +75,7 @@ export function load(studentName: string): Progress {
       flows: parsed.flows ?? {},
       sessions: parsed.sessions ?? {},
       walks: parsed.walks ?? {},
+      traces: parsed.traces ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -181,6 +186,7 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
   return taskIds.some((id) => {
     const t = progress.tasks[id]
     const walk = progress.walks[id]
+    const trace = progress.traces[id]
     return Boolean(
       t?.solved ||
         t?.attempts ||
@@ -189,7 +195,9 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
         progress.flows[id] ||
         progress.sessions[id]?.entries.length ||
         walk?.seen.length ||
-        walk?.order.length,
+        walk?.order.length ||
+        trace?.visits.length ||
+        trace?.seen.length,
     )
   })
 }
@@ -210,6 +218,7 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
     flows: keep(progress.flows),
     sessions: keep(progress.sessions),
     walks: keep(progress.walks),
+    traces: keep(progress.traces),
   }
 }
 
@@ -219,6 +228,14 @@ export function loadSession(progress: Progress, taskId: string): Session | undef
 
 export function saveSession(progress: Progress, taskId: string, session: Session): Progress {
   return { ...progress, sessions: { ...progress.sessions, [taskId]: session } }
+}
+
+export function loadTraces(progress: Progress, taskId: string): Traces | undefined {
+  return progress.traces[taskId]
+}
+
+export function saveTraces(progress: Progress, taskId: string, traces: Traces): Progress {
+  return { ...progress, traces: { ...progress.traces, [taskId]: traces } }
 }
 
 export function loadWalk(progress: Progress, taskId: string): Walk | undefined {
