@@ -155,7 +155,7 @@ export function Grid(props: GridProps) {
 
   return (
     <div
-      className="grid"
+      className={drag.kind === 'none' ? 'grid' : 'grid dragging'}
       ref={gridRef}
       tabIndex={0}
       onKeyDown={onKeyDown}
@@ -193,7 +193,21 @@ export function Grid(props: GridProps) {
                 {Array.from({ length: columns }, (_, col) => {
                   const pos = { row, col }
                   const a1 = toA1(pos)
-                  const style = sheet.getStyle(a1)
+
+                  // A merged block renders as one cell: the top-left spans it, the rest vanish.
+                  const merge = sheet.merges.find(
+                    (m) =>
+                      row >= Math.min(m.start.row, m.end.row) &&
+                      row <= Math.max(m.start.row, m.end.row) &&
+                      col >= Math.min(m.start.col, m.end.col) &&
+                      col <= Math.max(m.start.col, m.end.col),
+                  )
+                  if (merge && !(row === merge.start.row && col === merge.start.col)) return null
+                  const colSpan = merge ? Math.abs(merge.end.col - merge.start.col) + 1 : undefined
+                  const rowSpan = merge ? Math.abs(merge.end.row - merge.start.row) + 1 : undefined
+
+                  // effectiveStyle applies conditional formatting on top of the student's own.
+                  const style = sheet.effectiveStyle(a1)
                   const formatted = formatValue(sheet.getValue(a1), style.numberFormat)
                   const isAnchor = row === selection.anchor.row && col === selection.anchor.col
                   const inRange = rectContains(rect, pos)
@@ -212,10 +226,18 @@ export function Grid(props: GridProps) {
                     <td
                       key={a1}
                       className={classes.join(' ')}
+                      colSpan={colSpan}
+                      rowSpan={rowSpan}
                       style={{
                         background: style.fill ?? undefined,
                         fontWeight: style.bold ? 700 : undefined,
+                        fontStyle: style.italic ? 'italic' : undefined,
+                        textDecoration: style.underline ? 'underline' : undefined,
+                        fontFamily: style.fontFamily,
+                        fontSize: style.fontSize,
                         color: formatted.negativeRed ? '#c00' : style.color,
+                        whiteSpace: style.wrap ? 'normal' : 'nowrap',
+                        verticalAlign: style.vAlign ?? undefined,
                         textAlign:
                           style.hAlign ??
                           (typeof sheet.getValue(a1) === 'number' ? 'right' : 'left'),

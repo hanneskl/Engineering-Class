@@ -186,12 +186,68 @@ export class Sheet {
     }
   }
 
+  /** Merge a range (skill F1). Merging an already-merged range is a no-op. */
+  merge(range: RangeRef): void {
+    if (!this.isMerged(range)) this.merges.push(range)
+  }
+
+  unmerge(range: RangeRef): void {
+    const index = this.merges.findIndex(
+      (m) => formatA1(m.start) === formatA1(range.start) && formatA1(m.end) === formatA1(range.end),
+    )
+    if (index >= 0) this.merges.splice(index, 1)
+  }
+
+  addConditionalFormat(rule: CfRule): void {
+    this.conditionalFormats.push(rule)
+  }
+
+  /**
+   * The style a cell actually renders with: its own formatting, then any conditional rule
+   * whose condition its current value satisfies, applied in the order the rules were added.
+   *
+   * Kept separate from getStyle so the checker can still ask what the student formatted by
+   * hand as opposed to what a rule painted for them.
+   */
+  effectiveStyle(a1: string | CellRef): CellStyle {
+    const ref = typeof a1 === 'string' ? parseA1(a1) : a1
+    if (!ref) return DEFAULT_STYLE
+    let style = this.getStyle(ref)
+    const value = this.getValue(ref)
+
+    for (const rule of this.conditionalFormats) {
+      if (!rangeContains(rule.range, ref)) continue
+      if (conditionHolds(rule.condition, value)) style = { ...style, ...rule.format }
+    }
+    return style
+  }
+
   isMerged(range: RangeRef): boolean {
     return this.merges.some(
       (merge) =>
         formatA1(merge.start) === formatA1(range.start) &&
         formatA1(merge.end) === formatA1(range.end),
     )
+  }
+}
+
+function rangeContains(range: RangeRef, ref: CellRef): boolean {
+  const top = Math.min(range.start.row, range.end.row)
+  const bottom = Math.max(range.start.row, range.end.row)
+  const left = Math.min(range.start.col, range.end.col)
+  const right = Math.max(range.start.col, range.end.col)
+  return ref.row >= top && ref.row <= bottom && ref.col >= left && ref.col <= right
+}
+
+function conditionHolds(condition: CfRule['condition'], value: CellValue): boolean {
+  if (condition.kind === 'equalText') {
+    return typeof value === 'string' && value.trim().toUpperCase() === condition.text.toUpperCase()
+  }
+  if (typeof value !== 'number') return false
+  switch (condition.kind) {
+    case 'greaterThan': return value > condition.value
+    case 'lessThan': return value < condition.value
+    case 'between': return value >= condition.min && value <= condition.max
   }
 }
 

@@ -57,7 +57,7 @@ describe('gradeSubmission — the authoritative scoring path', () => {
 
 describe('re-seeding blocks tampering with the source data', () => {
   it('ignores an input that would overwrite a seeded cell', () => {
-    const sheet = rebuildSheet(scenarioById(SMV), { B2: '9999', B8: '=SUMME(B2:B6)' })
+    const sheet = rebuildSheet(scenarioById(SMV), { inputs: { B2: "9999", B8: "=SUMME(B2:B6)" } })
     expect(sheet.getValue('B2')).toBe(45)
     expect(sheet.getValue('B8')).toBe(220)
   })

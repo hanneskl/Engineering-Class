@@ -10,6 +10,7 @@
     "drive": "node scripts/drive.mjs",
     "drive:gestures": "node scripts/drive-gestures.mjs",
     "drive:switching": "node scripts/drive-switching.mjs",
+    "drive:formatting": "node scripts/drive-formatting.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

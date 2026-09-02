@@ -1,9 +1,25 @@
-import { formatValue, translateInput, type CellStyle, type Sheet } from '@quali/core'
-import { SCENARIOS, gradeSubmission, scenarioById, totalPoints, type TaskDef } from '@quali/scenarios'
+import {
+  DEFAULT_STYLE,
+  formatValue,
+  translateInput,
+  type CellStyle,
+  type NumberFormat,
+  type Sheet,
+} from '@quali/core'
+import {
+  SCENARIOS,
+  gradeSubmission,
+  scenarioById,
+  serialiseMerges,
+  totalPoints,
+  type Submission,
+  type TaskDef,
+} from '@quali/scenarios'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { backend, hasBackend, signOut, submitAttempt } from './backend.ts'
 import { Login } from './Login.tsx'
 import { Grid } from './Grid.tsx'
+import { Ribbon } from './Ribbon.tsx'
 import { handlePointKey, stopPointing, type EditState } from './editing.ts'
 import {
   canPoint,
@@ -198,11 +214,51 @@ export function App() {
     touch()
   }
 
-  /** Everything the student has entered, which is what the server re-grades. */
-  function currentInputs(): Record<string, string> {
+  function applyStyle(patch: Partial<CellStyle>): void {
+    for (const pos of cellsOf(rect)) sheet.setStyle(toA1(pos), patch)
+    touch()
+  }
+
+  function applyNumberFormat(numberFormat: NumberFormat): void {
+    applyStyle({ numberFormat })
+  }
+
+  /** „Verbinden und zentrieren" is one gesture in Excel, so it is one button here. */
+  function toggleMerge(): void {
+    const range = { start: { row: rect.top, col: rect.left, colAbs: false, rowAbs: false },
+                    end: { row: rect.bottom, col: rect.right, colAbs: false, rowAbs: false } }
+    if (sheet.isMerged(range)) {
+      sheet.unmerge(range)
+    } else {
+      sheet.merge(range)
+      sheet.setStyle(toA1({ row: rect.top, col: rect.left }), { hAlign: 'center' })
+    }
+    touch()
+  }
+
+  const mergedNow = sheet.isMerged({
+    start: { row: rect.top, col: rect.left, colAbs: false, rowAbs: false },
+    end: { row: rect.bottom, col: rect.right, colAbs: false, rowAbs: false },
+  })
+
+  /**
+   * Everything the student has done, which is what gets re-graded.
+   * Formatting has to travel with the inputs — without it no style check can pass, and the
+   * cells a formatting task targets are often ones the scenario seeded.
+   */
+  function currentWork(): Pick<Submission, 'inputs' | 'styles' | 'merges'> {
     const inputs: Record<string, string> = {}
     for (const a1 of sheet.populatedCells()) inputs[a1] = sheet.getInput(a1)
-    return inputs
+
+    const styles: Record<string, Partial<CellStyle>> = {}
+    for (let row = 0; row < scenario.rows; row++) {
+      for (let col = 0; col < scenario.columns; col++) {
+        const a1 = toA1({ row, col })
+        const style = sheet.getStyle(a1)
+        if (style !== DEFAULT_STYLE) styles[a1] = style
+      }
+    }
+    return { inputs, styles, merges: serialiseMerges(sheet) }
   }
 
   /**
@@ -211,8 +267,8 @@ export function App() {
    * is the one that is recorded, and the one we display once it lands.
    */
   async function check(task: TaskDef): Promise<void> {
-    const inputs = currentInputs()
-    const local = gradeSubmission({ scenarioId, taskId: task.id, inputs })
+    const work = currentWork()
+    const local = gradeSubmission({ scenarioId, taskId: task.id, ...work })
     setStates((previous) => ({
       ...previous,
       [task.id]: {
@@ -223,7 +279,7 @@ export function App() {
     }))
     if (!hasBackend) return
 
-    const { grade, error } = await submitAttempt(scenarioId, task.id, inputs)
+    const { grade, error } = await submitAttempt(scenarioId, task.id, work)
     setStates((previous) => ({
       ...previous,
       [task.id]: grade
@@ -322,6 +378,14 @@ export function App() {
               }}
             />
           </div>
+          <Ribbon
+            current={sheet.getStyle(activeA1)}
+            selection={rect}
+            onStyle={applyStyle}
+            onNumberFormat={applyNumberFormat}
+            onMerge={toggleMerge}
+            isMerged={mergedNow}
+          />
           <div className="tab">{sheet.name}</div>
           <Grid
             sheet={sheet}

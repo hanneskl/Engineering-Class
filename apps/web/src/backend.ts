@@ -6,7 +6,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import type { Grade } from '@quali/scenarios'
+import type { Grade, Submission } from '@quali/scenarios'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -52,12 +52,12 @@ export interface SubmitResult {
 export async function submitAttempt(
   scenarioId: string,
   taskId: string,
-  inputs: Record<string, string>,
+  work: Pick<Submission, 'inputs' | 'styles' | 'merges'>,
 ): Promise<SubmitResult> {
   if (!backend) return { grade: null, error: null }
 
   const { data, error } = await backend.functions.invoke<Grade>('check-task', {
-    body: { scenarioId, taskId, inputs },
+    body: { scenarioId, taskId, ...work },
   })
   if (error) return { grade: null, error: error.message }
   return { grade: data ?? null, error: null }

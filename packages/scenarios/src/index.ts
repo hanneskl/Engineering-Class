@@ -9,10 +9,14 @@ import {
   Sheet,
   filledDown,
   hasAbsoluteRef,
+  hasStyle,
   isFormula,
+  isMerged,
   matchesSolution,
+  numberFormatIs,
   usesFunction,
   usesOperator,
+  valueEquals,
   type Check,
 } from '@quali/core'
 
@@ -207,7 +211,124 @@ const felderBerechnen: Scenario = {
   ],
 }
 
-export const SCENARIOS: readonly Scenario[] = [smvWahl, felderBerechnen]
+/* -------------------------------------------------------------------------- */
+/* Vermögen — Quali 2025, Prüfungsteil Excel, Blatt 1                          */
+/* Real data, real task wording. The Musterlösung's per-person totals are      */
+/* 472 / 5.473 / 1.449 / 291 / 100 and the percentages 6,1 / 70,3 / 18,6 /     */
+/* 3,7 / 1,3 %.                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** The fill colours the ribbon offers; tasks name one of them. */
+export const PALETTE = {
+  hellblau: '#cfe2f3',
+  gelb: '#fff2cc',
+  rot: '#f4cccc',
+  gruen: '#d9ead3',
+  weiss: '#ffffff',
+  schwarz: '#000000',
+} as const
+
+const vermoegen: Scenario = {
+  id: 'vermoegen',
+  titleDe: 'Familienvermögen',
+  subtitleDe: 'Quali 2025 · Prüfungsteil Excel · Blatt 1',
+  columns: 8,
+  rows: 15,
+  seed() {
+    const sheet = new Sheet('Tabelle1')
+    sheet.load({
+      B3: 'Name', C3: 'Sparschwein', D3: 'Bankkonto', E3: 'Geldbörse',
+      F3: 'Sofaritze', G3: 'Gesamt', H3: 'Prozent',
+      B4: 'Arthur', C4: 30, D4: 434, E4: 8, F4: 0,
+      B5: 'Hannes', C5: 20, D5: 5232, E5: 221, F5: 0,
+      B6: 'Karin', C6: 14, D6: 1421, E6: 14, F6: 0,
+      B7: 'Max', C7: 27, D7: 234, E7: 30, F7: 0,
+      B8: 'Zola', C8: 0, D8: 0, E8: 0, F8: 100,
+      B15: 'Gesamtvermögen',
+    })
+    sheet.setStyle('B15', { bold: true })
+    return sheet
+  },
+  tasks: [
+    {
+      id: 'verm-titel',
+      skills: ['F1', 'F2'],
+      promptDe:
+        'Verbinde und zentriere die Zellen B1 - H1 und beschrifte sie mit „Familienvermögen". ' +
+        'Wähle als Füllfarbe ein helles Blau.',
+      target: 'B1',
+      checks: [
+        valueEquals('Familienvermögen'),
+        isMerged('B1:H1'),
+        hasStyle({ hAlign: 'center' }, 'B1'),
+        hasStyle({ fill: PALETTE.hellblau }, 'B1'),
+      ],
+      points: 3,
+    },
+    {
+      id: 'verm-gesamt-person',
+      skills: ['N1'],
+      promptDe:
+        'Berechne für jedes Familienmitglied sein Vermögen in den Zellen G4 - G8. ' +
+        'Ziehe die Formel herunter.',
+      target: 'G4',
+      solution: '=SUMME(C4:F4)',
+      checks: [
+        isFormula(),
+        usesFunction('SUMME'),
+        matchesSolution(),
+        filledDown('G4:G8', '=SUMME(C4:F4)'),
+      ],
+      points: 2,
+    },
+    {
+      id: 'verm-zeile-fett',
+      skills: ['F3'],
+      promptDe: 'Formatiere die Zeile 3 fett.',
+      target: 'B3',
+      checks: [hasStyle({ bold: true }, 'B3:H3')],
+      points: 1,
+    },
+    {
+      id: 'verm-zentriert',
+      skills: ['F6'],
+      promptDe:
+        'Formatiere die Zahlen der Zellen C3 - H8 so, dass sie zentriert in der Zelle stehen.',
+      target: 'C3',
+      checks: [hasStyle({ hAlign: 'center' }, 'C3:H8')],
+      points: 2,
+    },
+    {
+      id: 'verm-gesamt',
+      skills: ['N1'],
+      promptDe: 'Berechne in Zelle C15 das gesamte Familienvermögen.',
+      target: 'C15',
+      solution: '=SUMME(G4:G8)',
+      checks: [isFormula(), usesFunction('SUMME'), matchesSolution()],
+      points: 2,
+    },
+    {
+      id: 'verm-prozent',
+      skills: ['C5', 'C7', 'F13'],
+      promptDe:
+        'Formatiere die Zellen H4 - H8 in Prozent mit einer Nachkommastelle und berechne für ' +
+        'jedes Familienmitglied den prozentualen Anteil am Familienvermögen. ' +
+        'Der Bezug auf das Gesamtvermögen muss absolut sein.',
+      target: 'H4',
+      solution: '=G4/$C$15',
+      checks: [
+        isFormula(),
+        hasAbsoluteRef('C15'),
+        matchesSolution(),
+        filledDown('H4:H8', '=G4/$C$15'),
+        numberFormatIs({ kind: 'percent', decimals: 1 }, 'H4:H8'),
+      ],
+      points: 3,
+    },
+  ],
+}
+
+export const SCENARIOS: readonly Scenario[] = [smvWahl, felderBerechnen, vermoegen]
 
 export function scenarioById(id: string): Scenario {
   const found = SCENARIOS.find((scenario) => scenario.id === id)

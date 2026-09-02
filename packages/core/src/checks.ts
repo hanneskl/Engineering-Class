@@ -9,6 +9,7 @@
 import { isKnownFunction, unknownFunctionError } from './functions.ts'
 import { canonical, formatNode, parseFormula, translateNode, walk, type Node } from './parser.ts'
 import { expandRange, formatA1, parseA1, type RangeRef } from './refs.ts'
+import type { CellStyle, CfRule, NumberFormat } from './model.ts'
 import { isFormulaInput, type Sheet } from './sheet.ts'
 import { isError, toText, type CellValue } from './values.ts'
 
@@ -299,4 +300,158 @@ export function runChecks(checks: readonly Check[], ctx: TaskContext): TaskOutco
     if (!result.passed) return { passed: false, messages: [result.message] }
   }
   return { passed: true, messages: [] }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Style-tier checks (skills F1–F18)                                           */
+/* -------------------------------------------------------------------------- */
+
+const STYLE_LABELS: Partial<Record<keyof CellStyle, string>> = {
+  bold: 'fett',
+  italic: 'kursiv',
+  underline: 'unterstrichen',
+  fontFamily: 'Schriftart',
+  fontSize: 'Schriftgröße',
+  color: 'Schriftfarbe',
+  fill: 'Füllfarbe',
+  hAlign: 'horizontale Ausrichtung',
+  vAlign: 'vertikale Ausrichtung',
+  wrap: 'Textumbruch',
+}
+
+function sameColour(a: unknown, b: unknown): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return a === b
+  return a.trim().toLowerCase() === b.trim().toLowerCase()
+}
+
+/**
+ * Every cell in the range must carry these style properties.
+ *
+ * Only the properties named in `patch` are compared, so a task can require bold without
+ * caring what colour the student also chose.
+ */
+export function hasStyle(patch: Partial<CellStyle>, range?: string): Check {
+  return ({ sheet, target }) => {
+    const parsed = parseRangeText(range ?? target)
+    if (!parsed) throw new Error(`Ungültiger Bereich „${range ?? target}".`)
+
+    for (const ref of expandRange(parsed)) {
+      const style = sheet.getStyle(ref)
+      for (const [key, wanted] of Object.entries(patch) as [keyof CellStyle, unknown][]) {
+        const actual = style[key]
+        const equal =
+          key === 'fill' || key === 'color' ? sameColour(actual, wanted) : actual === wanted
+        if (!equal) {
+          const label = STYLE_LABELS[key] ?? String(key)
+          return fail(`In ${formatA1(ref)} fehlt noch die Formatierung: ${label}.`)
+        }
+      }
+    }
+    return OK
+  }
+}
+
+/** The cells must use this number format (skills F10–F15). */
+export function numberFormatIs(wanted: NumberFormat, range?: string): Check {
+  const describe = describeFormat(wanted)
+  return ({ sheet, target }) => {
+    const parsed = parseRangeText(range ?? target)
+    if (!parsed) throw new Error(`Ungültiger Bereich „${range ?? target}".`)
+
+    for (const ref of expandRange(parsed)) {
+      const actual = sheet.getStyle(ref).numberFormat
+      if (!formatsEqual(actual, wanted)) {
+        return fail(`Formatiere ${formatA1(ref)} als ${describe}.`)
+      }
+    }
+    return OK
+  }
+}
+
+function formatsEqual(a: NumberFormat, b: NumberFormat): boolean {
+  if (a.kind !== b.kind) return false
+  switch (b.kind) {
+    case 'number':
+      return a.kind === 'number' && a.decimals === b.decimals
+    case 'percent':
+      return a.kind === 'percent' && a.decimals === b.decimals
+    case 'currency':
+      return a.kind === 'currency' && a.decimals === b.decimals && a.negativeRed === b.negativeRed
+    case 'date':
+      return a.kind === 'date' && a.pattern === b.pattern
+    default:
+      return true
+  }
+}
+
+function describeFormat(format: NumberFormat): string {
+  switch (format.kind) {
+    case 'currency':
+      return `Währung € mit ${format.decimals} Nachkommastellen`
+    case 'percent':
+      return `Prozent mit ${format.decimals} Nachkommastellen`
+    case 'number':
+      return `Zahl mit ${format.decimals} Nachkommastellen`
+    case 'date':
+      return `Datum im Format ${format.pattern}`
+    default:
+      return 'Standard'
+  }
+}
+
+/**
+ * A conditional-formatting rule must exist over this range with this condition (F16–F18).
+ *
+ * Checking the *rule* rather than the resulting colours is the point: painting the cells by
+ * hand would make the sheet look right while teaching nothing, and it would stop being right
+ * the moment a number changed.
+ */
+export function hasConditionalFormat(
+  range: string,
+  condition: CfRule['condition'],
+  format?: Partial<CellStyle>,
+): Check {
+  return ({ sheet }) => {
+    const wanted = parseRangeText(range)
+    if (!wanted) throw new Error(`Ungültiger Bereich „${range}".`)
+
+    const covering = sheet.conditionalFormats.filter(
+      (rule) =>
+        formatA1(rule.range.start) === formatA1(wanted.start) &&
+        formatA1(rule.range.end) === formatA1(wanted.end),
+    )
+    if (covering.length === 0) {
+      return fail(`Für ${range} fehlt noch eine bedingte Formatierung.`)
+    }
+
+    const matching = covering.filter((rule) => conditionsEqual(rule.condition, condition))
+    if (matching.length === 0) {
+      return fail(`Die Bedingung der bedingten Formatierung für ${range} stimmt noch nicht.`)
+    }
+    if (!format) return OK
+
+    const satisfied = matching.some((rule) =>
+      (Object.entries(format) as [keyof CellStyle, unknown][]).every(([key, value]) => {
+        const actual = (rule.format as Record<string, unknown>)[key]
+        return key === 'fill' || key === 'color' ? sameColour(actual, value) : actual === value
+      }),
+    )
+    return satisfied
+      ? OK
+      : fail(`Die bedingte Formatierung für ${range} färbt noch nicht wie verlangt.`)
+  }
+}
+
+function conditionsEqual(a: CfRule['condition'], b: CfRule['condition']): boolean {
+  if (a.kind !== b.kind) return false
+  switch (b.kind) {
+    case 'greaterThan':
+      return a.kind === 'greaterThan' && a.value === b.value
+    case 'lessThan':
+      return a.kind === 'lessThan' && a.value === b.value
+    case 'between':
+      return a.kind === 'between' && a.min === b.min && a.max === b.max
+    case 'equalText':
+      return a.kind === 'equalText' && a.text.toUpperCase() === b.text.toUpperCase()
+  }
 }
