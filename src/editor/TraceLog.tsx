@@ -17,6 +17,7 @@ import {
   visit,
   type Traces,
 } from '../model/traces'
+import { FrageCard } from './FrageCard'
 
 type Ansicht = 'server' | 'tracker' | 'provider'
 
@@ -141,33 +142,16 @@ export function TraceLog({
           {fragen.map((id) => {
             const frage = traceFrage(id)
             if (!frage) return null
-            const chosen = traces.answers[frage.id]
             return (
-              <div key={id} className="walk-frage">
-                <p className="frage-text">{frage.text}</p>
-                <div className="frage-optionen">
-                  {frage.optionen.map((o) => {
-                    const picked = chosen === o.text
-                    return (
-                      <button
-                        key={o.text}
-                        className={`option${picked ? (o.ok ? ' ok' : ' bad') : ''}`}
-                        aria-pressed={picked}
-                        onClick={() => onTraces(answerTrace(traces, frage, o))}
-                      >
-                        {o.text}
-                      </button>
-                    )
-                  })}
-                </div>
-                {frage.optionen
-                  .filter((o) => o.text === chosen)
-                  .map((o) => (
-                    <p key={o.text} className={`frage-warum${o.ok ? ' ok' : ' bad'}`}>
-                      {o.warum}
-                    </p>
-                  ))}
-              </div>
+              <FrageCard
+                key={id}
+                text={frage.text}
+                optionen={frage.optionen}
+                chosen={traces.answers[frage.id]}
+                onChoose={(o) =>
+                  onTraces(answerTrace(traces, frage, frage.optionen.find((x) => x.text === o.text)!))
+                }
+              />
             )
           })}
         </section>

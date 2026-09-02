@@ -15,6 +15,7 @@ import {
   type Walk,
   type WalkContext,
 } from '../model/web'
+import { FrageCard } from './FrageCard'
 
 /**
  * The packet walk: an address bar, the road the packet takes, and one card per
@@ -253,33 +254,20 @@ export function PacketWalk({
           )}
 
           {frage && (
-            <div className="walk-frage">
-              <p className="frage-text">{frage.text}</p>
-              <div className="frage-optionen">
-                {frage.optionen.map((o) => {
-                  const picked = chosen === o.text
-                  const good = o.ok(ctx)
-                  return (
-                    <button
-                      key={o.text}
-                      className={`option${picked ? (good ? ' ok' : ' bad') : ''}`}
-                      aria-pressed={picked}
-                      onClick={() => onWalk(answerFrage(walk, ctx, frage, o))}
-                    >
-                      {o.text}
-                    </button>
-                  )
-                })}
-              </div>
-              {chosen &&
-                frage.optionen
-                  .filter((o) => o.text === chosen)
-                  .map((o) => (
-                    <p key={o.text} className={`frage-warum${o.ok(ctx) ? ' ok' : ' bad'}`}>
-                      {o.warum}
-                    </p>
-                  ))}
-            </div>
+            <FrageCard
+              text={frage.text}
+              optionen={frage.optionen.map((o) => ({
+                text: o.text,
+                ok: o.ok(ctx),
+                warum: o.warum,
+              }))}
+              chosen={chosen}
+              onChoose={(o) =>
+                onWalk(
+                  answerFrage(walk, ctx, frage, frage.optionen.find((x) => x.text === o.text)!),
+                )
+              }
+            />
           )}
 
           <div className="walk-controls">

@@ -84,7 +84,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     media: ['cable'],
     hasIp: false,
     funktion:
-      'Meldet sich beim Provider an und stellt die Internetverbindung her.',
+      'Authentifiziert sich beim Provider und stellt die Internetverbindung her.',
   },
   router: {
     label: 'Router',
@@ -93,7 +93,8 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     media: ['cable', 'wifi'],
     hasIp: true,
     funktion:
-      'Leitet Daten zwischen deinem Heimnetz und dem Internet weiter und vergibt die IP-Adressen (DHCP).',
+      'Leitet Daten zwischen verschiedenen Netzwerken weiter, meist zwischen Heimnetz und ' +
+      'Internet. Er vergibt außerdem die IP-Adressen (DHCP).',
   },
   switch: {
     label: 'Switch',
@@ -101,7 +102,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     ports: 5,
     media: ['cable'],
     hasIp: true,
-    funktion: 'Verbindet mehrere Geräte über Kabel miteinander (LAN).',
+    funktion: 'Verbindet mehrere Geräte in einem kabelgebundenen Netzwerk (LAN) miteinander.',
   },
   accesspoint: {
     label: 'Access Point',
@@ -110,7 +111,8 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     media: ['cable', 'wifi'],
     hasIp: true,
     funktion:
-      'Bringt kabellose Geräte ins Netz. Er selbst hängt per Kabel am Router.',
+      'Verbindet kabellose Geräte (WLAN) mit einem kabelgebundenen Netzwerk (LAN). ' +
+      'Er selbst hängt per Kabel am Router.',
   },
   repeater: {
     label: 'WLAN-Repeater',
@@ -119,7 +121,8 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     media: ['wifi'],
     hasIp: true,
     funktion:
-      'Verlängert das WLAN. Er ist selbst per WLAN verbunden, nicht per Kabel.',
+      'Spezieller Access Point, der selbst per WLAN und nicht per Kabel mit dem Router ' +
+      'verbunden ist — so verlängert er die Reichweite.',
   },
   pc: { label: 'PC', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Ein Computer im Netzwerk.' },
   laptop: { label: 'Laptop', group: 'geraete', ports: 1, media: ['cable', 'wifi'], hasIp: true, funktion: 'Ein tragbarer Computer.' },
@@ -148,7 +151,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     ports: 1,
     media: ['cable'],
     hasIp: true,
-    funktion: 'Stellt einen Dienst bereit, zum Beispiel Webseiten.',
+    funktion: 'Stellt Dienste im Netzwerk bereit, zum Beispiel Webseiten.',
   },
   nas: {
     label: 'NAS',
@@ -156,7 +159,7 @@ export const DEVICES: Record<DeviceType, DeviceSpec> = {
     ports: 1,
     media: ['cable'],
     hasIp: true,
-    funktion: 'Ein Speicher, auf den alle im Netzwerk zugreifen können.',
+    funktion: 'Stellt Speicherplatz im Netzwerk bereit, auf den alle zugreifen können.',
   },
 }
 

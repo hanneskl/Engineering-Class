@@ -12,6 +12,7 @@ import type { Flow } from '../model/flow'
 import type { Session } from '../model/console'
 import type { Walk } from '../model/web'
 import type { Traces } from '../model/traces'
+import type { Matches } from '../model/match'
 
 export type TaskProgress = {
   solved: boolean
@@ -35,6 +36,8 @@ export type Progress = {
   walks: Record<string, Walk>
   /** Surfing trails, one per trace task. */
   traces: Record<string, Traces>
+  /** Sorted cards, one per match task. */
+  matches: Record<string, Matches>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -55,6 +58,7 @@ export function emptyProgress(studentName: string): Progress {
     sessions: {},
     walks: {},
     traces: {},
+    matches: {},
   }
 }
 
@@ -76,6 +80,7 @@ export function load(studentName: string): Progress {
       sessions: parsed.sessions ?? {},
       walks: parsed.walks ?? {},
       traces: parsed.traces ?? {},
+      matches: parsed.matches ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -187,6 +192,7 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
     const t = progress.tasks[id]
     const walk = progress.walks[id]
     const trace = progress.traces[id]
+    const match = progress.matches[id]
     return Boolean(
       t?.solved ||
         t?.attempts ||
@@ -197,7 +203,9 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
         walk?.seen.length ||
         walk?.order.length ||
         trace?.visits.length ||
-        trace?.seen.length,
+        trace?.seen.length ||
+        (match && Object.keys(match.gelegt).length) ||
+        (match && Object.keys(match.answers).length),
     )
   })
 }
@@ -219,6 +227,7 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
     sessions: keep(progress.sessions),
     walks: keep(progress.walks),
     traces: keep(progress.traces),
+    matches: keep(progress.matches),
   }
 }
 
@@ -228,6 +237,14 @@ export function loadSession(progress: Progress, taskId: string): Session | undef
 
 export function saveSession(progress: Progress, taskId: string, session: Session): Progress {
   return { ...progress, sessions: { ...progress.sessions, [taskId]: session } }
+}
+
+export function loadMatches(progress: Progress, taskId: string): Matches | undefined {
+  return progress.matches[taskId]
+}
+
+export function saveMatches(progress: Progress, taskId: string, matches: Matches): Progress {
+  return { ...progress, matches: { ...progress.matches, [taskId]: matches } }
 }
 
 export function loadTraces(progress: Progress, taskId: string): Traces | undefined {

@@ -248,6 +248,9 @@ edited without touching the simulator.
 5. **Internet world + DNS + the HTTP packet walk** — M6, the centrepiece and the
    hardest part.
 6. **M7 Anonymität** — server logs, cookies.
+7. **M1 Geräte & Komponenten** — the Zuordnung the exam opens with. Built last
+   on purpose: by then the devices had names, icons and functions everywhere
+   else in the tool, so the module only had to ask about them.
 
-All six are built and deployed. What is left is M1 as a module of its own; its
-content currently lives in M2's inspector.
+All of it is built and deployed. The one task still open is T1.6, a walkthrough
+of a simulated router web interface.

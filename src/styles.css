@@ -531,7 +531,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .mitleser.safe { background: var(--good-bg); color: var(--good); }
 
-.walk-frage {
+.frage {
   margin-top: .9rem; padding: .7rem .8rem;
   background: var(--hint-bg); border: 1px solid var(--hint-line); border-radius: 8px;
 }
@@ -653,3 +653,76 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .feld-warum.bad { color: var(--muted); }
 
 .trace-fragen { padding: 0 1rem 1rem; display: grid; gap: .7rem; }
+
+/* ---------- M1: the Zuordnung board ---------- */
+
+.board {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 1rem;
+}
+.board-auftrag { margin: 0 0 .9rem; color: var(--muted); }
+
+.plaetze {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: .6rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+/* Many places read better as a tidy block than as one long row with a
+   leftover at the end: two columns on a phone, four on a laptop. */
+.plaetze.viele { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 760px) {
+  .plaetze.viele { grid-template-columns: repeat(4, 1fr); }
+}
+/* Ranks read as a ladder, so they go one under the other. */
+.plaetze.rang { grid-template-columns: 1fr; }
+.plaetze.rang .platz { display: grid; grid-template-columns: 190px 1fr; gap: .6rem; align-items: stretch; }
+
+.platz { display: grid; gap: .4rem; }
+.platz-ziel {
+  display: grid; justify-items: center; gap: .2rem;
+  padding: .6rem .5rem; border-radius: 9px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  width: 100%;
+}
+.platz-ziel:disabled { cursor: default; opacity: 1; }
+/* Only lights up while a card is waiting to be put down. */
+.platz-ziel.offen { border-color: var(--accent); border-style: dashed; background: var(--surface); }
+.platz-rang {
+  width: 1.5rem; height: 1.5rem; display: grid; place-items: center;
+  border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  font-size: .78rem; font-weight: 800;
+}
+.platz-icon { color: var(--muted); line-height: 0; }
+.platz-label { font-weight: 700; font-size: .95rem; }
+.platz-sub { color: var(--muted); font-size: .8rem; }
+.platz-karten { display: grid; gap: .3rem; align-content: start; }
+.platz-leer {
+  padding: .35rem .5rem; border: 1px dashed var(--line); border-radius: 7px;
+  color: var(--muted); font-size: .8rem; text-align: center;
+}
+
+.karte {
+  text-align: left; padding: .45rem .6rem; border-radius: 7px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font-size: .9rem; line-height: 1.35;
+}
+.karte.in-hand { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.karte.gelegt { background: var(--bg); }
+.karte.gelegt.richtig { border-color: var(--good); }
+.karte.gelegt.falsch { border-color: var(--bad); background: var(--bad-bg); color: var(--bad); }
+
+.pile {
+  margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--line);
+  display: grid; gap: .4rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.board-hinweis { margin: .7rem 0 0; color: var(--accent); font-size: .9rem; font-weight: 600; }
+
+.board-verdict { margin: 1rem 0 0; font-size: .92rem; }
+.board-verdict.ok { color: var(--good); font-weight: 700; }
+.board-verdict.bad p { margin: 0 0 .4rem; color: var(--bad); font-weight: 700; }
+.board-verdict.bad ul { margin: 0; padding-left: 1.1rem; color: var(--muted); display: grid; gap: .3rem; }
+.board-verdict.bad strong { color: var(--ink); }
+
+.board-fragen { display: grid; gap: .7rem; margin-top: 1rem; }
+.board-fragen .frage { margin-top: 0; }

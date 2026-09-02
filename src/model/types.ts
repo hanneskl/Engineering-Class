@@ -285,6 +285,47 @@ export function traceZielMet(
   return traceZielFindings(state, ziel).length === 0
 }
 
+/** Modules where the student sorts cards into places. */
+export type MatchZiel = {
+  text: string
+  rules: import('./matchRules').MatchRule[]
+}
+
+export type MatchTask = {
+  id: string
+  title: string
+  brief: string
+  ziele: MatchZiel[]
+  hints: Hints
+  /** The board. A task may be questions only, and then have none. */
+  zuordnung?: import('./match').Zuordnung
+  /** Questions asked under the board. */
+  fragen?: import('./frage').Frage[]
+}
+
+export type MatchLesson = LessonBase & {
+  kind: 'match'
+  tasks: MatchTask[]
+}
+
+export function matchTaskRules(task: MatchTask): import('./matchRules').MatchRule[] {
+  return task.ziele.flatMap((z) => z.rules)
+}
+
+export function matchZielFindings(
+  state: import('./matchRules').MatchState,
+  ziel: MatchZiel,
+): import('./rules').Finding[] {
+  return ziel.rules.flatMap((rule) => rule(state))
+}
+
+export function matchZielMet(
+  state: import('./matchRules').MatchState,
+  ziel: MatchZiel,
+): boolean {
+  return matchZielFindings(state, ziel).length === 0
+}
+
 export type Lesson =
   | QuizLesson
   | BuildLesson
@@ -292,3 +333,4 @@ export type Lesson =
   | ConsoleLesson
   | WebLesson
   | TraceLesson
+  | MatchLesson

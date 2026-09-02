@@ -20,10 +20,11 @@ npm run build    # production build into dist/
 Pushing to `main` deploys to GitHub Pages —
 [hanneskl.github.io/Network-Education](https://hanneskl.github.io/Network-Education/).
 
-**Built so far:** M2 (Netzwerk zeichnen), M5 (Netzwerkbefehle), M6 (der Weg
-einer Internetseite), M7 (Spuren im Internet), M4 (Binärzahlen), M8 (Begriffe &
-Abkürzungen) and M9 (Flussdiagramme). Still to come: M1 (Geräte & Komponenten), whose content
-currently lives in M2's inspector.
+**Built so far:** all eight modules — M1 (Geräte & Komponenten), M2 (Netzwerk
+zeichnen), M5 (Netzwerkbefehle), M6 (der Weg einer Internetseite), M7 (Spuren im
+Internet), M4 (Binärzahlen), M8 (Begriffe & Abkürzungen) and M9
+(Flussdiagramme). The one task still open is T1.6, the walkthrough of a
+simulated router web interface.
 
 ---
 
