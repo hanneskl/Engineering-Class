@@ -167,12 +167,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .bar { display: block; height: 7px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: .45rem; }
 .bar-fill { display: block; height: 100%; background: var(--good); transition: width .25s ease; }
 
-.soon {
-  margin-top: 2rem; padding: 1rem 1.1rem;
-  border: 1px dashed var(--line); border-radius: var(--radius);
-}
-.soon h3 { margin: 0 0 .35rem; font-size: .95rem; color: var(--muted); }
-.soon p { margin: 0; color: var(--muted); font-size: .92rem; }
 
 .export { margin-top: 2rem; }
 .export p { color: var(--muted); font-size: .85rem; margin: .5rem 0 0; }

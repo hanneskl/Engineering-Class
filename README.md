@@ -22,8 +22,8 @@ Pushing to `main` deploys to GitHub Pages —
 
 **Built so far:** M2 (Netzwerk zeichnen), M5 (Netzwerkbefehle), M6 (der Weg
 einer Internetseite), M7 (Spuren im Internet), M4 (Binärzahlen), M8 (Begriffe &
-Abkürzungen) and M9 (Flussdiagramme). Still to come: M1 (Geräte & Komponenten
-— currently taught inside M2's inspector) and a Probequali mode.
+Abkürzungen) and M9 (Flussdiagramme). Still to come: M1 (Geräte & Komponenten), whose content
+currently lives in M2's inspector.
 
 ---
 

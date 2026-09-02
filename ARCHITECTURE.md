@@ -175,10 +175,9 @@ send it in, exactly as they already mail homework to `hannes@kleist.com`.
 Modules unlock in order M1 → M8. The pure quiz modules (M4 Binärzahlen, M8
 Abkürzungen) are always available as free practice.
 
-**Probequali mode** is the capstone: a timed mock covering the networking and
-binary portion of the exam — 16 of the 30 theory points — drawing on real
-questions from 2019–2026. Since the whole tool exists for exam preparation and
-runs unsupervised, this is the natural motivator and the natural end state.
+A timed Probequali mode was considered as a capstone and dropped: the modules
+already carry the exam questions, and a mock exam with a clock is the one thing
+in here that would need a teacher in the room to be worth anything.
 
 ---
 
@@ -249,6 +248,6 @@ edited without touching the simulator.
 5. **Internet world + DNS + the HTTP packet walk** — M6, the centrepiece and the
    hardest part.
 6. **M7 Anonymität** — server logs, cookies.
-7. **Probequali mode.**
 
-Steps 1 to 6 are built and deployed; the Probequali mode is next.
+All six are built and deployed. What is left is M1 as a module of its own; its
+content currently lives in M2's inspector.

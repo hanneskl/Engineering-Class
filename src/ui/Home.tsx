@@ -112,14 +112,6 @@ export function Home({
         })}
       </div>
 
-      <section className="soon">
-        <h3>Kommt später dazu</h3>
-        <p>
-          Ein Probequali: Aufgaben aus allen Bereichen gemischt, wie in der echten
-          Prüfung — mit Zeit und Punkten.
-        </p>
-      </section>
-
       <div className="export">
         <button className="ghost" onClick={() => exportProgress(progress)}>
           Fortschritt als Datei speichern
