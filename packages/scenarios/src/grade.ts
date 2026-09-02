@@ -13,6 +13,7 @@ import {
   Sheet,
   type CellStyle,
   type CfRule,
+  type ChartSpec,
   type RangeRef,
 } from '@quali/core'
 import { scenarioById, type Scenario, type TaskDef } from './index.ts'
@@ -31,6 +32,7 @@ export interface Submission {
   /** Merged ranges as `"B1:H1"`. */
   readonly merges?: readonly string[]
   readonly conditionalFormats?: readonly CfRule[]
+  readonly charts?: readonly ChartSpec[]
   /** Per-student data randomisation. Reserved; scenarios are not yet randomised. */
   readonly seed?: number
 }
@@ -74,6 +76,9 @@ export function rebuildSheet(scenario: Scenario, submission: Omit<Submission, 's
   }
   for (const rule of submission.conditionalFormats ?? []) {
     sheet.addConditionalFormat(rule)
+  }
+  for (const chart of submission.charts ?? []) {
+    sheet.addChart(chart)
   }
   return sheet
 }

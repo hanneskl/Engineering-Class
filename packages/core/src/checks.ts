@@ -9,7 +9,7 @@
 import { isKnownFunction, unknownFunctionError } from './functions.ts'
 import { canonical, formatNode, parseFormula, translateNode, walk, type Node } from './parser.ts'
 import { expandRange, formatA1, parseA1, type RangeRef } from './refs.ts'
-import type { CellStyle, CfRule, NumberFormat } from './model.ts'
+import type { CellStyle, CfRule, ChartKind, ChartSpec, NumberFormat } from './model.ts'
 import { isFormulaInput, type Sheet } from './sheet.ts'
 import { isError, toText, type CellValue } from './values.ts'
 
@@ -453,5 +453,90 @@ function conditionsEqual(a: CfRule['condition'], b: CfRule['condition']): boolea
       return a.kind === 'between' && a.min === b.min && a.max === b.max
     case 'equalText':
       return a.kind === 'equalText' && a.text.toUpperCase() === b.text.toUpperCase()
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Chart checks (skills D1–D11)                                                */
+/* -------------------------------------------------------------------------- */
+
+const CHART_NAMES: Record<ChartKind, string> = {
+  column: 'Säulendiagramm',
+  bar: 'Balkendiagramm',
+  pie: 'Kreisdiagramm',
+  line: 'Liniendiagramm',
+  area: 'Flächendiagramm',
+}
+
+export interface ChartRequirement {
+  readonly kind: ChartKind
+  /** The range the chart must read from — skill D6, and the part students get wrong. */
+  readonly source: string
+  readonly title?: string
+  readonly dataLabels?: ChartSpec['dataLabels']
+  readonly axisTitles?: { readonly x?: string; readonly y?: string }
+}
+
+/**
+ * A chart of this kind must exist over this range.
+ *
+ * Reported one requirement at a time: a student who picked the wrong range should hear about
+ * the range, not be told the whole task is wrong.
+ */
+export function hasChart(requirement: ChartRequirement): Check {
+  const name = CHART_NAMES[requirement.kind]
+  return ({ sheet }) => {
+    const wanted = parseRangeText(requirement.source)
+    if (!wanted) throw new Error(`Ungültiger Bereich „${requirement.source}".`)
+
+    const ofKind = sheet.charts.filter((chart) => chart.kind === requirement.kind)
+    if (ofKind.length === 0) {
+      return fail(
+        sheet.charts.length === 0
+          ? `Es fehlt noch ein ${name}.`
+          : `Das Diagramm ist kein ${name}.`,
+      )
+    }
+
+    const onRange = ofKind.filter(
+      (chart) =>
+        formatA1(chart.source.start) === formatA1(wanted.start) &&
+        formatA1(chart.source.end) === formatA1(wanted.end),
+    )
+    if (onRange.length === 0) {
+      return fail(`Das ${name} muss die Daten aus ${requirement.source} verwenden.`)
+    }
+
+    if (requirement.title !== undefined) {
+      const titled = onRange.filter(
+        (chart) => (chart.title ?? '').trim().toUpperCase() === requirement.title!.toUpperCase(),
+      )
+      if (titled.length === 0) {
+        return fail(`Gib dem ${name} den Titel „${requirement.title}".`)
+      }
+    }
+
+    if (requirement.dataLabels !== undefined) {
+      const labelled = onRange.some((chart) => chart.dataLabels === requirement.dataLabels)
+      if (!labelled) {
+        const wantedLabel =
+          requirement.dataLabels === 'percent' ? 'Prozentwerte' :
+          requirement.dataLabels === 'value' ? 'Werte' : 'keine'
+        return fail(`Stelle die Datenbeschriftungen des ${name}s auf ${wantedLabel}.`)
+      }
+    }
+
+    if (requirement.axisTitles) {
+      const ok = onRange.some(
+        (chart) =>
+          (requirement.axisTitles!.x === undefined ||
+            chart.axisTitles.x === requirement.axisTitles!.x) &&
+          (requirement.axisTitles!.y === undefined ||
+            chart.axisTitles.y === requirement.axisTitles!.y),
+      )
+      if (!ok) return fail(`Beschrifte die Achsen des ${name}s.`)
+    }
+
+    return OK
   }
 }

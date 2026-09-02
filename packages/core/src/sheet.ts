@@ -198,6 +198,20 @@ export class Sheet {
     if (index >= 0) this.merges.splice(index, 1)
   }
 
+  addChart(spec: ChartSpec): void {
+    this.charts.push(spec)
+  }
+
+  removeChart(id: string): void {
+    const index = this.charts.findIndex((chart) => chart.id === id)
+    if (index >= 0) this.charts.splice(index, 1)
+  }
+
+  updateChart(id: string, patch: Partial<ChartSpec>): void {
+    const index = this.charts.findIndex((chart) => chart.id === id)
+    if (index >= 0) this.charts[index] = { ...this.charts[index]!, ...patch }
+  }
+
   addConditionalFormat(rule: CfRule): void {
     this.conditionalFormats.push(rule)
   }

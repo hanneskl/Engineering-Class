@@ -9,6 +9,7 @@ import {
   Sheet,
   filledDown,
   hasAbsoluteRef,
+  hasChart,
   hasStyle,
   isFormula,
   isMerged,
@@ -114,6 +115,24 @@ const smvWahl: Scenario = {
         filledDown('D2:D6', '=WENN(B2>50;"Gewählt";"Nicht gewählt")'),
       ],
       points: 3,
+    },
+    {
+      id: 'smv-diagramm',
+      skills: ['D3', 'D6', 'D7', 'D9'],
+      promptDe:
+        'Erstelle ein Kreisdiagramm, das die Stimmenverteilung aus A2:B6 abbildet. ' +
+        'Gib ihm den Titel „Stimmenverteilung SMV-Wahl" und zeige die Datenbeschriftungen ' +
+        'als Prozentwerte an.',
+      target: 'A2',
+      checks: [
+        hasChart({
+          kind: 'pie',
+          source: 'A2:B6',
+          title: 'Stimmenverteilung SMV-Wahl',
+          dataLabels: 'percent',
+        }),
+      ],
+      points: 4,
     },
   ],
 }

@@ -11,6 +11,7 @@
     "drive:gestures": "node scripts/drive-gestures.mjs",
     "drive:switching": "node scripts/drive-switching.mjs",
     "drive:formatting": "node scripts/drive-formatting.mjs",
+    "drive:charts": "node scripts/drive-charts.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

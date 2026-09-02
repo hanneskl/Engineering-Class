@@ -184,9 +184,13 @@ them and any wrong answer would grade as correct.
 3. ~~**Supabase auth + attempt logging + the `check-task` edge function.**~~ Written. The
    grading path is covered by tests; the deployed function and the SQL have not been run
    against a live project yet.
-4. Formatting ribbon (the 18 features) + style checks.
+4. ~~**Formatting ribbon + style checks.**~~ Done.
 5. The remaining eight scenarios.
-6. **Charts last** — D1–D11 are the largest UI lift for the fewest exam points.
+6. ~~**Charts.**~~ Column, bar, pie, line and area, drawn as dependency-free inline SVG in
+   Excel's own accent colours so a student recognises what the exam will produce. The palette
+   does not pass the usual lightness/chroma bands — Excel's grey slot reads grey and its
+   yellow is pale — but CVD separation does pass, and the relief the contrast check demands is
+   direct labels, which the 2026 paper asks for anyway.
 7. Teacher dashboard.
 8. Exam mode — a timer and a results screen over the existing checker.
 

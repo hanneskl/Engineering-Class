@@ -3,6 +3,7 @@ import {
   formatValue,
   translateInput,
   type CellStyle,
+  type ChartKind,
   type NumberFormat,
   type Sheet,
 } from '@quali/core'
@@ -20,6 +21,7 @@ import { backend, hasBackend, signOut, submitAttempt } from './backend.ts'
 import { Login } from './Login.tsx'
 import { Grid } from './Grid.tsx'
 import { Ribbon, borderWeights, type BorderPreset } from './Ribbon.tsx'
+import { Chart } from './Chart.tsx'
 import { handlePointKey, stopPointing, type EditState } from './editing.ts'
 import {
   canPoint,
@@ -262,12 +264,28 @@ export function App() {
     end: { row: rect.bottom, col: rect.right, colAbs: false, rowAbs: false },
   })
 
+  /** Insert a chart reading the current selection — Excel's "Einfügen → Diagramm". */
+  function insertChart(kind: ChartKind): void {
+    sheet.addChart({
+      id: `chart-${Date.now()}`,
+      kind,
+      source: {
+        start: { row: rect.top, col: rect.left, colAbs: false, rowAbs: false },
+        end: { row: rect.bottom, col: rect.right, colAbs: false, rowAbs: false },
+      },
+      title: null,
+      axisTitles: { x: null, y: null },
+      dataLabels: kind === 'pie' ? 'percent' : 'none',
+    })
+    touch()
+  }
+
   /**
    * Everything the student has done, which is what gets re-graded.
    * Formatting has to travel with the inputs — without it no style check can pass, and the
    * cells a formatting task targets are often ones the scenario seeded.
    */
-  function currentWork(): Pick<Submission, 'inputs' | 'styles' | 'merges'> {
+  function currentWork(): Pick<Submission, 'inputs' | 'styles' | 'merges' | 'charts'> {
     const inputs: Record<string, string> = {}
     for (const a1 of sheet.populatedCells()) inputs[a1] = sheet.getInput(a1)
 
@@ -279,7 +297,7 @@ export function App() {
         if (style !== DEFAULT_STYLE) styles[a1] = style
       }
     }
-    return { inputs, styles, merges: serialiseMerges(sheet) }
+    return { inputs, styles, merges: serialiseMerges(sheet), charts: [...sheet.charts] }
   }
 
   /**
@@ -345,6 +363,15 @@ export function App() {
 
       <main>
         <section className="sheet-pane">
+          <Ribbon
+            current={sheet.getStyle(activeA1)}
+            onStyle={applyStyle}
+            onNumberFormat={applyNumberFormat}
+            onBorders={applyBorders}
+            onMerge={toggleMerge}
+            isMerged={mergedNow}
+            onInsertChart={insertChart}
+          />
           <div className="formula-bar">
             <span className="address">{rectLabel(rect)}</span>
             <input
@@ -399,14 +426,6 @@ export function App() {
               }}
             />
           </div>
-          <Ribbon
-            current={sheet.getStyle(activeA1)}
-            onStyle={applyStyle}
-            onNumberFormat={applyNumberFormat}
-            onBorders={applyBorders}
-            onMerge={toggleMerge}
-            isMerged={mergedNow}
-          />
           <div className="tab">{sheet.name}</div>
           <Grid
             sheet={sheet}
@@ -424,6 +443,47 @@ export function App() {
             copiedRect={clipboard?.rect ?? null}
             revision={revision}
           />
+          {sheet.charts.length > 0 && (
+            <div className="charts">
+              {sheet.charts.map((spec) => (
+                <div className="chart-card" key={spec.id}>
+                  <Chart sheet={sheet} spec={spec} />
+                  <div className="chart-controls">
+                    <input
+                      value={spec.title ?? ''}
+                      placeholder="Diagrammtitel"
+                      onChange={(event) => {
+                        sheet.updateChart(spec.id, { title: event.target.value || null })
+                        touch()
+                      }}
+                    />
+                    <select
+                      value={spec.dataLabels}
+                      title="Datenbeschriftungen"
+                      onChange={(event) => {
+                        sheet.updateChart(spec.id, {
+                          dataLabels: event.target.value as typeof spec.dataLabels,
+                        })
+                        touch()
+                      }}
+                    >
+                      <option value="none">Keine Beschriftung</option>
+                      <option value="value">Werte</option>
+                      <option value="percent">Prozentwerte</option>
+                    </select>
+                    <button
+                      className="ghost small drop"
+                      title="Diagramm löschen"
+                      onClick={() => { sheet.removeChart(spec.id); touch() }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <p className="hint">
             Ziehen am kleinen Quadrat unten rechts füllt die Formel weiter · Strg+C / Strg+V
             kopiert und fügt ein · beim Schreiben einer Formel fügt ein Klick auf eine Zelle

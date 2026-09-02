@@ -1,4 +1,4 @@
-import type { BorderWeight, CellStyle, NumberFormat } from '@quali/core'
+import type { BorderWeight, CellStyle, ChartKind, NumberFormat } from '@quali/core'
 import { useEffect, useRef, useState } from 'react'
 
 export type BorderPreset = 'all' | 'outer' | 'thickOuter' | 'none'
@@ -11,6 +11,7 @@ interface RibbonProps {
   onBorders: (preset: BorderPreset) => void
   onMerge: () => void
   isMerged: boolean
+  onInsertChart: (kind: ChartKind) => void
 }
 
 const FONTS = ['Calibri', 'Aptos Narrow', 'Arial', 'Arial Black', 'Times New Roman', 'Courier New']
@@ -35,6 +36,14 @@ const FONT_COLOURS: [string, string][] = [
   ['Blau', '#1d4ed8'],
   ['Grün', '#207245'],
   ['Grau', '#6b7280'],
+]
+
+const CHARTS: [string, ChartKind][] = [
+  ['Säulendiagramm', 'column'],
+  ['Balkendiagramm', 'bar'],
+  ['Kreisdiagramm', 'pie'],
+  ['Liniendiagramm', 'line'],
+  ['Flächendiagramm', 'area'],
 ]
 
 const BORDERS: [string, BorderPreset][] = [
@@ -79,6 +88,7 @@ export function Ribbon({
   onBorders,
   onMerge,
   isMerged,
+  onInsertChart,
 }: RibbonProps) {
   const [menu, setMenu] = useState<string | null>(null)
   const toggle = (name: string) => setMenu((open) => (open === name ? null : name))
@@ -288,6 +298,22 @@ export function Ribbon({
         </div>
 
         <div className="rgroup">
+          <div className="split">
+            <button className="tool wide" title="Diagramm einfügen" onClick={() => onInsertChart('column')}>
+              <ChartIcon />
+            </button>
+            <button className="chev" title="Diagrammtyp wählen" onClick={() => toggle('chart')}>⌄</button>
+            <Menu open={menu === 'chart'} onClose={close}>
+              {CHARTS.map(([label, kind]) => (
+                <button key={kind} className="menu-item" onClick={() => { onInsertChart(kind); close() }}>
+                  {label}
+                </button>
+              ))}
+            </Menu>
+          </div>
+        </div>
+
+        <div className="rgroup">
           <select
             className="numfmt"
             value={formatKey(format)}
@@ -379,6 +405,17 @@ function FontColourIcon({ colour }: { colour: string }) {
     <svg viewBox="0 0 16 18" className="ico tallico" aria-hidden>
       <text x="8" y="11" textAnchor="middle" className="bigA">A</text>
       <rect x="1" y="14" width="14" height="3.2" fill={colour} stroke="#9ca3af" strokeWidth="0.6" />
+    </svg>
+  )
+}
+
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 18 16" className="ico" aria-hidden>
+      <line x1="1.5" y1="14" x2="16.5" y2="14" />
+      <rect x="3" y="8" width="3" height="6" className="fill1" />
+      <rect x="7.5" y="4.5" width="3" height="9.5" className="fill2" />
+      <rect x="12" y="6.5" width="3" height="7.5" className="fill3" />
     </svg>
   )
 }

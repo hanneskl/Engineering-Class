@@ -24,7 +24,7 @@ await cell('F9').click(); await p.keyboard.type('=SUMME(B2:E2)'); await p.keyboa
 await p.locator('select').first().selectOption('smv-wahl'); await p.waitForTimeout(150)
 
 expect('SMV-Eingabe überlebt den Wechsel', await inputOf('B8'), '=SUMME(B2:B6)')
-expect('SMV-Punkte überleben', (await p.locator('.score').textContent()).trim(), '2 / 9 Punkte')
+expect('SMV-Punkte überleben', (await p.locator('.score').textContent()).trim(), '2 / 13 Punkte')
 
 await p.locator('select').first().selectOption('felder-berechnen'); await p.waitForTimeout(150)
 expect('Felder-Eingabe überlebt', await inputOf('F9'), '=SUMME(B2:E2)')

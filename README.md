@@ -228,6 +228,7 @@ npm run drive --workspace @quali/web           # walk the tasks in Chromium, wri
 npm run drive:gestures --workspace @quali/web  # drag-to-fill, copy/paste, click-to-reference
 npm run drive:switching --workspace @quali/web # work survives switching scenarios
 npm run drive:formatting --workspace @quali/web# the ribbon against the 2025 Vermögen sheet
+npm run drive:charts --workspace @quali/web     # inserting charts, against the 2026 pie task
 ```
 
 `npm run drive` expects the dev server to already be running. Set `SHOT_DIR` to choose where

@@ -226,3 +226,30 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; ba
 }
 .login-error { margin: 0; color: var(--bad); font-size: 12.5px; }
 .pending { color: #6b7280; font-size: 11px; }
+
+/* charts */
+.ico .fill1 { fill: #4472C4; stroke: none; }
+.ico .fill2 { fill: #ED7D31; stroke: none; }
+.ico .fill3 { fill: #A5A5A5; stroke: none; }
+
+.charts { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+.chart-card {
+  width: 360px; padding: 8px; background: #fff;
+  border: 1px solid var(--line); border-radius: 6px;
+}
+.chartsvg { width: 100%; height: auto; display: block; }
+.chart-title { font-size: 11px; font-weight: 600; fill: var(--ink); }
+.chart-tick { font-size: 8px; fill: #6b7280; }
+.chart-legend { font-size: 8.5px; fill: #374151; }
+.chart-axistitle { font-size: 8.5px; fill: #4b5563; }
+.chart-datalabel { font-size: 8px; fill: #fff; font-weight: 600; }
+.chart-grid { stroke: #e8eaee; stroke-width: 1; }
+.chart-axis { stroke: #b8bec7; stroke-width: 1; }
+.chart-empty { font-size: 12px; color: #6b7280; margin: 8px; }
+
+.chart-controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.chart-controls input { flex: 1; min-width: 0; padding: 4px 6px; font-size: 12px;
+  border: 1px solid var(--line); border-radius: 4px; }
+.chart-controls select { font-size: 11px; padding: 3px 4px;
+  border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.chart-controls .drop { border-color: #f0c4c0; color: var(--bad); }
