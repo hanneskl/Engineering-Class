@@ -1,4 +1,5 @@
 import type { DeviceType } from '../model/plan'
+import { fotoFuer } from './fotos'
 
 /**
  * Pictures of the devices, for the "which device is this?" board in M1.
@@ -12,6 +13,11 @@ import type { DeviceType } from '../model/plan'
  *
  * Each sits on its own pale tile, like a product photo on a white background,
  * so the colours hold in both themes without any of them being theme tokens.
+ *
+ * They are the fallback, not the goal: as soon as a real photograph of a
+ * device sits in src/fotos/, that photo is shown instead. A drawing is better
+ * than a wrong photo, and better than an empty box while the photos are being
+ * sourced.
  */
 
 const GEHAEUSE = '#3c4a5c'
@@ -175,6 +181,12 @@ const BILDER: Record<string, JSX.Element> = {
  * drawing: only the types M1 asks about are illustrated.
  */
 export function DeviceBild({ type, size = 96 }: { type: DeviceType; size?: number }) {
+  const foto = fotoFuer(type)
+  if (foto) {
+    return (
+      <img className="device-bild" src={foto} width={size} height={size} alt="" loading="lazy" />
+    )
+  }
   const bild = BILDER[type]
   if (!bild) return null
   return (

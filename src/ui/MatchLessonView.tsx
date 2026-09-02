@@ -92,6 +92,11 @@ export function MatchLessonView({
         fragen={task.fragen}
         onMatches={change}
       />
+      {lesson.bildnachweise?.length ? (
+        <p className="bildnachweis">
+          Bildnachweis: {lesson.bildnachweise.join(' · ')}
+        </p>
+      ) : null}
     </LessonShell>
   )
 }

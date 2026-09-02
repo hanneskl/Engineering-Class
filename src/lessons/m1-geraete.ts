@@ -361,6 +361,9 @@ export const m1Geraete: MatchLesson = {
   id: 'm1',
   module: 'M1',
   title: 'Geräte & Komponenten',
+  // Filled in once photos with a named author are in src/fotos/ — see the
+  // README there. Empty means nothing is shown.
+  bildnachweise: [],
   quali:
     'Fast jeder Quali beginnt mit einer Zuordnung: Beschreibung links, Gerät rechts. ' +
     'Dazu kommen die Netzwerktypen (LAN, MAN, WAN, GAN), der Steckertyp RJ-45 und ' +

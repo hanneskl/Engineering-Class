@@ -725,5 +725,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .board-verdict.bad ul { margin: 0; padding-left: 1.1rem; color: var(--muted); display: grid; gap: .3rem; }
 .board-verdict.bad strong { color: var(--ink); }
 
+.bildnachweis { margin: .6rem .2rem 0; color: var(--muted); font-size: .78rem; }
+
 .board-fragen { display: grid; gap: .7rem; margin-top: 1rem; }
 .board-fragen .frage { margin-top: 0; }
