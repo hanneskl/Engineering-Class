@@ -1,16 +1,27 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Lesson } from '../model/types'
-import { exportProgress, moduleStats, type Progress } from '../progress/store'
+import {
+  exportProgress,
+  hasProgress,
+  moduleStats,
+  resetTasks,
+  type Progress,
+} from '../progress/store'
 
 export function Home({
   lessons,
   progress,
+  onProgress,
   onOpen,
 }: {
   lessons: Lesson[]
   progress: Progress
+  onProgress: (next: Progress) => void
   onOpen: (lessonId: string) => void
 }) {
+  /** Which card is asking "are you sure?" — a reset can throw away a drawing. */
+  const [confirming, setConfirming] = useState<string | null>(null)
+
   const cards = useMemo(
     () =>
       lessons.map((lesson) => {
@@ -18,7 +29,12 @@ export function Home({
           lesson.kind === 'quiz'
             ? lesson.buildTasks(progress.seed).map((t) => t.id)
             : lesson.tasks.map((t) => t.id)
-        return { lesson, stats: moduleStats(progress, ids) }
+        return {
+          lesson,
+          ids,
+          stats: moduleStats(progress, ids),
+          resettable: hasProgress(progress, ids),
+        }
       }),
     [lessons, progress],
   )
@@ -36,28 +52,62 @@ export function Home({
       </p>
 
       <div className="cards">
-        {cards.map(({ lesson, stats }) => {
+        {cards.map(({ lesson, ids, stats, resettable }) => {
           const pct = stats.total ? Math.round((stats.solved / stats.total) * 100) : 0
           const done = stats.total > 0 && stats.solved === stats.total
+          const asking = confirming === lesson.id
           return (
-            <button
-              key={lesson.id}
-              className={`card${done ? ' card-done' : ''}`}
-              onClick={() => onOpen(lesson.id)}
-            >
-              <div className="card-head">
-                <span className="badge">{lesson.module}</span>
-                {done && <span className="tick">fertig</span>}
+            <article key={lesson.id} className={`card${done ? ' card-done' : ''}`}>
+              {/* The card body is the button; Reset sits beside it, since a
+                  button may not be nested inside another button. */}
+              <button className="card-open" onClick={() => onOpen(lesson.id)}>
+                <span className="card-head">
+                  <span className="badge">{lesson.module}</span>
+                  {done && <span className="tick">fertig</span>}
+                </span>
+                <span className="card-title">{lesson.title}</span>
+                <span className="card-sub">{lesson.intro.heading}</span>
+                <span className="bar" role="img" aria-label={`${pct} Prozent gelöst`}>
+                  <span className="bar-fill" style={{ width: `${pct}%` }} />
+                </span>
+                <span className="card-meta">
+                  {stats.solved} / {stats.total} Aufgaben
+                </span>
+              </button>
+
+              <div className="card-foot">
+                {asking ? (
+                  <div className="confirm" role="alertdialog" aria-label="Zurücksetzen bestätigen">
+                    <p>
+                      Alles in <strong>{lesson.title}</strong> löschen? Gelöste Aufgaben und
+                      {lesson.kind === 'quiz' ? ' Antworten' : ' Zeichnungen'} sind dann weg.
+                    </p>
+                    <div className="row">
+                      <button
+                        className="ghost danger small"
+                        onClick={() => {
+                          onProgress(resetTasks(progress, ids))
+                          setConfirming(null)
+                        }}
+                      >
+                        Ja, zurücksetzen
+                      </button>
+                      <button className="ghost small" onClick={() => setConfirming(null)}>
+                        Abbrechen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    className="link reset"
+                    disabled={!resettable}
+                    onClick={() => setConfirming(lesson.id)}
+                  >
+                    {resettable ? 'Zurücksetzen' : 'Noch nichts zum Zurücksetzen'}
+                  </button>
+                )}
               </div>
-              <h2>{lesson.title}</h2>
-              <p>{lesson.intro.heading}</p>
-              <div className="bar" role="img" aria-label={`${pct} Prozent gelöst`}>
-                <div className="bar-fill" style={{ width: `${pct}%` }} />
-              </div>
-              <span className="card-meta">
-                {stats.solved} / {stats.total} Aufgaben
-              </span>
-            </button>
+            </article>
           )
         })}
       </div>

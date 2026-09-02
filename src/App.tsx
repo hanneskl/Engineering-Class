@@ -86,6 +86,7 @@ export function App() {
           <Home
             lessons={LESSONS}
             progress={progress}
+            onProgress={update}
             onOpen={(id) => setView({ kind: 'lesson', lessonId: id })}
           />
         )}

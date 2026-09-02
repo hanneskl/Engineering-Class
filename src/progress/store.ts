@@ -165,3 +165,30 @@ export function loadFlow(progress: Progress, taskId: string): Flow | undefined {
 export function saveFlow(progress: Progress, taskId: string, flow: Flow): Progress {
   return { ...progress, flows: { ...progress.flows, [taskId]: flow } }
 }
+
+/** Has the student anything to lose in these tasks? Drives whether Reset shows. */
+export function hasProgress(progress: Progress, taskIds: string[]): boolean {
+  return taskIds.some((id) => {
+    const t = progress.tasks[id]
+    return Boolean(
+      t?.solved || t?.attempts || t?.hintsUsed || progress.plans[id] || progress.flows[id],
+    )
+  })
+}
+
+/**
+ * Clears a module back to its untouched state: answers, hints, and any drawn
+ * network or flowchart. Only the listed tasks are touched, so resetting one
+ * module never disturbs another.
+ */
+export function resetTasks(progress: Progress, taskIds: string[]): Progress {
+  const ids = new Set(taskIds)
+  const keep = <T,>(record: Record<string, T>): Record<string, T> =>
+    Object.fromEntries(Object.entries(record).filter(([id]) => !ids.has(id)))
+  return {
+    ...progress,
+    tasks: keep(progress.tasks),
+    plans: keep(progress.plans),
+    flows: keep(progress.flows),
+  }
+}

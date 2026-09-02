@@ -136,24 +136,36 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 .cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .card {
-  text-align: left; background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 1.1rem; color: inherit;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); color: inherit;
+  display: flex; flex-direction: column;
 }
 .card:hover { border-color: var(--accent); }
-.card h2 { margin: .5rem 0 .2rem; font-size: 1.15rem; }
-.card p { margin: 0 0 .9rem; color: var(--muted); font-size: .92rem; }
+.card-open {
+  display: flex; flex-direction: column; gap: .2rem;
+  text-align: left; background: none; border: 0; color: inherit;
+  padding: 1.1rem 1.1rem .8rem; border-radius: var(--radius) var(--radius) 0 0;
+}
+.card-title { font-size: 1.15rem; font-weight: 700; margin-top: .3rem; }
+.card-sub { color: var(--muted); font-size: .92rem; margin-bottom: .7rem; }
 .card-head { display: flex; justify-content: space-between; align-items: center; }
 .card-done { border-color: var(--good); }
 .tick { color: var(--good); font-size: .8rem; font-weight: 700; }
 .card-meta { color: var(--muted); font-size: .82rem; }
+
+.card-foot { border-top: 1px solid var(--line); padding: .55rem 1.1rem .7rem; margin-top: auto; }
+.reset { font-size: .82rem; }
+.reset:disabled { text-decoration: none; opacity: .55; cursor: default; }
+.confirm p { margin: 0 0 .55rem; font-size: .85rem; color: var(--ink); }
+.confirm .row { gap: .4rem; }
 
 .badge {
   display: inline-block; background: var(--accent); color: var(--accent-ink);
   border-radius: 999px; padding: .1rem .6rem; font-size: .75rem; font-weight: 700;
 }
 
-.bar { height: 7px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: .45rem; }
-.bar-fill { height: 100%; background: var(--good); transition: width .25s ease; }
+.bar { display: block; height: 7px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: .45rem; }
+.bar-fill { display: block; height: 100%; background: var(--good); transition: width .25s ease; }
 
 .soon {
   margin-top: 2rem; padding: 1rem 1.1rem;
@@ -340,7 +352,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .medium-dot { width: 9px; height: 9px; border-radius: 2px; background: var(--muted); flex: none; }
 .medium-dot.wifi { background: var(--accent); border-radius: 999px; }
 .danger { color: var(--bad); }
-.ghost.danger { border-color: var(--line); width: 100%; }
+/* Full width only in the inspector column, not wherever .danger is reused. */
+.inspector .ghost.danger { border-color: var(--line); width: 100%; }
 .muted { color: var(--muted); font-size: .85rem; }
 
 .f-message { font-weight: 600; }
