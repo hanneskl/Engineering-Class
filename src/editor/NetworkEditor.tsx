@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   type DeviceType,
   type Medium,
@@ -33,7 +33,18 @@ export function NetworkEditor({
   const [tool, setTool] = useState<Tool>('select')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [linkFromId, setLinkFromId] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  /**
+   * Transient notices disappear on their own; the ones explaining why a link
+   * was refused stay, because that text is the teaching and a student may
+   * still be reading it.
+   */
+  const [notice, setNotice] = useState<{ text: string; transient?: boolean } | null>(null)
+
+  useEffect(() => {
+    if (!notice?.transient) return
+    const timer = setTimeout(() => setNotice(null), 3000)
+    return () => clearTimeout(timer)
+  }, [notice])
 
   const faultyIds = useMemo(
     () => new Set(findings.flatMap((f) => f.deviceIds)),
@@ -61,7 +72,7 @@ export function NetworkEditor({
       if (!a || !b) return
       const problem = whyCannotLink(plan, a, b, medium)
       if (problem) {
-        setNotice(problem)
+        setNotice({ text: problem })
         return
       }
       onChange({
@@ -121,8 +132,8 @@ export function NetworkEditor({
       </div>
 
       {notice && (
-        <div className="notice" role="status">
-          {notice}
+        <div className={`notice${notice.transient ? ' notice-ok' : ''}`} role="status">
+          {notice.text}
         </div>
       )}
 
@@ -171,9 +182,10 @@ export function NetworkEditor({
           onDhcp={() => {
             const { plan: next, assigned, prefix } = assignAddresses(plan)
             onChange(next)
-            setNotice(
-              `Der Router hat ${assigned} Adressen im Netz ${prefix}.x vergeben — so funktioniert DHCP.`,
-            )
+            setNotice({
+              text: `Der Router hat ${assigned} Adressen im Netz ${prefix}.x vergeben — so funktioniert DHCP.`,
+              transient: true,
+            })
           }}
         />
       </div>

@@ -6,6 +6,11 @@ export const NODE = 64
 
 /** How far the pointer may travel before a press counts as a drag, not a click. */
 const DRAG_THRESHOLD = 5
+const VIEW_W = 900
+const VIEW_H = 560
+
+/** Keeps a dragged device on the canvas — off the edge it is clipped and lost. */
+const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
 
 export type Tool = 'select' | 'cable' | 'wifi'
 
@@ -61,10 +66,14 @@ export function Canvas({
    * A click and a drag are told apart by distance travelled, so a wobbly
    * trackpad press still registers as a click and starts a link.
    */
-  function startDrag(e: React.PointerEvent, d: Device) {
+  function startDrag(e: React.PointerEvent<SVGGElement>, d: Device) {
     const p = toSvgPoint(e)
     setDragging({ id: d.id, dx: p.x - d.x, dy: p.y - d.y, startX: p.x, startY: p.y })
     setMoved(false)
+    // Without this the browser starts selecting the SVG labels the drag
+    // passes over. Focus is restored by hand, since preventDefault drops it.
+    e.preventDefault()
+    e.currentTarget.focus()
     e.currentTarget.setPointerCapture?.(e.pointerId)
   }
 
@@ -75,14 +84,20 @@ export function Canvas({
       return
     }
     setMoved(true)
-    onMove(dragging.id, Math.round(p.x - dragging.dx), Math.round(p.y - dragging.dy))
+    const half = NODE / 2
+    onMove(
+      dragging.id,
+      Math.round(clamp(p.x - dragging.dx, half, VIEW_W - half)),
+      // Extra room at the bottom for the name and IP printed under the box.
+      Math.round(clamp(p.y - dragging.dy, half, VIEW_H - half - 24)),
+    )
   }
 
   return (
     <svg
       ref={svgRef}
       className={`canvas tool-${tool}`}
-      viewBox="0 0 900 560"
+      viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       role="application"
       aria-label="Netzwerkplan"
       onPointerMove={onPointerMove}
@@ -100,7 +115,7 @@ export function Canvas({
           <path d="M20 0H0V20" fill="none" stroke="var(--line)" strokeWidth="1" opacity=".5" />
         </pattern>
       </defs>
-      <rect width="900" height="560" fill="url(#grid)" />
+      <rect width={VIEW_W} height={VIEW_H} fill="url(#grid)" />
 
       {plan.links.map((l) => {
         const a = deviceById(plan, l.from)

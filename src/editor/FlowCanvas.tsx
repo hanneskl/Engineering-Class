@@ -8,6 +8,11 @@ const H = 58
 const DW = 176
 const DH = 96
 const LINE = 14
+const VIEW_W = 900
+const VIEW_H = 620
+
+/** Keeps a dragged symbol on the canvas — off the edge it is clipped and lost. */
+const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
 
 /** Greedy wrap so a label sits inside its shape instead of spilling over it. */
 function wrapText(text: string, maxChars: number, maxLines: number): string[] {
@@ -92,10 +97,14 @@ export function FlowCanvas({
     }
   }
 
-  function startDrag(e: React.PointerEvent, n: FlowNode) {
+  function startDrag(e: React.PointerEvent<SVGGElement>, n: FlowNode) {
     const p = toSvgPoint(e)
     setDragging({ id: n.id, dx: p.x - n.x, dy: p.y - n.y, startX: p.x, startY: p.y })
     setMoved(false)
+    // Without this the browser starts selecting the SVG labels the drag
+    // passes over. Focus is restored by hand, since preventDefault drops it.
+    e.preventDefault()
+    e.currentTarget.focus()
     e.currentTarget.setPointerCapture?.(e.pointerId)
   }
 
@@ -103,7 +112,7 @@ export function FlowCanvas({
     <svg
       ref={svgRef}
       className={`canvas flow-canvas tool-${tool}`}
-      viewBox="0 0 900 620"
+      viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       role="application"
       aria-label="Flussdiagramm"
       onPointerMove={(e) => {
@@ -113,7 +122,13 @@ export function FlowCanvas({
           return
         }
         setMoved(true)
-        onMove(dragging.id, Math.round(p.x - dragging.dx), Math.round(p.y - dragging.dy))
+        const halfW = DW / 2
+        const halfH = DH / 2
+        onMove(
+          dragging.id,
+          Math.round(clamp(p.x - dragging.dx, halfW, VIEW_W - halfW)),
+          Math.round(clamp(p.y - dragging.dy, halfH, VIEW_H - halfH)),
+        )
       }}
       onPointerUp={() => setDragging(null)}
       onPointerLeave={() => setDragging(null)}
@@ -140,7 +155,7 @@ export function FlowCanvas({
           <polygon points="0 0, 9 3.5, 0 7" fill="var(--muted)" />
         </marker>
       </defs>
-      <rect width="900" height="620" fill="url(#flowgrid)" />
+      <rect width={VIEW_W} height={VIEW_H} fill="url(#flowgrid)" />
 
       {flow.edges.map((e) => {
         const a = nodeById(flow, e.from)

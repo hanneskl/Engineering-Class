@@ -320,7 +320,12 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .pal-item:hover { border-color: var(--accent); background: var(--bg); }
 
-.canvas { display: block; width: 100%; height: 100%; background: var(--bg); touch-action: none; }
+.canvas {
+  display: block; width: 100%; height: 100%;
+  background: var(--bg); touch-action: none;
+  /* Dragging a device must not sweep a text selection across the diagram. */
+  user-select: none; -webkit-user-select: none;
+}
 .canvas.tool-cable, .canvas.tool-wifi { cursor: crosshair; }
 
 /* Named .wire, not .link — .link is already the text-button style. */
@@ -335,8 +340,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .node.linking .node-box { stroke: var(--accent); stroke-dasharray: 5 4; stroke-width: 3; }
 .node.faulty .node-box { stroke: var(--bad); stroke-width: 3; }
 .node-icon { color: var(--ink); }
-.node-label { fill: var(--ink); font-size: 12px; font-weight: 600; }
-.node-ip { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.node-label { fill: var(--ink); font-size: 12px; font-weight: 600; pointer-events: none; }
+.node-ip { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; pointer-events: none; }
 
 .inspector { border-left: 1px solid var(--line); padding: .8rem .9rem; overflow-y: auto; }
 .inspector.empty p { color: var(--muted); font-size: .88rem; }
@@ -372,6 +377,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .edge-hit { stroke: transparent; stroke-width: 16; cursor: pointer; }
 .edge.sel .edge-line { stroke: var(--accent); stroke-width: 3; }
 .edge-label {
+  pointer-events: none;
   fill: var(--ink); font-size: 12px; font-weight: 700;
   paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round;
 }
@@ -397,3 +403,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .branch-row { margin-bottom: .9rem; }
 .branch-row .tool { flex: 1; }
+
+/* A confirmation, not a correction: green, and it fades itself out. */
+.notice-ok { background: var(--good-bg); color: var(--good); }
