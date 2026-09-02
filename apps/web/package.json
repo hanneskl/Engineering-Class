@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "drive": "node scripts/drive.mjs",
     "drive:gestures": "node scripts/drive-gestures.mjs",
+    "drive:switching": "node scripts/drive-switching.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

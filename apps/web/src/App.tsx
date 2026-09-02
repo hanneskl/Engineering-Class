@@ -1,6 +1,6 @@
 import { formatValue, translateInput, type CellStyle, type Sheet } from '@quali/core'
 import { SCENARIOS, gradeSubmission, scenarioById, totalPoints, type TaskDef } from '@quali/scenarios'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { backend, hasBackend, signOut, submitAttempt } from './backend.ts'
 import { Login } from './Login.tsx'
 import { Grid } from './Grid.tsx'
@@ -37,7 +37,18 @@ export function App() {
   const [scenarioId, setScenarioId] = useState(SCENARIOS[0]!.id)
   const scenario = useMemo(() => scenarioById(scenarioId), [scenarioId])
 
-  const [sheet, setSheet] = useState<Sheet>(() => scenario.seed())
+  // One sheet per scenario, kept alive across switches so a student can move between
+  // scenarios without losing work. Only Zurücksetzen re-seeds.
+  const sheetsRef = useRef(new Map<string, Sheet>())
+  function sheetFor(id: string): Sheet {
+    const existing = sheetsRef.current.get(id)
+    if (existing) return existing
+    const created = scenarioById(id).seed()
+    sheetsRef.current.set(id, created)
+    return created
+  }
+  const sheet = sheetFor(scenarioId)
+
   const [revision, setRevision] = useState(0)
   const [selection, setSelection] = useState<Selection>(single({ row: 0, col: 0 }))
   const [edit, setEdit] = useState<EditState | null>(null)
@@ -65,11 +76,24 @@ export function App() {
     setRevision((value) => value + 1)
   }
 
-  function reset(id: string): void {
-    const next = scenarioById(id)
+  /** Switch scenarios, keeping whatever the student has already done in each. */
+  function switchScenario(id: string): void {
     setScenarioId(id)
-    setSheet(next.seed())
-    setStates({})
+    sheetFor(id)
+    setSelection(single({ row: 0, col: 0 }))
+    setEdit(null)
+    setClipboard(null)
+    touch()
+  }
+
+  /** Start the current scenario over: fresh sheet, and forget only its own task results. */
+  function resetScenario(): void {
+    sheetsRef.current.set(scenarioId, scenarioById(scenarioId).seed())
+    setStates((previous) => {
+      const next = { ...previous }
+      for (const task of scenario.tasks) delete next[task.id]
+      return next
+    })
     setSelection(single({ row: 0, col: 0 }))
     setEdit(null)
     setClipboard(null)
@@ -229,13 +253,13 @@ export function App() {
           <p className="subtitle">{scenario.subtitleDe}</p>
         </div>
         <div className="header-right">
-          <select value={scenarioId} onChange={(event) => reset(event.target.value)}>
+          <select value={scenarioId} onChange={(event) => switchScenario(event.target.value)}>
             {SCENARIOS.map((item) => (
               <option key={item.id} value={item.id}>{item.titleDe}</option>
             ))}
           </select>
           <span className="score">{earned} / {totalPoints(scenario)} Punkte</span>
-          <button className="ghost" onClick={() => reset(scenarioId)}>Zurücksetzen</button>
+          <button className="ghost" onClick={resetScenario}>Zurücksetzen</button>
           {hasBackend && (
             <button className="ghost" onClick={() => void signOut()}>Abmelden</button>
           )}
