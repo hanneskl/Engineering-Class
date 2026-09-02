@@ -692,7 +692,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   border-radius: 50%; background: var(--accent); color: var(--accent-ink);
   font-size: .78rem; font-weight: 800;
 }
-.platz-icon { color: var(--muted); line-height: 0; }
+.platz-bild { line-height: 0; display: block; }
+.platz-bild img, .device-bild { display: block; width: 104px; height: 104px; border-radius: 10px; }
 .platz-label { font-weight: 700; font-size: .95rem; }
 .platz-sub { color: var(--muted); font-size: .8rem; }
 .platz-karten { display: grid; gap: .3rem; align-content: start; }

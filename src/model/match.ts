@@ -24,6 +24,11 @@ export type Platz = {
   sub?: string
   /** Drawn instead of a label, for "which device is this?" */
   icon?: DeviceType
+  /**
+   * A photograph instead of the drawn illustration. Put a file in `public/`
+   * and set its path here; the board prefers it over `icon`.
+   */
+  bild?: string
 }
 
 export type Karte = {
