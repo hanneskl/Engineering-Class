@@ -406,3 +406,43 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 /* A confirmation, not a correction: green, and it fades itself out. */
 .notice-ok { background: var(--good-bg); color: var(--good); }
+
+/* ---------- console ---------- */
+
+.console {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden;
+}
+.console-bar {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  padding: .6rem .8rem; border-bottom: 1px solid var(--line);
+}
+.console-bar label { font-size: .85rem; font-weight: 600; }
+.console-bar select {
+  padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--bg); color: var(--ink); font: inherit; font-size: .9rem;
+}
+.console-log {
+  height: 340px; overflow-y: auto; padding: .8rem 1rem;
+  background: var(--bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .84rem; line-height: 1.45;
+}
+.console-welcome { color: var(--muted); margin: 0; font-family: inherit; }
+.console-welcome code { background: var(--surface); padding: 0 .3rem; border-radius: 4px; }
+.console-entry { margin-bottom: .8rem; }
+.console-cmd { color: var(--ink); font-weight: 700; }
+.console-line { color: var(--muted); white-space: pre-wrap; }
+.console-entry.bad .console-line { color: var(--bad); }
+.prompt { color: var(--accent); font-weight: 700; }
+.console-input {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem .8rem; border-top: 1px solid var(--line);
+}
+.console-input input {
+  flex: 1; margin: 0; padding: .5rem .6rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.console-input .prompt {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem;
+}

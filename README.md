@@ -20,9 +20,9 @@ npm run build    # production build into dist/
 Pushing to `main` deploys to GitHub Pages —
 [hanneskl.github.io/Network-Education](https://hanneskl.github.io/Network-Education/).
 
-**Built so far:** M2 (Netzwerk zeichnen), M4 (Binärzahlen), M8 (Begriffe &
-Abkürzungen) and M9 (Flussdiagramme). Still to come: M5 (ping, tracert,
-ipconfig), M6 (der Weg einer Internetseite) and M7 (Anonymität).
+**Built so far:** M2 (Netzwerk zeichnen), M5 (Netzwerkbefehle), M4
+(Binärzahlen), M8 (Begriffe & Abkürzungen) and M9 (Flussdiagramme).
+Still to come: M6 (der Weg einer Internetseite) and M7 (Anonymität).
 
 ---
 

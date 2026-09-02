@@ -166,4 +166,43 @@ export function flowZielMet(flow: import('./flow').Flow, ziel: FlowZiel): boolea
   return flow.nodes.length > 0 && flowZielFindings(flow, ziel).length === 0
 }
 
-export type Lesson = QuizLesson | BuildLesson | FlowLesson
+/** Modules where the student runs commands against a network. */
+export type ConsoleZiel = {
+  text: string
+  rules: import('./consoleRules').ConsoleRule[]
+}
+
+export type ConsoleTask = {
+  id: string
+  title: string
+  brief: string
+  ziele: ConsoleZiel[]
+  hints: Hints
+}
+
+export type ConsoleLesson = LessonBase & {
+  kind: 'console'
+  tasks: ConsoleTask[]
+  /** Network used when the student has not drawn one of their own yet. */
+  starter: import('./plan').Plan
+}
+
+export function consoleTaskRules(task: ConsoleTask): import('./consoleRules').ConsoleRule[] {
+  return task.ziele.flatMap((z) => z.rules)
+}
+
+export function consoleZielFindings(
+  state: import('./consoleRules').ConsoleState,
+  ziel: ConsoleZiel,
+): import('./rules').Finding[] {
+  return ziel.rules.flatMap((rule) => rule(state))
+}
+
+export function consoleZielMet(
+  state: import('./consoleRules').ConsoleState,
+  ziel: ConsoleZiel,
+): boolean {
+  return consoleZielFindings(state, ziel).length === 0
+}
+
+export type Lesson = QuizLesson | BuildLesson | FlowLesson | ConsoleLesson

@@ -9,6 +9,7 @@
 import { seedFromName } from '../model/rng'
 import type { Plan } from '../model/plan'
 import type { Flow } from '../model/flow'
+import type { Session } from '../model/console'
 
 export type TaskProgress = {
   solved: boolean
@@ -26,6 +27,8 @@ export type Progress = {
   plans: Record<string, Plan>
   /** Drawn flowcharts, one per flow task. */
   flows: Record<string, Flow>
+  /** Console history, one per console task. */
+  sessions: Record<string, Session>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -43,6 +46,7 @@ export function emptyProgress(studentName: string): Progress {
     tasks: {},
     plans: {},
     flows: {},
+    sessions: {},
   }
 }
 
@@ -61,6 +65,7 @@ export function load(studentName: string): Progress {
       tasks: parsed.tasks,
       plans: parsed.plans ?? {},
       flows: parsed.flows ?? {},
+      sessions: parsed.sessions ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -171,7 +176,12 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
   return taskIds.some((id) => {
     const t = progress.tasks[id]
     return Boolean(
-      t?.solved || t?.attempts || t?.hintsUsed || progress.plans[id] || progress.flows[id],
+      t?.solved ||
+        t?.attempts ||
+        t?.hintsUsed ||
+        progress.plans[id] ||
+        progress.flows[id] ||
+        progress.sessions[id]?.entries.length,
     )
   })
 }
@@ -190,5 +200,23 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
     tasks: keep(progress.tasks),
     plans: keep(progress.plans),
     flows: keep(progress.flows),
+    sessions: keep(progress.sessions),
   }
+}
+
+export function loadSession(progress: Progress, taskId: string): Session | undefined {
+  return progress.sessions[taskId]
+}
+
+export function saveSession(progress: Progress, taskId: string, session: Session): Progress {
+  return { ...progress, sessions: { ...progress.sessions, [taskId]: session } }
+}
+
+/**
+ * The network the console runs on: whatever the student built in M2, so the
+ * addresses in `ipconfig` are the ones they assigned themselves.
+ */
+export function latestPlan(progress: Progress): Plan | undefined {
+  const drawn = Object.values(progress.plans).filter((p) => p.devices.length > 1)
+  return drawn.sort((a, b) => b.devices.length - a.devices.length)[0]
 }
