@@ -205,4 +205,43 @@ export function consoleZielMet(
   return consoleZielFindings(state, ziel).length === 0
 }
 
-export type Lesson = QuizLesson | BuildLesson | FlowLesson | ConsoleLesson
+/** Modules where the student walks a packet from a URL to the screen. */
+export type WebZiel = {
+  text: string
+  rules: import('./webRules').WebRule[]
+}
+
+export type WebTask = {
+  id: string
+  title: string
+  brief: string
+  ziele: WebZiel[]
+  hints: Hints
+  /** Also show the "put the seven steps in order" exercise below the walk. */
+  reihenfolge?: boolean
+}
+
+export type WebLesson = LessonBase & {
+  kind: 'web'
+  tasks: WebTask[]
+}
+
+export function webTaskRules(task: WebTask): import('./webRules').WebRule[] {
+  return task.ziele.flatMap((z) => z.rules)
+}
+
+export function webZielFindings(
+  state: import('./webRules').WebState,
+  ziel: WebZiel,
+): import('./rules').Finding[] {
+  return ziel.rules.flatMap((rule) => rule(state))
+}
+
+export function webZielMet(
+  state: import('./webRules').WebState,
+  ziel: WebZiel,
+): boolean {
+  return webZielFindings(state, ziel).length === 0
+}
+
+export type Lesson = QuizLesson | BuildLesson | FlowLesson | ConsoleLesson | WebLesson

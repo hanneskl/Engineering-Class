@@ -250,3 +250,5 @@ edited without touching the simulator.
    hardest part.
 6. **M7 Anonymität** — server logs, cookies.
 7. **Probequali mode.**
+
+Steps 1 to 5 are built and deployed; M7 is next.

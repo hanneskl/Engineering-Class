@@ -446,3 +446,146 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .console-input .prompt {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem;
 }
+
+/* ---------- M6: the packet walk ---------- */
+
+.walk {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden;
+}
+.walk-bar {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  padding: .6rem .8rem; border-bottom: 1px solid var(--line);
+}
+.walk-bar select {
+  padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--bg); color: var(--ink); font: inherit; font-size: .9rem;
+}
+.walk-proto { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg {
+  border: 0; background: var(--bg); color: var(--muted);
+  padding: .35rem .7rem; font-size: .85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.seg.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+.walk-map { display: block; width: 100%; background: var(--bg); user-select: none; }
+.walk-map .zone { fill: var(--surface); stroke: var(--line); }
+.walk-map .zone.wan { fill: var(--bg); }
+.walk-map .zone-label {
+  fill: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .03em;
+}
+.walk-map .grenze { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; opacity: .7; }
+.walk-road { stroke: var(--line); stroke-width: 3; fill: none; }
+.walk-road.dashed { stroke-dasharray: 5 5; }
+
+.walk-station rect { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+.walk-station .wt-label {
+  text-anchor: middle; font-size: 13px; font-weight: 700; fill: var(--ink);
+}
+.walk-station .wt-sub { text-anchor: middle; font-size: 10.5px; fill: var(--muted); }
+.walk-station .wt-rolle {
+  text-anchor: middle; font-size: 9.5px; fill: var(--muted);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.walk-station.here rect { stroke: var(--accent); stroke-width: 3; }
+.walk-station.zone-dns rect { stroke-dasharray: 4 4; }
+
+.packet { transition: transform .35s ease; }
+.packet rect { fill: var(--accent); }
+.packet text {
+  text-anchor: middle; font-size: 12px; font-weight: 700; fill: var(--accent-ink);
+}
+
+.walk-idle { margin: 0; padding: 1rem; color: var(--muted); }
+.walk-step { padding: .9rem 1rem 1rem; border-top: 1px solid var(--line); }
+.walk-step-head { display: flex; align-items: center; gap: .6rem; }
+.walk-step-head h3 { margin: 0; font-size: 1.05rem; }
+.walk-step > p { color: var(--muted); margin: .5rem 0 .8rem; }
+
+.packet-view {
+  border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 8px; background: var(--bg); padding: .6rem .8rem;
+  display: grid; gap: .15rem;
+}
+.packet-view.sealed { border-left-color: var(--good); }
+.packet-title {
+  font-size: .72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+}
+.packet-view code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .82rem; color: var(--ink); overflow-wrap: anywhere;
+}
+
+.page-view {
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface);
+}
+.page-bar {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .35rem .7rem; background: var(--bg); border-bottom: 1px solid var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .8rem; color: var(--muted);
+}
+.page-body { padding: .8rem 1rem 1rem; }
+.page-body h4 { margin: 0 0 .3rem; font-size: 1.1rem; }
+.page-body p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+.mitleser {
+  margin: .7rem 0 0; padding: .5rem .7rem; border-radius: 8px;
+  background: var(--bad-bg); color: var(--bad); font-size: .9rem;
+}
+.mitleser.safe { background: var(--good-bg); color: var(--good); }
+
+.walk-frage {
+  margin-top: .9rem; padding: .7rem .8rem;
+  background: var(--hint-bg); border: 1px solid var(--hint-line); border-radius: 8px;
+}
+.frage-text { margin: 0 0 .5rem; font-weight: 700; }
+.frage-optionen { display: grid; gap: .4rem; }
+.option {
+  text-align: left; padding: .45rem .6rem; border-radius: 7px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font-size: .92rem;
+}
+.option.ok { border-color: var(--good); background: var(--good-bg); color: var(--good); font-weight: 700; }
+.option.bad { border-color: var(--bad); background: var(--bad-bg); color: var(--bad); }
+.frage-warum { margin: .5rem 0 0; font-size: .9rem; }
+.frage-warum.ok { color: var(--good); }
+.frage-warum.bad { color: var(--bad); }
+
+.walk-controls {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .6rem; margin-top: 1rem;
+}
+.walk-count { color: var(--muted); font-size: .85rem; }
+
+/* ---------- M6: ordering the seven steps ---------- */
+
+.order {
+  margin-top: 1rem; padding: 1rem;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.order h3 { margin: 0 0 .2rem; font-size: 1.05rem; }
+.order-lede { margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+.order-slots { list-style: none; margin: 0 0 .9rem; padding: 0; display: grid; gap: .35rem; }
+.slot { display: flex; align-items: center; gap: .6rem; }
+.slot-n {
+  flex: 0 0 1.6rem; height: 1.6rem; display: grid; place-items: center;
+  border-radius: 50%; background: var(--bg); border: 1px solid var(--line);
+  font-size: .8rem; font-weight: 700; color: var(--muted);
+}
+.slot.filled .slot-n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.order-empty {
+  flex: 1; padding: .45rem .6rem; border: 1px dashed var(--line);
+  border-radius: 7px; color: var(--muted);
+}
+.order-card {
+  flex: 1; text-align: left; padding: .45rem .6rem; border-radius: 7px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: .92rem;
+}
+.order-card.set { background: var(--surface); border-color: var(--accent); }
+.order-pile { display: grid; gap: .35rem; }
+.order-verdict { margin: .8rem 0 0; font-weight: 700; }
+.order-verdict.ok { color: var(--good); }
+.order-verdict.bad { color: var(--bad); }

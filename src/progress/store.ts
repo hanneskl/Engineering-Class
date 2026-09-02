@@ -10,6 +10,7 @@ import { seedFromName } from '../model/rng'
 import type { Plan } from '../model/plan'
 import type { Flow } from '../model/flow'
 import type { Session } from '../model/console'
+import type { Walk } from '../model/web'
 
 export type TaskProgress = {
   solved: boolean
@@ -29,6 +30,8 @@ export type Progress = {
   flows: Record<string, Flow>
   /** Console history, one per console task. */
   sessions: Record<string, Session>
+  /** Packet walks, one per web task. */
+  walks: Record<string, Walk>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -47,6 +50,7 @@ export function emptyProgress(studentName: string): Progress {
     plans: {},
     flows: {},
     sessions: {},
+    walks: {},
   }
 }
 
@@ -66,6 +70,7 @@ export function load(studentName: string): Progress {
       plans: parsed.plans ?? {},
       flows: parsed.flows ?? {},
       sessions: parsed.sessions ?? {},
+      walks: parsed.walks ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -175,13 +180,16 @@ export function saveFlow(progress: Progress, taskId: string, flow: Flow): Progre
 export function hasProgress(progress: Progress, taskIds: string[]): boolean {
   return taskIds.some((id) => {
     const t = progress.tasks[id]
+    const walk = progress.walks[id]
     return Boolean(
       t?.solved ||
         t?.attempts ||
         t?.hintsUsed ||
         progress.plans[id] ||
         progress.flows[id] ||
-        progress.sessions[id]?.entries.length,
+        progress.sessions[id]?.entries.length ||
+        walk?.seen.length ||
+        walk?.order.length,
     )
   })
 }
@@ -201,6 +209,7 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
     plans: keep(progress.plans),
     flows: keep(progress.flows),
     sessions: keep(progress.sessions),
+    walks: keep(progress.walks),
   }
 }
 
@@ -210,6 +219,14 @@ export function loadSession(progress: Progress, taskId: string): Session | undef
 
 export function saveSession(progress: Progress, taskId: string, session: Session): Progress {
   return { ...progress, sessions: { ...progress.sessions, [taskId]: session } }
+}
+
+export function loadWalk(progress: Progress, taskId: string): Walk | undefined {
+  return progress.walks[taskId]
+}
+
+export function saveWalk(progress: Progress, taskId: string, walk: Walk): Progress {
+  return { ...progress, walks: { ...progress.walks, [taskId]: walk } }
 }
 
 /**

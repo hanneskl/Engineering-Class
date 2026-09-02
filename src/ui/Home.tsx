@@ -115,8 +115,8 @@ export function Home({
       <section className="soon">
         <h3>Kommt später dazu</h3>
         <p>
-          ping und tracert an deinem eigenen Netz, der Weg einer Internetseite von der
-          Adresse bis zum Bildschirm, und welche Spuren du dabei hinterlässt.
+          Welche Spuren du im Internet hinterlässt: Was ein Server über dich mitschreibt,
+          was Cookies sind und wie anonym man in einem Netzwerk wirklich ist.
         </p>
       </section>
 
