@@ -1,0 +1,282 @@
+:root {
+  --line: #d5d8dd;
+  --head: #f1f3f5;
+  --accent: #1a6b3c;
+  --bad: #b42318;
+  --ink: #1c1f23;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  background: #fafbfc;
+}
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--line); background: #fff;
+}
+header h1 { font-size: 16px; margin: 0; }
+.subtitle { margin: 2px 0 0; color: #6b7280; font-size: 12px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.score { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+main { display: flex; flex: 1; min-height: 0; }
+.sheet-pane { flex: 1; padding: 16px 20px; overflow: auto; }
+
+.formula-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.address {
+  min-width: 52px; padding: 6px 8px; border: 1px solid var(--line);
+  background: #fff; border-radius: 4px; font-weight: 600; text-align: center;
+}
+.formula-input {
+  flex: 1; padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: #fff;
+}
+
+.tab {
+  display: inline-block; padding: 4px 14px; border: 1px solid var(--line); border-bottom: none;
+  background: #fff; font-size: 12px; font-weight: 600; border-radius: 4px 4px 0 0;
+}
+
+.grid { outline: none; overflow: auto; }
+/* Suppress the browser's own text selection only while dragging cells. Applying this at rest
+   would stop Chromium firing the copy event that Strg+C relies on. */
+.grid.dragging { user-select: none; -webkit-user-select: none; }
+.grid table {
+  border-collapse: collapse; background: #fff;
+  /* Fixed layout so the grid does not reflow when a cell's content or weight changes —
+     columns jumping around mid-edit is both un-Excel-like and disorienting. */
+  table-layout: fixed;
+}
+.grid th {
+  background: var(--head); border: 1px solid var(--line); font-weight: 600;
+  font-size: 11px; color: #4b5563; padding: 3px 6px;
+}
+.grid th.corner, .grid th.row-head { width: 38px; }
+.grid td {
+  border: 1px solid var(--line); padding: 3px 7px; width: 108px; height: 24px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: cell;
+}
+.grid td.selected { outline: 2px solid var(--accent); outline-offset: -2px; }
+.editor {
+  width: 100%; border: none; outline: none; background: transparent;
+  font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tasks {
+  width: 380px; border-left: 1px solid var(--line); background: #fff;
+  padding: 16px 18px; overflow-y: auto;
+}
+.tasks-head { display: flex; align-items: center; justify-content: space-between; }
+.tasks h2 { font-size: 14px; margin: 0; }
+.rule { font-size: 12px; font-style: italic; color: #6b7280; margin: 8px 0 14px; }
+.tasks ol { list-style: none; margin: 0; padding: 0; }
+
+.task { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+.task.passed { border-color: var(--accent); background: #f2f9f5; }
+.task.failed { border-color: var(--bad); background: #fdf3f2; }
+.task-head { display: flex; align-items: center; justify-content: space-between; }
+.mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--head);
+  font-size: 12px; font-weight: 700;
+}
+.task.passed .mark { background: var(--accent); color: #fff; }
+.task.failed .mark { background: var(--bad); color: #fff; }
+.points { font-size: 11px; color: #6b7280; }
+.prompt { margin: 8px 0; font-size: 13px; }
+.feedback {
+  margin: 8px 0; padding: 8px 10px; background: #fff; border-left: 3px solid var(--bad);
+  font-size: 12.5px; color: #7a271a;
+}
+
+button {
+  padding: 6px 12px; border: 1px solid var(--accent); background: var(--accent);
+  color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px;
+}
+button.ghost { background: #fff; color: var(--ink); border-color: var(--line); }
+button.small { padding: 4px 10px; font-size: 12px; }
+select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+
+/* selection, fill handle and clipboard affordances */
+.grid td { position: relative; }
+.grid td.in-range { background-image: linear-gradient(rgba(26,107,60,.09), rgba(26,107,60,.09)); }
+.grid td.anchor { outline: 2px solid var(--accent); outline-offset: -2px; background-image: none; }
+.grid td.fill-preview { outline: 1px dashed var(--accent); outline-offset: -1px; }
+.grid td.copied { outline: 1px dashed #6b7280; outline-offset: -1px; }
+.grid th.lit { background: #e3e8ee; color: var(--ink); }
+
+.fill-handle {
+  position: absolute; right: -3px; bottom: -3px; width: 7px; height: 7px;
+  background: var(--accent); border: 1px solid #fff; cursor: crosshair; z-index: 2;
+}
+
+.hint { margin: 12px 0 0; font-size: 12px; color: #6b7280; max-width: 620px; }
+.grid td.pointing {
+  outline: 2px dashed #1d4ed8; outline-offset: -2px;
+  background-image: linear-gradient(rgba(29,78,216,.10), rgba(29,78,216,.10));
+}
+
+/* sign-in */
+.login { display: grid; place-items: center; min-height: 100vh; }
+.login form {
+  display: flex; flex-direction: column; gap: 12px; width: 320px;
+  padding: 28px; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+}
+.login h1 { font-size: 18px; margin: 0; }
+.login .subtitle { margin: 0 0 6px; }
+.login label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4b5563; }
+.login input {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px;
+}
+.login-error { margin: 0; color: var(--bad); font-size: 12.5px; }
+.pending { color: #6b7280; font-size: 11px; }
+
+/* formatting ribbon — laid out after Excel's Home tab: two rows of grouped tools */
+.ribbon {
+  display: flex; flex-direction: column; gap: 4px; width: fit-content;
+  padding: 6px 4px; margin-bottom: 10px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+}
+.ribbon-row { display: flex; align-items: center; }
+.rgroup { display: flex; align-items: center; gap: 2px; padding: 0 8px; }
+.rgroup + .rgroup { border-left: 1px solid #e5e7eb; }
+
+.tool {
+  display: inline-flex; align-items: center; justify-content: center; gap: 1px;
+  min-width: 28px; height: 26px; padding: 0 5px;
+  background: #fff; color: var(--ink); border: 1px solid #e3e6ea; border-radius: 4px;
+  font-size: 13px; line-height: 1;
+}
+.tool.wide { min-width: 34px; }
+.tool:hover { background: #eef1f4; border-color: #dfe3e8; }
+.tool.on { background: #d7dce1; border-color: #c3c9d0; }
+
+.ico { width: 16px; height: 16px; stroke: #3d4450; fill: none; stroke-width: 1.2; stroke-linecap: round; }
+.ico.wideico { width: 22px; }
+.ico.tallico { height: 18px; }
+.ico .accent { stroke: #1d4ed8; }
+.ico .faint { stroke: #9aa2ad; }
+.ico .solid { fill: #3d4450; stroke: none; }
+.ico .tiny { font-size: 7px; fill: #3d4450; stroke: none; font-family: inherit; }
+.ico .bigA { font-size: 12px; fill: #3d4450; stroke: none; font-weight: 700; font-family: inherit; }
+.tool.on .ico { stroke: #10151c; }
+
+.glyph-a { font-weight: 600; }
+.glyph-a.big { font-size: 15px; }
+.glyph-a.small { font-size: 11px; }
+.caretup, .caretdown { font-size: 9px; color: #1d4ed8; }
+.neg { color: #c00; font-size: 11px; }
+
+/* split button: action on the left, chevron opening a menu on the right */
+.split { position: relative; display: inline-flex; align-items: center; }
+.chev {
+  width: 14px; height: 26px; padding: 0; margin-left: -2px;
+  background: #fff; color: #6b7280; border: 1px solid #e3e6ea; border-left: none;
+  border-radius: 0 4px 4px 0; font-size: 9px; line-height: 1;
+}
+/* A split button reads as one control: square off the join between action and chevron. */
+.split .tool { border-radius: 4px 0 0 4px; }
+.chev:hover { background: #eef1f4; border-color: #dfe3e8; }
+
+.menu {
+  position: absolute; top: 30px; left: 0; z-index: 20;
+  min-width: 150px; padding: 5px;
+  background: #fff; border: 1px solid var(--line); border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(16, 21, 28, .14);
+}
+.menu-item {
+  display: block; width: 100%; padding: 6px 8px; text-align: left;
+  background: #fff; color: var(--ink); border: none; border-radius: 4px; font-size: 12.5px;
+}
+.menu-item:hover { background: #eef1f4; }
+.swatches { display: grid; grid-template-columns: repeat(5, 22px); gap: 4px; padding: 2px; }
+.swatch {
+  width: 22px; height: 22px; padding: 0;
+  border: 1px solid #9ca3af; border-radius: 3px; cursor: pointer;
+}
+.swatch.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.font-name { width: 148px; }
+.font-size { width: 58px; }
+.ribbon select {
+  height: 26px; padding: 2px 4px; font-size: 12px;
+  border: 1px solid var(--line); border-radius: 4px; background: #fff;
+}
+.numfmt { width: 168px; }
+
+/* sign-in */
+.login { display: grid; place-items: center; min-height: 100vh; }
+.login form {
+  display: flex; flex-direction: column; gap: 12px; width: 320px;
+  padding: 28px; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+}
+.login h1 { font-size: 18px; margin: 0; }
+.login .subtitle { margin: 0 0 6px; }
+.login label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4b5563; }
+.login input {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px;
+}
+.login-error { margin: 0; color: var(--bad); font-size: 12.5px; }
+.pending { color: #6b7280; font-size: 11px; }
+
+/* charts */
+.ico .fill1 { fill: #4472C4; stroke: none; }
+.ico .fill2 { fill: #ED7D31; stroke: none; }
+.ico .fill3 { fill: #A5A5A5; stroke: none; }
+
+.charts { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+.chart-card {
+  width: 360px; padding: 8px; background: #fff;
+  border: 1px solid var(--line); border-radius: 6px;
+}
+.chartsvg { width: 100%; height: auto; display: block; }
+.chart-title { font-size: 11px; font-weight: 600; fill: var(--ink); }
+.chart-tick { font-size: 8px; fill: #6b7280; }
+.chart-legend { font-size: 8.5px; fill: #374151; }
+.chart-axistitle { font-size: 8.5px; fill: #4b5563; }
+.chart-datalabel { font-size: 8px; fill: #fff; font-weight: 600; }
+.chart-grid { stroke: #e8eaee; stroke-width: 1; }
+.chart-axis { stroke: #b8bec7; stroke-width: 1; }
+.chart-empty { font-size: 12px; color: #6b7280; margin: 8px; }
+
+.chart-controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.chart-controls input { flex: 1; min-width: 0; padding: 4px 6px; font-size: 12px;
+  border: 1px solid var(--line); border-radius: 4px; }
+.chart-controls select { font-size: 11px; padding: 3px 4px;
+  border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.chart-controls .drop { border-color: #f0c4c0; color: var(--bad); }
+
+/* conditional-formatting rule builder */
+.cf-form { display: flex; flex-direction: column; gap: 6px; width: 210px; padding: 4px; }
+.cf-form select, .cf-form input {
+  padding: 5px 6px; font-size: 12px; border: 1px solid var(--line); border-radius: 4px;
+  background: #fff; width: 100%;
+}
+.cf-values { display: flex; gap: 6px; }
+.cf-apply { background: var(--accent); color: #fff; text-align: center; }
+.cf-apply:hover { background: #175c33; }
+
+/* editable sheet tab */
+.tab-input {
+  padding: 4px 10px; font-size: 12px; font-weight: 600; width: 130px;
+  border: 1px solid var(--accent); border-radius: 4px 4px 0 0;
+}
+
+/* crash screen — the last line of defence against a white page */
+.crash { max-width: 620px; margin: 60px auto; padding: 24px; }
+.crash h1 { font-size: 20px; margin: 0 0 8px; }
+.crash p { color: #5b6169; margin: 0 0 16px; }
+.crash details { margin-top: 18px; font-size: 12px; }
+.crash summary { cursor: pointer; color: #5b6169; }
+.crash pre {
+  margin-top: 8px; padding: 10px; background: #f6f6f6; border: 1px solid var(--line);
+  border-radius: 4px; overflow: auto; white-space: pre-wrap; font-size: 11px;
+}
