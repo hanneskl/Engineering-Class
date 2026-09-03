@@ -18,7 +18,7 @@ import {
 
 const SYMBOLE: Zuordnung = {
   id: 'z-symbole',
-  auftrag: 'Welches Gerät steckt hinter welchem Symbol? Zieh jeden Namen auf sein Bild.',
+  auftrag: 'Welches Gerät ist das? Klick einen Namen an und leg ihn unter das passende Bild.',
   plaetze: [
     { id: 'p-router', label: 'Router', icon: 'router' },
     { id: 'p-switch', label: 'Switch', icon: 'switch' },
@@ -34,49 +34,63 @@ const SYMBOLE: Zuordnung = {
       id: 'k-router',
       text: 'Router',
       platzId: 'p-router',
-      warum: 'Das Kästchen mit der Antenne und dem Pfeil nach oben: von hier geht es hinaus.',
+      warum:
+        'Das Gerät mit den zwei Antennen. Die braucht es fürs WLAN — und genau daran ' +
+        'erkennst du zu Hause den Router.',
     },
     {
       id: 'k-switch',
       text: 'Switch',
       platzId: 'p-switch',
-      warum: 'Der flache Kasten mit den vielen Anschlüssen nebeneinander.',
+      warum:
+        'Der flache Kasten, dessen ganze Vorderseite aus Netzwerkbuchsen besteht. Genau ' +
+        'dafür ist er da: viele Kabel an einem Ort.',
     },
     {
       id: 'k-ap',
       text: 'Access Point',
       platzId: 'p-ap',
-      warum: 'Der kleine Kasten mit den Funkwellen — er macht das WLAN auf.',
+      warum:
+        'Die flache runde Scheibe, die an der Decke hängt und Funkwellen aussendet — so ' +
+        'sehen sie in der Schule und im Büro aus.',
     },
     {
       id: 'k-repeater',
       text: 'WLAN-Repeater',
       platzId: 'p-repeater',
-      warum: 'Funkwellen auf beiden Seiten: er empfängt WLAN und sendet es weiter.',
+      warum:
+        'Das Gerät mit den zwei Steckerstiften unten: Es kommt direkt in die Steckdose ' +
+        'und zeigt mit Balken an, wie gut es das WLAN noch empfängt.',
     },
     {
       id: 'k-modem',
       text: 'Modem',
       platzId: 'p-modem',
-      warum: 'Der Kasten mit der Leitung nach oben — das ist die Leitung zum Provider.',
+      warum:
+        'Der Kasten ohne Antennen, dafür mit dem dicken Kabel in die Wanddose. Über diese ' +
+        'Dose kommt die Leitung des Providers ins Haus.',
     },
     {
       id: 'k-server',
       text: 'Server',
       platzId: 'p-server',
-      warum: 'Der hohe Kasten mit den Einschüben, wie im Rechenzentrum.',
+      warum:
+        'Der hohe Schrank aus mehreren gleichen Einschüben, jeder mit eigener Lampe — ' +
+        'so stehen sie im Rechenzentrum.',
     },
     {
       id: 'k-nas',
       text: 'NAS',
       platzId: 'p-nas',
-      warum: 'Der Speicher fürs Netzwerk — außen wie eine Festplatte mit Anschluss.',
+      warum:
+        'Der kleine Kasten, dessen Vorderseite aus Festplatten-Einschüben besteht. Er ist ' +
+        'nichts als Speicher fürs Netzwerk.',
     },
     {
       id: 'k-drucker',
       text: 'Drucker',
       platzId: 'p-drucker',
-      warum: 'Mit dem Blatt Papier, das oben herauskommt.',
+      warum: 'Da kommt oben ein bedrucktes Blatt heraus — eindeutiger geht es kaum.',
     },
   ],
 }
@@ -347,6 +361,9 @@ export const m1Geraete: MatchLesson = {
   id: 'm1',
   module: 'M1',
   title: 'Geräte & Komponenten',
+  // Filled in once photos with a named author are in src/fotos/ — see the
+  // README there. Empty means nothing is shown.
+  bildnachweise: [],
   quali:
     'Fast jeder Quali beginnt mit einer Zuordnung: Beschreibung links, Gerät rechts. ' +
     'Dazu kommen die Netzwerktypen (LAN, MAN, WAN, GAN), der Steckertyp RJ-45 und ' +
@@ -359,29 +376,31 @@ export const m1Geraete: MatchLesson = {
       'Achte besonders auf die Paare, die leicht zu verwechseln sind: Switch und Access ' +
         'Point verteilen beide — der eine per Kabel, der andere per Funk. Access Point und ' +
         'Repeater machen beide WLAN — aber der Repeater hängt selbst im WLAN statt am Kabel.',
-      'Die Symbole unten sind dieselben, die du im Netzwerkplaner benutzt.',
+      'In der ersten Aufgabe siehst du die Geräte so, wie sie wirklich aussehen — ' +
+        'daran erkennst du sie später auch zu Hause oder im Computerraum.',
     ],
   },
   tasks: [
     {
       id: 'm1-symbole',
-      title: 'Die Symbole erkennen',
+      title: 'Die Geräte erkennen',
       brief:
-        'Acht Symbole, acht Namen. Klick einen Namen an und dann das Bild, zu dem er gehört.',
+        'Acht Bilder, acht Namen. Klick einen Namen an und dann das Gerät, zu dem er gehört.',
       zuordnung: SYMBOLE,
       ziele: [
         { text: 'Alle acht Namen abgelegt', rules: [allePlatziert(SYMBOLE)] },
-        { text: 'Jeder Name auf dem richtigen Symbol', rules: [alleRichtigZugeordnet(SYMBOLE)] },
+        { text: 'Jeder Name beim richtigen Gerät', rules: [alleRichtigZugeordnet(SYMBOLE)] },
       ],
       hints: {
         stups: 'Fang mit den Geräten an, die du sicher kennst — der Rest wird dann weniger.',
         hinweis:
-          'Router und Modem sehen sich ähnlich. Das Modem hat die Leitung nach draußen, ' +
-          'der Router den Pfeil und die Antenne.',
+          'Router und Modem sehen sich ähnlich, beides flache Kästen mit Lämpchen. Der ' +
+          'Router hat die Antennen, das Modem das Kabel in die Wanddose.',
         loesung:
-          'Von links nach rechts: Router (Antenne), Switch (viele Anschlüsse), Access Point ' +
-          '(Funkwellen), Repeater (Funk auf beiden Seiten), Modem (Leitung nach oben), ' +
-          'Server (hoher Kasten), NAS (Speicher), Drucker (Blatt Papier).',
+          'Router: zwei Antennen. Switch: die lange Reihe Buchsen. Access Point: die ' +
+          'Scheibe für die Decke. Repeater: die Steckerstifte für die Steckdose. Modem: ' +
+          'das Kabel in die Wanddose. Server: der hohe Schrank mit Einschüben. NAS: die ' +
+          'Festplatten-Einschübe. Drucker: das Blatt Papier.',
       },
     },
     {

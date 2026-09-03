@@ -306,6 +306,11 @@ export type MatchTask = {
 export type MatchLesson = LessonBase & {
   kind: 'match'
   tasks: MatchTask[]
+  /**
+   * Credits for the device photos, one line each. CC-licensed pictures have
+   * to name their author, so the lines are shown under the board.
+   */
+  bildnachweise?: string[]
 }
 
 export function matchTaskRules(task: MatchTask): import('./matchRules').MatchRule[] {

@@ -14,7 +14,7 @@ import {
 } from '../model/match'
 import type { Frage } from '../model/frage'
 import { answerMatch } from '../model/match'
-import { DeviceIcon } from './icons'
+import { DeviceBild } from './DeviceBild'
 import { FrageCard } from './FrageCard'
 
 /**
@@ -91,9 +91,11 @@ export function MatchBoard({
                 onClick={() => drop(p.id)}
               >
                 {zuordnung.rang && <span className="platz-rang">{i + 1}</span>}
-                {p.icon ? (
-                  <span className="platz-icon">
-                    <DeviceIcon type={p.icon} size={40} />
+                {p.bild ? (
+                  <img className="platz-bild" src={p.bild} alt="" />
+                ) : p.icon ? (
+                  <span className="platz-bild">
+                    <DeviceBild type={p.icon} size={104} />
                   </span>
                 ) : (
                   <span className="platz-label">{p.label}</span>
