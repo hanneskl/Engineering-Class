@@ -13,10 +13,10 @@ export function NameGate({ onStart }: { onStart: (name: string) => void }) {
     <div className="gate">
       <div className="gate-card">
         <h1>
-          Netzwerk<span>-Trainer</span>
+          Informatik<span>-Trainer</span>
         </h1>
         <p className="gate-sub">
-          Übe die Netzwerk- und Binär-Aufgaben für den Quali in Informatik.
+          Übe Netzwerke, Binärzahlen und Tabellenkalkulation für den Quali in Informatik.
         </p>
 
         <form
