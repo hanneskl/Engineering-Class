@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { gradeSubmission, rebuildSheet } from '../src/grade.ts'
-import { scenarioById } from '../src/index.ts'
+import { gradeSubmission, rebuildSheet } from './grade.ts'
+import { scenarioById } from './index.ts'
 
 const SMV = 'smv-wahl'
 

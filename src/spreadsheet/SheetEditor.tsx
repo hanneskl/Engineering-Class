@@ -9,21 +9,16 @@ import {
   type Sheet,
 } from '@quali/core'
 import {
-  SCENARIOS,
-  gradeSubmission,
+  rebuildSheet,
   scenarioById,
   serialiseMerges,
-  totalPoints,
   type Submission,
-  type TaskDef,
 } from '@quali/scenarios'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { backend, hasBackend, signOut, submitAttempt } from './backend.ts'
-import { Login } from './Login.tsx'
-import { Grid } from './Grid.tsx'
-import { Ribbon, borderWeights, type BorderPreset } from './Ribbon.tsx'
-import { Chart } from './Chart.tsx'
-import { handlePointKey, stopPointing, type EditState } from './editing.ts'
+import { Grid } from './ui/Grid.tsx'
+import { Ribbon, borderWeights, type BorderPreset } from './ui/Ribbon.tsx'
+import { Chart } from './ui/Chart.tsx'
+import { handlePointKey, stopPointing, type EditState } from './ui/editing.ts'
 import {
   canPoint,
   cellsOf,
@@ -35,16 +30,10 @@ import {
   type Pos,
   type Rect,
   type Selection,
-} from './selection.ts'
+} from './ui/selection.ts'
 
-type Status = 'open' | 'passed' | 'failed'
-
-interface TaskState {
-  readonly status: Status
-  readonly message: string
-  /** True while the server has not yet confirmed the browser's provisional result. */
-  readonly pending: boolean
-}
+/** Everything the student has typed, formatted and drawn — what gets graded. */
+export type Work = Omit<Submission, 'scenarioId' | 'taskId'>
 
 interface Clipboard {
   readonly rect: Rect
@@ -52,17 +41,45 @@ interface Clipboard {
   readonly styles: readonly (readonly CellStyle[])[]
 }
 
-export function App() {
-  const [scenarioId, setScenarioId] = useState(SCENARIOS[0]!.id)
+/**
+ * The spreadsheet itself: ribbon, formula bar, grid, charts.
+ *
+ * It used to be the whole app, with its own header, scenario dropdown, score
+ * and sign-in. All of that now belongs to the module shell around it (M10),
+ * the same shell M2 and M9 use — so this component knows only about the
+ * scenario it was handed and reports back what the student has done.
+ */
+export function SheetEditor({
+  scenarioId,
+  resetNonce,
+  initialWork,
+  onWork,
+}: {
+  scenarioId: string
+  /** Bumped by the shell's Zurücksetzen; re-seeds the sheet from the scenario. */
+  resetNonce: number
+  /** What the student had here last time, restored from their progress file. */
+  initialWork?: Work
+  onWork: (work: Work) => void
+}) {
   const scenario = useMemo(() => scenarioById(scenarioId), [scenarioId])
 
   // One sheet per scenario, kept alive across switches so a student can move between
   // scenarios without losing work. Only Zurücksetzen re-seeds.
   const sheetsRef = useRef(new Map<string, Sheet>())
+  // Restoration is a first-mount affair: after that the live sheet is the truth, and
+  // re-reading saved work would undo whatever the student just typed.
+  const restored = useRef(false)
   function sheetFor(id: string): Sheet {
     const existing = sheetsRef.current.get(id)
     if (existing) return existing
-    const created = scenarioById(id).seed()
+    // rebuildSheet is the same function the server grades with, so a restored
+    // sheet is exactly the sheet the checker would have seen.
+    const created =
+      !restored.current && initialWork
+        ? rebuildSheet(scenarioById(id), initialWork)
+        : scenarioById(id).seed()
+    restored.current = true
     sheetsRef.current.set(id, created)
     return created
   }
@@ -72,22 +89,7 @@ export function App() {
   const [selection, setSelection] = useState<Selection>(single({ row: 0, col: 0 }))
   const [edit, setEdit] = useState<EditState | null>(null)
   const [clipboard, setClipboard] = useState<Clipboard | null>(null)
-  const [states, setStates] = useState<Record<string, TaskState>>({})
   const [renamingTab, setRenamingTab] = useState(false)
-  const [signedIn, setSignedIn] = useState(false)
-  const [authReady, setAuthReady] = useState(!hasBackend)
-
-  useEffect(() => {
-    if (!backend) return
-    backend.auth.getSession().then(({ data }) => {
-      setSignedIn(data.session !== null)
-      setAuthReady(true)
-    })
-    const { data } = backend.auth.onAuthStateChange((_event, session) => {
-      setSignedIn(session !== null)
-    })
-    return () => data.subscription.unsubscribe()
-  }, [])
 
   const rect = rectOf(selection)
   const activeA1 = toA1(selection.anchor)
@@ -96,29 +98,26 @@ export function App() {
     setRevision((value) => value + 1)
   }
 
-  /** Switch scenarios, keeping whatever the student has already done in each. */
-  function switchScenario(id: string): void {
-    setScenarioId(id)
-    sheetFor(id)
+  // Moving to another scenario keeps whatever is already in it; the cursor starts
+  // over so the student is not left selecting a cell from the sheet they just left.
+  useEffect(() => {
     setSelection(single({ row: 0, col: 0 }))
     setEdit(null)
     setClipboard(null)
-    touch()
-  }
+  }, [scenarioId])
 
-  /** Start the current scenario over: fresh sheet, and forget only its own task results. */
-  function resetScenario(): void {
+  // Zurücksetzen lives in the shell, and reaches us as a bumped nonce. Skip the
+  // first run, which is mount, not a reset.
+  const seenReset = useRef(resetNonce)
+  useEffect(() => {
+    if (seenReset.current === resetNonce) return
+    seenReset.current = resetNonce
     sheetsRef.current.set(scenarioId, scenarioById(scenarioId).seed())
-    setStates((previous) => {
-      const next = { ...previous }
-      for (const task of scenario.tasks) delete next[task.id]
-      return next
-    })
     setSelection(single({ row: 0, col: 0 }))
     setEdit(null)
     setClipboard(null)
     touch()
-  }
+  }, [resetNonce, scenarioId])
 
   function commit(a1: string, input: string): void {
     sheet.setInput(a1, input)
@@ -326,68 +325,22 @@ export function App() {
   }
 
   /**
-   * Grade locally for instant feedback, then let the server's verdict overwrite it.
-   * Both sides run the same gradeSubmission, so they should agree — but the server's answer
-   * is the one that is recorded, and the one we display once it lands.
+   * Report the work upward after every change, so the module shell can grade it.
+   *
+   * Grading used to sit behind a „Prüfen" button on each task. The shell checks
+   * continuously instead — ARCHITECTURE.md §5.4, no submit button — and every
+   * other module in here already works that way.
    */
-  async function check(task: TaskDef): Promise<void> {
-    const work = currentWork()
-    const local = gradeSubmission({ scenarioId, taskId: task.id, ...work })
-    setStates((previous) => ({
-      ...previous,
-      [task.id]: {
-        status: local.passed ? 'passed' : 'failed',
-        message: local.message,
-        pending: hasBackend,
-      },
-    }))
-    if (!hasBackend) return
-
-    const { grade, error } = await submitAttempt(scenarioId, task.id, work)
-    setStates((previous) => ({
-      ...previous,
-      [task.id]: grade
-        ? { status: grade.passed ? 'passed' : 'failed', message: grade.message, pending: false }
-        : {
-            status: previous[task.id]?.status ?? 'failed',
-            message: error ?? previous[task.id]?.message ?? '',
-            pending: false,
-          },
-    }))
-  }
-
-  const earned = scenario.tasks
-    .filter((task) => states[task.id]?.status === 'passed')
-    .reduce((sum, task) => sum + task.points, 0)
+  useEffect(() => {
+    onWork(currentWork())
+    // `revision` is the change signal; `sheet` is mutated in place, so it is not one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision, scenarioId])
 
   const barValue = edit ? edit.draft : sheet.getInput(activeA1)
 
-  if (!authReady) return <div className="login"><p>Wird geladen …</p></div>
-  if (hasBackend && !signedIn) return <Login onSignedIn={() => setSignedIn(true)} />
-
   return (
-    <div className="app">
-      <header>
-        <div>
-          <h1>Quali Excel Trainer</h1>
-          <p className="subtitle">{scenario.subtitleDe}</p>
-        </div>
-        <div className="header-right">
-          <select value={scenarioId} onChange={(event) => switchScenario(event.target.value)}>
-            {SCENARIOS.map((item) => (
-              <option key={item.id} value={item.id}>{item.titleDe}</option>
-            ))}
-          </select>
-          <span className="score">{earned} / {totalPoints(scenario)} Punkte</span>
-          <button className="ghost" onClick={resetScenario}>Zurücksetzen</button>
-          {hasBackend && (
-            <button className="ghost" onClick={() => void signOut()}>Abmelden</button>
-          )}
-        </div>
-      </header>
-
-      <main>
-        <section className="sheet-pane">
+    <div className="sheet-pane">
           <Ribbon
             current={sheet.getStyle(activeA1)}
             onStyle={applyStyle}
@@ -538,36 +491,6 @@ export function App() {
             kopiert und fügt ein · beim Schreiben einer Formel fügt ein Klick auf eine Zelle
             deren Bezug ein
           </p>
-        </section>
-
-        <aside className="tasks">
-          <div className="tasks-head">
-            <h2>Arbeitsaufträge</h2>
-            <button onClick={() => scenario.tasks.forEach((task) => void check(task))}>Alles prüfen</button>
-          </div>
-          <p className="rule">Alle Berechnungen sind mit Formeln durchzuführen!</p>
-
-          <ol>
-            {scenario.tasks.map((task, index) => {
-              const state: TaskState = states[task.id] ?? { status: 'open', message: '', pending: false }
-              return (
-                <li key={task.id} className={`task ${state.status}`}>
-                  <div className="task-head">
-                    <span className="mark">
-                      {state.status === 'passed' ? '✓' : state.status === 'failed' ? '✗' : index + 1}
-                    </span>
-                    <span className="points">{task.points} P</span>
-                  </div>
-                  <p className="prompt">{task.promptDe}</p>
-                  {state.status === 'failed' && <p className="feedback">{state.message}</p>}
-                  {state.pending && <p className="pending">wird gespeichert …</p>}
-                  <button className="ghost small" onClick={() => void check(task)}>Prüfen</button>
-                </li>
-              )
-            })}
-          </ol>
-        </aside>
-      </main>
     </div>
   )
 }

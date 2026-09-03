@@ -14,6 +14,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    "baseUrl": ".",
+    "paths": {
+      "@quali/core": ["./src/spreadsheet/core/index.ts"],
+      "@quali/scenarios": ["./src/spreadsheet/scenarios/index.ts"]
+    },
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

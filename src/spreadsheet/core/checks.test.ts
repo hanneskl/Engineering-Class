@@ -16,8 +16,8 @@ import {
   usesOperator,
   type Check,
   type TaskContext,
-} from '../src/checks.ts'
-import { Sheet } from '../src/sheet.ts'
+} from './checks.ts'
+import { Sheet } from './sheet.ts'
 
 /** Blatt 3 „SMV Wahl" — Lukas 45, Mia 58, Ben 32, Sina 65, Noah 20. */
 function smvSheet(): Sheet {

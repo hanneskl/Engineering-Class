@@ -13,6 +13,7 @@ import type { Session } from '../model/console'
 import type { Walk } from '../model/web'
 import type { Traces } from '../model/traces'
 import type { Matches } from '../model/match'
+import type { Work } from '../spreadsheet/SheetEditor'
 
 export type TaskProgress = {
   solved: boolean
@@ -38,6 +39,8 @@ export type Progress = {
   traces: Record<string, Traces>
   /** Sorted cards, one per match task. */
   matches: Record<string, Matches>
+  /** Spreadsheet work, one per sheet task. */
+  sheets: Record<string, Work>
 }
 
 const PREFIX = 'netzwerk-trainer:'
@@ -59,6 +62,7 @@ export function emptyProgress(studentName: string): Progress {
     walks: {},
     traces: {},
     matches: {},
+    sheets: {},
   }
 }
 
@@ -81,6 +85,7 @@ export function load(studentName: string): Progress {
       walks: parsed.walks ?? {},
       traces: parsed.traces ?? {},
       matches: parsed.matches ?? {},
+      sheets: parsed.sheets ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -193,6 +198,7 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
     const walk = progress.walks[id]
     const trace = progress.traces[id]
     const match = progress.matches[id]
+    const sheet = progress.sheets[id]
     return Boolean(
       t?.solved ||
         t?.attempts ||
@@ -205,7 +211,8 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
         trace?.visits.length ||
         trace?.seen.length ||
         (match && Object.keys(match.gelegt).length) ||
-        (match && Object.keys(match.answers).length),
+        (match && Object.keys(match.answers).length) ||
+        (sheet && Object.keys(sheet.inputs).length),
     )
   })
 }
@@ -228,6 +235,7 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
     walks: keep(progress.walks),
     traces: keep(progress.traces),
     matches: keep(progress.matches),
+    sheets: keep(progress.sheets),
   }
 }
 
@@ -253,6 +261,14 @@ export function loadTraces(progress: Progress, taskId: string): Traces | undefin
 
 export function saveTraces(progress: Progress, taskId: string, traces: Traces): Progress {
   return { ...progress, traces: { ...progress.traces, [taskId]: traces } }
+}
+
+export function loadSheet(progress: Progress, taskId: string): Work | undefined {
+  return progress.sheets[taskId]
+}
+
+export function saveSheet(progress: Progress, taskId: string, work: Work): Progress {
+  return { ...progress, sheets: { ...progress.sheets, [taskId]: work } }
 }
 
 export function loadWalk(progress: Progress, taskId: string): Walk | undefined {

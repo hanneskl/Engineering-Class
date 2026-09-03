@@ -1,5 +1,5 @@
 {
-  "name": "network-education",
+  "name": "engineering-class",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,9 +8,11 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "drive": "node scripts/sheet-drive/drive.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -18,6 +20,8 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "playwright": "^1.62.1",
+    "tsx": "^4.23.13",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vitest": "^2.1.8"

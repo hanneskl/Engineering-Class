@@ -326,6 +326,27 @@ export function matchZielMet(
   return matchZielFindings(state, ziel).length === 0
 }
 
+/**
+ * M10, the spreadsheet module.
+ *
+ * The other modules carry their own content; this one delegates, because the
+ * exam scenarios already exist as data in `src/spreadsheet/scenarios`. One
+ * shell task per scenario, and the scenario's own Arbeitsaufträge become the
+ * checklist — so a `SheetTask` only has to say which scenario it opens and
+ * what to say when the student is stuck.
+ */
+export type SheetTask = {
+  id: string
+  /** Scenario id in `src/spreadsheet/scenarios` — "vermoegen", "klima" … */
+  scenarioId: string
+  hints: Hints
+}
+
+export type SheetLesson = LessonBase & {
+  kind: 'sheet'
+  tasks: SheetTask[]
+}
+
 export type Lesson =
   | QuizLesson
   | BuildLesson
@@ -334,3 +355,4 @@ export type Lesson =
   | WebLesson
   | TraceLesson
   | MatchLesson
+  | SheetLesson

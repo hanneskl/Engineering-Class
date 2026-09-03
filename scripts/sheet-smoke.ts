@@ -14,7 +14,7 @@ import {
   toText,
   usesFunction,
   type Check,
-} from '../src/index.ts'
+} from '../src/spreadsheet/core/index.ts'
 
 const sheet = new Sheet('SMV Wahl')
 sheet.load({

@@ -7,6 +7,7 @@ import { m6Internetseite } from './m6-internetseite'
 import { m7Spuren } from './m7-spuren'
 import { m8Abkuerzungen } from './m8-abkuerzungen'
 import { m9Flussdiagramm } from './m9-flussdiagramm'
+import { m10Tabellen } from './m10-tabellen'
 
 /**
  * Lessons are content, deliberately kept clear of the engine (ARCHITECTURE.md
@@ -14,6 +15,9 @@ import { m9Flussdiagramm } from './m9-flussdiagramm'
  *
  * M3's addressing work lives inside M2's last two tasks; M1 T1.6 (the
  * router's own web interface) is still open.
+ *
+ * M10 is the Datenverarbeitung third of the Quali rather than a networking
+ * module, which is why it sits last despite being worth the most points.
  */
 export const LESSONS: Lesson[] = [
   m1Geraete,
@@ -24,6 +28,7 @@ export const LESSONS: Lesson[] = [
   m4Binaer,
   m8Abkuerzungen,
   m9Flussdiagramm,
+  m10Tabellen,
 ]
 
 export function lessonById(id: string): Lesson | undefined {

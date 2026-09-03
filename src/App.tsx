@@ -9,6 +9,7 @@ import { ConsoleLessonView } from './ui/ConsoleLessonView'
 import { WebLessonView } from './ui/WebLessonView'
 import { TraceLessonView } from './ui/TraceLessonView'
 import { MatchLessonView } from './ui/MatchLessonView'
+import { SheetLessonView } from './ui/SheetLessonView'
 import { load, save, lastStudent, type Progress } from './progress/store'
 
 type View = { kind: 'home' } | { kind: 'lesson'; lessonId: string }
@@ -64,7 +65,14 @@ export function App() {
 
       <main className={lesson && lesson.kind !== 'quiz' ? 'wide' : undefined}>
         {lesson ? (
-          lesson.kind === 'match' ? (
+          lesson.kind === 'sheet' ? (
+            <SheetLessonView
+              lesson={lesson}
+              progress={progress}
+              onProgress={update}
+              onBack={() => setView({ kind: 'home' })}
+            />
+          ) : lesson.kind === 'match' ? (
             <MatchLessonView
               lesson={lesson}
               progress={progress}

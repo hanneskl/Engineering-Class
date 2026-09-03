@@ -1,7 +1,7 @@
 {
   "imports": {
-    "@quali/core": "../../packages/core/src/index.ts",
-    "@quali/scenarios": "../../packages/scenarios/src/index.ts",
+    "@quali/core": "../../src/spreadsheet/core/index.ts",
+    "@quali/scenarios": "../../src/spreadsheet/scenarios/index.ts",
     "@supabase/supabase-js": "jsr:@supabase/supabase-js@2"
   }
 }

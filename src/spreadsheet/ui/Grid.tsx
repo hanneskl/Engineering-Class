@@ -13,7 +13,6 @@ import {
   fillExtension,
   rectContains,
   rectOf,
-  rectLabel,
   single,
   toA1,
   toPos,
