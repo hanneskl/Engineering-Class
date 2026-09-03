@@ -1,57 +1,64 @@
+/*
+ * Corporate identity — Montessorischule Niederseeon.
+ *
+ * Values taken from the school's own artwork, not guessed: the RGB logo
+ * (Logo_RGB_Montessori-Niederseeon.pdf) carries #EE7D00 and #3B4D55, the
+ * emblem and business cards add the aubergine and the warm paper tint.
+ *
+ * The bright CI orange carries no text. #EE7D00 against white is 2.76:1 and
+ * against white *type* likewise — it fails as a text colour and as a button
+ * fill under white type. So it does what a logo colour should: it identifies.
+ * Fills that carry small type use --brand-deep (5.4:1 under white) or pair the
+ * bright orange with near-black (5.7:1). Every value below is measured.
+ */
 :root {
-  --bg: #f4f6fa;
+  /* identity */
+  --brand: #ee7d00;          /* the logo orange — identity, never small type  */
+  --brand-deep: #a85400;     /* type and fills that must carry white          */
+  --brand-wash: #fdf1e3;     /* tint for selected / current surfaces          */
+  --plum: #5a2266;           /* CI aubergine — the hint ladder                */
+  --plum-wash: #f4ecf6;
+
+  /* surfaces and ink */
+  --bg: #f5f4ef;             /* the CI's warm paper                           */
   --surface: #ffffff;
-  --ink: #16202e;
-  --muted: #5b6b80;
-  --line: #dde3ec;
-  --accent: #1f5fd6;
+  --ink: #2b3a42;            /* the wordmark slate, deepened for body text    */
+  --ink-strong: #1a2429;
+  --muted: #5c6b72;          /* 5.5:1 on white, 5.0:1 on paper                */
+  --line: #ddd9d0;
+  --line-soft: #ebe8e1;
+
+  /* state */
+  --good: #4e7a12;           /* CI green, deepened to 5.1:1                   */
+  --good-bright: #7ab829;
+  --good-bg: #eef5e4;
+  --bad: #a3231b;            /* clearly not the brand orange: darker, redder  */
+  --bad-bg: #fbeceb;
+  --hint-bg: var(--plum-wash);
+  --hint-line: #b493bd;
+
+  /*
+   * The rest of the sheet reaches for --accent for focus rings, selected
+   * nodes, WLAN links and primary buttons. It stays, pointing at the deep
+   * orange rather than the bright one, because most of those uses carry
+   * white type or need to read against paper.
+   */
+  --accent: var(--brand-deep);
   --accent-ink: #ffffff;
-  --good: #0f7a4a;
-  --good-bg: #e6f5ee;
-  --bad: #a8341f;
-  --bad-bg: #fdeeea;
-  --hint-bg: #fff8e6;
-  --hint-line: #e8c96a;
-  --radius: 12px;
-  color-scheme: light dark;
-}
 
-/* Dark tokens are defined twice on purpose. The media query covers the common
-   case (no explicit choice, dark OS) but is guarded so a host that stamps
-   data-theme="light" still wins; the attribute rule covers an explicit dark
-   choice on a light OS. Components only ever read the tokens. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #10151d;
-    --surface: #182029;
-    --ink: #e8edf4;
-    --muted: #9aabbf;
-    --line: #2a3542;
-    --accent: #6098f5;
-    --accent-ink: #0b1017;
-    --good: #6ddaa4;
-    --good-bg: #14311f;
-    --bad: #ffa593;
-    --bad-bg: #3a1a15;
-    --hint-bg: #2e2712;
-    --hint-line: #7d6a2c;
-  }
-}
+  --radius: 10px;
 
-:root[data-theme='dark'] {
-  --bg: #10151d;
-  --surface: #182029;
-  --ink: #e8edf4;
-  --muted: #9aabbf;
-  --line: #2a3542;
-  --accent: #6098f5;
-  --accent-ink: #0b1017;
-  --good: #6ddaa4;
-  --good-bg: #14311f;
-  --bad: #ffa593;
-  --bad-bg: #3a1a15;
-  --hint-bg: #2e2712;
-  --hint-line: #7d6a2c;
+  /*
+   * ITC Officina Sans is the school's typeface (Erik Spiekermann, © Adobe).
+   * The licence is desktop-only, so the files are NOT shipped — naming the
+   * family picks it up wherever it is installed and falls through to the
+   * system UI sans everywhere else. No webfont is fetched: hotlinking Google
+   * Fonts from a German school site is a GDPR problem nobody needs.
+   */
+  --font: "ITC Officina Sans Std", "ITC Officina Sans", "Officina Sans",
+          system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -60,41 +67,58 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 15px/1.5 var(--font);
+  /* The trainer is a fixed-height application, not a document. */
+  overflow: hidden;
 }
 
 button { font: inherit; cursor: pointer; }
-h1, h2, h3 { line-height: 1.25; }
+h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
 
-/* ---------- shell ---------- */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-deep);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
-.app { min-height: 100vh; display: flex; flex-direction: column; }
+/* ---------- shell ----------
+ *
+ * One screen, never scrolled. Students work on 17" laptops in fullscreen and
+ * the thing they manipulate — canvas, grid, console — has to be on screen the
+ * moment a module opens. The app is therefore a fixed grid: bar, then work.
+ * Anything that needs more room scrolls inside its own pane, never the page.
+ */
+
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
 
 .topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; padding: .75rem 1.25rem;
+  display: flex; align-items: baseline; gap: .85rem;
+  padding: .5rem 1rem;
   background: var(--surface); border-bottom: 1px solid var(--line);
 }
 .brand {
   background: none; border: 0; padding: 0; color: var(--ink);
-  font-weight: 700; font-size: 1.05rem; letter-spacing: -.01em;
+  font-weight: 700; font-size: 1rem; letter-spacing: -.01em;
 }
-.brand span { color: var(--muted); font-weight: 500; }
-.topbar-right { display: flex; align-items: center; gap: .75rem; }
-.who { font-weight: 600; }
+.brand span { color: var(--brand-deep); }
+/* The old footer said this on its own row. A fixed screen cannot spare 53px
+   for a line nobody reads twice, so it rides along up here. */
+.topbar-where { color: var(--muted); font-size: .78rem; }
+.topbar-right { margin-left: auto; display: flex; align-items: baseline; gap: .7rem; }
+.who { font-weight: 600; font-size: .9rem; }
 .link {
   background: none; border: 0; color: var(--muted);
-  text-decoration: underline; padding: 0; font-size: .9rem;
+  text-decoration: underline; padding: 0; font-size: .85rem;
 }
 
-main { flex: 1; width: min(760px, 100% - 2rem); margin: 0 auto; padding: 1.75rem 0 3rem; }
-/* The editor needs room for palette + canvas + inspector side by side. */
-main.wide { width: min(1180px, 100% - 2rem); }
-
-.foot {
-  padding: 1rem 1.25rem; text-align: center;
-  color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line);
-}
+/* Positioned so a quiz module's Erklären panel can cover the work area the
+   same way the editor modules' does. */
+main { position: relative; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 
 /* ---------- name gate ---------- */
 
@@ -129,84 +153,209 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .ghost.small { padding: .4rem .8rem; font-size: .9rem; }
 .row { display: flex; gap: .6rem; flex-wrap: wrap; }
 
-/* ---------- home ---------- */
+/* ---------- home ----------
+ *
+ * Nine modules, one screen. The old card spent a whole row on a Reset button
+ * plus the sentence "Noch nichts zum Zurücksetzen" — around a third of its
+ * height explaining an action nobody takes on first sight. Reset is now a
+ * single glyph in the card head, and only when there is something to lose.
+ */
 
-.home h1 { margin: 0 0 .25rem; font-size: 1.7rem; }
-.lede { color: var(--muted); margin: 0 0 1.75rem; }
+.home {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex; flex-direction: column; gap: .75rem;
+}
+.home-head { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; }
+.home h1 { margin: 0; font-size: 1.35rem; }
+.lede { color: var(--muted); margin: 0; font-size: .9rem; }
+.home-head .export { margin-left: auto; }
 
-.cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+/* Nine modules is exactly three by three. Saying so beats auto-fit, which
+   spread them five-and-four across a wide screen and left the bottom half
+   of the page empty. The rows share the leftover height, so the grid fills
+   the screen instead of hanging from the top of it. */
+.cards {
+  display: grid; gap: .7rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  width: min(66rem, 100%); margin-inline: auto;
+  flex: 1; min-height: 0;
+}
+@media (max-width: 780px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .card {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius); color: inherit;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; position: relative;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
-.card:hover { border-color: var(--accent); }
+.card:hover { border-color: var(--brand); }
 .card-open {
-  display: flex; flex-direction: column; gap: .2rem;
+  display: flex; flex-direction: column; gap: .15rem; flex: 1;
   text-align: left; background: none; border: 0; color: inherit;
-  padding: 1.1rem 1.1rem .8rem; border-radius: var(--radius) var(--radius) 0 0;
+  padding: .7rem .8rem .75rem; border-radius: var(--radius);
 }
-.card-title { font-size: 1.15rem; font-weight: 700; margin-top: .3rem; }
-.card-sub { color: var(--muted); font-size: .92rem; margin-bottom: .7rem; }
-.card-head { display: flex; justify-content: space-between; align-items: center; }
-.card-done { border-color: var(--good); }
-.tick { color: var(--good); font-size: .8rem; font-weight: 700; }
-.card-meta { color: var(--muted); font-size: .82rem; }
+.card-title { font-size: 1rem; font-weight: 700; margin-top: .25rem; line-height: 1.25; }
+.card-sub {
+  color: var(--muted); font-size: .82rem; margin-bottom: .55rem; flex: none;
+  /* Two lines at most, so every card in a row is the same height. */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: .4rem; }
+.card-done { border-color: var(--good-bright); }
+.tick { color: var(--good); font-size: .72rem; font-weight: 700; }
+.card-meta { color: var(--muted); font-size: .76rem; }
 
-.card-foot { border-top: 1px solid var(--line); padding: .55rem 1.1rem .7rem; margin-top: auto; }
-.reset { font-size: .82rem; }
-.reset:disabled { text-decoration: none; opacity: .55; cursor: default; }
-.confirm p { margin: 0 0 .55rem; font-size: .85rem; color: var(--ink); }
-.confirm .row { gap: .4rem; }
+/* Reset sits over the card, not inside its button — a button may not nest. */
+.card-foot { position: absolute; top: .45rem; right: .5rem; }
+.reset {
+  display: grid; place-items: center; width: 1.5rem; height: 1.5rem;
+  background: none; border: 1px solid transparent; border-radius: 6px;
+  color: var(--muted); font-size: .85rem; text-decoration: none; line-height: 1;
+}
+.reset:hover { border-color: var(--line); color: var(--bad); }
+.reset:disabled { opacity: 0; pointer-events: none; }
+
+.confirm {
+  position: absolute; inset: 0; z-index: 2;
+  background: var(--surface); border-radius: var(--radius);
+  padding: .7rem .8rem; display: flex; flex-direction: column; justify-content: center;
+  border: 1px solid var(--bad);
+}
+.confirm p { margin: 0 0 .55rem; font-size: .8rem; color: var(--ink); }
+.confirm .row { gap: .35rem; }
 
 .badge {
-  display: inline-block; background: var(--accent); color: var(--accent-ink);
-  border-radius: 999px; padding: .1rem .6rem; font-size: .75rem; font-weight: 700;
+  display: inline-block; background: var(--brand); color: var(--ink-strong);
+  border-radius: 999px; padding: .1rem .55rem; font-size: .72rem; font-weight: 700;
+  letter-spacing: .01em;
 }
 
-.bar { display: block; height: 7px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: .45rem; }
-.bar-fill { display: block; height: 100%; background: var(--good); transition: width .25s ease; }
+/* The bar and its count are one unit and belong at the foot of the card,
+   however tall the row turns out to be. */
+.bar {
+  display: block; height: 5px; background: var(--line-soft);
+  border-radius: 999px; overflow: hidden; margin: auto 0 .35rem;
+}
+.bar-fill { display: block; height: 100%; background: var(--brand); transition: width .25s ease; }
+.card-done .bar-fill { background: var(--good-bright); }
 
+.export p { display: none; }
 
-.export { margin-top: 2rem; }
-.export p { color: var(--muted); font-size: .85rem; margin: .5rem 0 0; }
+/* ---------- lesson ----------
+ *
+ * Two columns, both fixed to the screen. The chrome — who you are, which task,
+ * what counts as done, help — lives in a narrow rail on the left. The editor
+ * takes everything else and fills it.
+ *
+ * Before, this was one column: back link, heading, Erklären, task dots, brief
+ * with checklist, THEN the editor. That put ~450px of reading above the only
+ * thing the student touches, so every module opened on a screen with no work
+ * area visible at all. The rail carries the same content in the same order;
+ * it just stopped pushing the canvas off the bottom of the screen.
+ */
 
-/* ---------- lesson ---------- */
+.lesson {
+  min-height: 0; height: 100%;
+  display: grid; grid-template-columns: 20.5rem minmax(0, 1fr);
+  gap: .85rem; padding: .85rem 1rem;
+}
+/* Under ~1100px the rail would starve the canvas; stack and let the page own
+   a scrollbar rather than shipping two unusable panes. */
+@media (max-width: 1100px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100dvh; }
+  .lesson { grid-template-columns: 1fr; height: auto; }
+  .lesson-rail { max-height: none; }
+}
 
-.back { background: none; border: 0; color: var(--muted); padding: 0; margin-bottom: 1rem; }
-.lesson-head { display: flex; align-items: center; gap: .7rem; margin-bottom: 1rem; }
-.lesson-head h1 { margin: 0; font-size: 1.5rem; }
+/*
+ * M4 and M8 are quizzes: one question at a time, nothing to manipulate. They
+ * have no editor, so the two-column rail would be a column of chrome beside an
+ * empty stage. They keep a single measured column that scrolls inside itself.
+ */
+.lesson-quiz {
+  display: flex; flex-direction: column; gap: .7rem;
+  width: min(46rem, 100%); margin-inline: auto;
+  overflow-y: auto; padding-bottom: 1rem;
+}
+/* The quiz has no stage of its own, so its panel is measured against main. */
+.lesson-quiz > .intro { inset: .85rem 1rem; }
 
+.lesson-rail {
+  min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: .7rem;
+  padding-right: .2rem;
+}
+.lesson-stage {
+  min-height: 0; min-width: 0; position: relative;
+  display: flex; flex-direction: column;
+}
+/* Whatever a module puts on the stage fills it. */
+.lesson-stage > * { min-height: 0; }
+.lesson-stage > .editor,
+.lesson-stage > .console,
+.lesson-stage > .sheet-pane { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+.back {
+  background: none; border: 0; color: var(--muted); padding: 0;
+  font-size: .85rem; text-align: left;
+}
+.back:hover { color: var(--ink); }
+
+.lesson-head { display: flex; align-items: center; gap: .55rem; }
+.lesson-head h1 { margin: 0; font-size: 1.15rem; }
+
+/*
+ * Erklären covers the stage instead of pushing it down. It opens on a first
+ * visit, and the rail keeps a button to bring it back — the explanation is
+ * part of the teaching loop (ARCHITECTURE.md §5), so it must stay reachable
+ * after it has been dismissed.
+ */
+.intro-open {
+  align-self: flex-start;
+  background: var(--plum-wash); color: var(--plum); border: 1px solid var(--hint-line);
+  border-radius: 999px; padding: .25rem .7rem; font-size: .8rem; font-weight: 600;
+}
 .intro {
+  position: absolute; inset: 0; z-index: 3;
   background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: .9rem 1.1rem; margin-bottom: 1.25rem;
+  border-radius: var(--radius); padding: 1.4rem 1.6rem;
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 24px rgb(43 58 66 / .10);
 }
-.intro summary { font-weight: 700; cursor: pointer; }
-.intro p { color: var(--muted); }
-.intro .quali { color: var(--ink); border-top: 1px solid var(--line); padding-top: .8rem; font-size: .92rem; }
+.intro h2 { margin: 0 0 .7rem; font-size: 1.2rem; }
+.intro p { color: var(--ink); max-width: 68ch; margin: 0 0 .8rem; text-wrap: pretty; }
+.intro .quali {
+  color: var(--ink); background: var(--brand-wash);
+  border-radius: 8px; padding: .7rem .9rem; font-size: .92rem; max-width: 68ch;
+}
+.intro-close { margin-top: auto; padding-top: 1rem; }
 
-.dots { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; padding: 0; margin: 0 0 1.25rem; }
+.dots { display: flex; flex-wrap: wrap; gap: .3rem; list-style: none; padding: 0; margin: 0; }
 .dot {
-  width: 2rem; height: 2rem; border-radius: 999px; font-size: .82rem; font-weight: 700;
+  width: 1.7rem; height: 1.7rem; border-radius: 999px; font-size: .78rem; font-weight: 700;
   background: var(--surface); border: 1px solid var(--line); color: var(--muted);
 }
-.dot.here { border-color: var(--accent); color: var(--accent); }
-.dot.done { background: var(--good); border-color: var(--good); color: #fff; }
+.dot.here { border-color: var(--brand); background: var(--brand-wash); color: var(--brand-deep); }
+.dot.done { background: var(--good-bright); border-color: var(--good); color: #10240a; }
+.dot.done.here { box-shadow: 0 0 0 2px var(--brand); }
 
 .task {
   background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 1.4rem;
+  border-radius: var(--radius); padding: 1rem 1.1rem;
 }
 .task-solved { border-color: var(--good); }
-.task h2 { margin: 0 0 .3rem; font-size: 1.2rem; }
+.task h2 { margin: 0 0 .3rem; font-size: 1.05rem; }
 .task-note { color: var(--muted); font-size: .9rem; margin: 0 0 1rem; }
 
 .choices { display: grid; gap: .5rem; margin-bottom: 1rem; }
 .choice {
-  display: flex; gap: .65rem; align-items: flex-start;
-  border: 1px solid var(--line); border-radius: 8px; padding: .65rem .8rem; cursor: pointer;
+  display: flex; gap: .6rem; align-items: flex-start;
+  border: 1px solid var(--line); border-radius: 8px; padding: .5rem .7rem; cursor: pointer;
 }
-.choice.sel { border-color: var(--accent); }
+.choice.sel { border-color: var(--brand); background: var(--brand-wash); }
 .choice input { width: auto; margin: .25rem 0 0; }
 
 .feedback { border-radius: 8px; padding: .8rem 1rem; margin-top: 1rem; }
@@ -214,21 +363,26 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .feedback.bad { background: var(--bad-bg); color: var(--bad); }
 .feedback.good { background: var(--good-bg); color: var(--good); }
 
-.hints { margin-top: 1.25rem; display: grid; gap: .7rem; justify-items: start; }
-.hint {
-  background: var(--hint-bg); border-left: 3px solid var(--hint-line);
-  border-radius: 6px; padding: .7rem .9rem; width: 100%;
+.hints { display: grid; gap: .5rem; justify-items: stretch; }
+/* Scoped to .hints: M10's spreadsheet pane has its own .hint, a muted line of
+   keyboard tips, and the plum card was landing on that too. */
+.hints .hint {
+  background: var(--hint-bg); border: 1px solid var(--hint-line);
+  border-radius: 8px; padding: .55rem .7rem;
 }
-.hint p { margin: .2rem 0 0; font-size: .93rem; }
-.hint-label { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.hints .hint p { margin: .15rem 0 0; font-size: .87rem; color: var(--ink); }
+.hint-label {
+  font-size: .68rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--plum);
+}
 
 .selfcheck .model { background: var(--bg); border-radius: 8px; padding: .8rem 1rem; }
 
 .next { margin-top: 1.2rem; }
 
-.stellenwert { margin-top: .8rem; }
-.stellenwert table { border-collapse: collapse; font-size: .9rem; background: var(--surface); }
-.stellenwert th, .stellenwert td { border: 1px solid var(--line); padding: .3rem .7rem; text-align: left; }
+.stellenwert { margin-top: .6rem; }
+.stellenwert table { border-collapse: collapse; font-size: .82rem; background: var(--surface); }
+.stellenwert th, .stellenwert td { border: 1px solid var(--line); padding: .18rem .55rem; text-align: left; }
 .stellenwert tr.set td { font-weight: 700; color: var(--good); }
 .stellenwert .blank { color: var(--muted); opacity: .6; }
 .stellenwert-note { font-size: .88rem; color: var(--muted); margin: .5rem 0 0; }
@@ -244,33 +398,36 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 .brief {
   background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 1.1rem 1.2rem; margin-bottom: 1rem;
+  border-radius: var(--radius); padding: .8rem .9rem;
 }
-.brief h2 { margin: 0 0 .3rem; font-size: 1.2rem; }
-.brief p { margin: 0 0 .8rem; color: var(--muted); }
-.brief-done { border-color: var(--good); }
+.brief h2 { margin: 0 0 .25rem; font-size: 1rem; }
+.brief > p { margin: 0 0 .7rem; color: var(--muted); font-size: .88rem; text-wrap: pretty; }
+.brief-done { border-color: var(--good-bright); background: var(--good-bg); }
 
-.ziele { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
-.ziel { display: flex; align-items: flex-start; gap: .55rem; font-size: .94rem; }
+.ziele { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+.ziel { display: flex; align-items: flex-start; gap: .5rem; font-size: .88rem; }
 .ziel-mark {
-  flex: none; width: 1.25rem; height: 1.25rem; margin-top: .1rem;
+  flex: none; width: 1.1rem; height: 1.1rem; margin-top: .12rem;
   border: 2px solid var(--line); border-radius: 5px;
   display: grid; place-items: center;
-  font-size: .8rem; font-weight: 800; line-height: 1;
+  font-size: .72rem; font-weight: 800; line-height: 1;
   color: transparent; transition: background .15s ease, border-color .15s ease;
 }
 .ziel.ok .ziel-mark { background: var(--good); border-color: var(--good); color: #fff; }
-.ziel-body { display: grid; gap: .1rem; }
+.ziel-body { display: grid; gap: .1rem; min-width: 0; }
 .ziel.ok .ziel-text { color: var(--muted); text-decoration: line-through; }
-.ziel-why { color: var(--muted); font-size: .86rem; }
+.ziel-why { color: var(--bad); font-size: .82rem; }
 
-.problems { list-style: none; margin: .9rem 0 0; padding: 0; display: grid; gap: .5rem; }
-.problems li { display: grid; gap: .1rem; border-left: 3px solid var(--bad); padding-left: .7rem; }
+.problems { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.problems li {
+  display: grid; gap: .1rem; font-size: .85rem;
+  background: var(--bad-bg); border-radius: 7px; padding: .45rem .6rem;
+}
 
 .brief-done-row {
-  display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
-  margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--line);
-  color: var(--good);
+  display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  margin-top: .8rem; padding-top: .7rem; border-top: 1px solid var(--line);
+  color: var(--good); font-size: .9rem;
 }
 
 .sr-only {
@@ -282,6 +439,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius); overflow: hidden;
 }
+/* The stage hands the editor a height; the body takes what the toolbar leaves. */
+.editor-body { min-height: 0; }
 .toolbar {
   display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
   padding: .6rem .8rem; border-bottom: 1px solid var(--line);
@@ -298,7 +457,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   padding: .6rem .9rem; font-size: .92rem; border-bottom: 1px solid var(--line);
 }
 
-.editor-body { display: grid; grid-template-columns: 148px 1fr 240px; min-height: 560px; }
+.editor-body { display: grid; grid-template-columns: 132px minmax(0, 1fr) 210px; flex: 1; min-height: 0; }
 @media (max-width: 900px) { .editor-body { grid-template-columns: 1fr; } }
 
 .palette { border-right: 1px solid var(--line); padding: .7rem .55rem; overflow-y: auto; }
@@ -417,7 +576,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   background: var(--bg); color: var(--ink); font: inherit; font-size: .9rem;
 }
 .console-log {
-  height: 340px; overflow-y: auto; padding: .8rem 1rem;
+  flex: 1; min-height: 0; overflow-y: auto; padding: .8rem 1rem;
   background: var(--bg);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: .84rem; line-height: 1.45;

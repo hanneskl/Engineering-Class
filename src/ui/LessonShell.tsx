@@ -77,115 +77,126 @@ export function LessonShell({
   const hints = [task.hints.stups, task.hints.hinweis, task.hints.loesung]
 
   return (
-    <div className="lesson build">
-      <button className="back" onClick={onBack}>
-        ← Übersicht
-      </button>
+    <div className="lesson">
+      <div className="lesson-rail">
+        <button className="back" onClick={onBack}>
+          ← Übersicht
+        </button>
 
-      <div className="lesson-head">
-        <span className="badge">{module}</span>
-        <h1>{title}</h1>
-      </div>
+        <div className="lesson-head">
+          <span className="badge">{module}</span>
+          <h1>{title}</h1>
+        </div>
 
-      <details
-        className="intro"
-        open={introOpen}
-        onToggle={(e) => setIntroOpen(e.currentTarget.open)}
-      >
-        <summary>{intro.heading}</summary>
-        {intro.body.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-        <p className="quali">
-          <strong>Für den Quali:</strong> {quali}
-        </p>
-      </details>
+        <button className="intro-open" onClick={() => setIntroOpen(true)}>
+          Erklärung: {intro.heading}
+        </button>
 
-      <ol className="dots" aria-label="Aufgaben">
-        {tasks.map((t, i) => {
-          const s = taskProgress(progress, t.id)
-          const cls = s.solved ? 'dot done' : i === index ? 'dot here' : 'dot'
-          return (
-            <li key={t.id}>
-              <button
-                className={cls}
-                aria-current={i === index}
-                aria-label={`Aufgabe ${i + 1}: ${t.title}`}
-                onClick={() => onOpenTask(i)}
-              >
-                {i + 1}
-              </button>
-            </li>
-          )
-        })}
-      </ol>
+        <ol className="dots" aria-label="Aufgaben">
+          {tasks.map((t, i) => {
+            const s = taskProgress(progress, t.id)
+            const cls = s.solved ? 'dot done' : i === index ? 'dot here' : 'dot'
+            return (
+              <li key={t.id}>
+                <button
+                  className={i === index && s.solved ? 'dot done here' : cls}
+                  aria-current={i === index}
+                  aria-label={`Aufgabe ${i + 1}: ${t.title}`}
+                  onClick={() => onOpenTask(i)}
+                >
+                  {i + 1}
+                </button>
+              </li>
+            )
+          })}
+        </ol>
 
-      <section className={`brief${done ? ' brief-done' : ''}`} aria-live="polite">
-        <h2>{task.title}</h2>
-        <p>{task.brief}</p>
+        <section className={`brief${done ? ' brief-done' : ''}`} aria-live="polite">
+          <h2>{task.title}</h2>
+          <p>{task.brief}</p>
 
-        <ul className="ziele">
-          {ziele.map((z) => (
-            <li key={z.text} className={z.ok ? 'ziel ok' : 'ziel'}>
-              <span className="ziel-mark" aria-hidden="true">
-                {z.ok ? '✓' : ''}
-              </span>
-              <span className="ziel-body">
-                <span className="ziel-text">{z.text}</span>
-                <span className="sr-only">{z.ok ? ' — erledigt' : ' — offen'}</span>
-                {!z.ok && z.why && <span className="ziel-why">{z.why}</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        {probleme && probleme.length > 0 && (
-          <ul className="problems">
-            {probleme.map((f, i) => (
-              <li key={`${f.code}-${i}`}>
-                <span className="f-message">{f.message}</span>
-                <span className="f-why">{f.why}</span>
+          <ul className="ziele">
+            {ziele.map((z) => (
+              <li key={z.text} className={z.ok ? 'ziel ok' : 'ziel'}>
+                <span className="ziel-mark" aria-hidden="true">
+                  {z.ok ? '✓' : ''}
+                </span>
+                <span className="ziel-body">
+                  <span className="ziel-text">{z.text}</span>
+                  <span className="sr-only">{z.ok ? ' — erledigt' : ' — offen'}</span>
+                  {!z.ok && z.why && <span className="ziel-why">{z.why}</span>}
+                </span>
               </li>
             ))}
           </ul>
-        )}
 
-        {done && (
-          <div className="brief-done-row">
-            <strong>{doneText}</strong>
-            {!isLast && (
-              <button className="primary" onClick={() => onOpenTask(index + 1)}>
-                Weiter
+          {probleme && probleme.length > 0 && (
+            <ul className="problems">
+              {probleme.map((f, i) => (
+                <li key={`${f.code}-${i}`}>
+                  <span className="f-message">{f.message}</span>
+                  <span className="f-why">{f.why}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {done && (
+            <div className="brief-done-row">
+              <strong>{doneText}</strong>
+              {!isLast && (
+                <button className="primary" onClick={() => onOpenTask(index + 1)}>
+                  Weiter
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+
+        {!done && (
+          <div className="hints">
+            {hints.slice(0, state.hintsUsed).map((text, i) => (
+              <div key={i} className={`hint hint-${i}`}>
+                <span className="hint-label">{HINT_LABELS[i]}</span>
+                <p>{text}</p>
+              </div>
+            ))}
+            {state.hintsUsed < 3 && (
+              <button
+                className="ghost small"
+                onClick={() =>
+                  onProgress(withTask(progress, task.id, { hintsUsed: state.hintsUsed + 1 }))
+                }
+              >
+                {state.hintsUsed === 0
+                  ? 'Ich komme nicht weiter'
+                  : `${HINT_LABELS[state.hintsUsed]} anzeigen`}
               </button>
             )}
           </div>
         )}
-      </section>
+      </div>
 
-      {children}
+      <div className="lesson-stage">
+        {children}
 
-      {!done && (
-        <div className="hints">
-          {hints.slice(0, state.hintsUsed).map((text, i) => (
-            <div key={i} className={`hint hint-${i}`}>
-              <span className="hint-label">{HINT_LABELS[i]}</span>
-              <p>{text}</p>
+        {introOpen && (
+          <section className="intro" aria-label={intro.heading}>
+            <h2>{intro.heading}</h2>
+            {intro.body.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+            <p className="quali">
+              <strong>Für den Quali:</strong> {quali}
+            </p>
+            <div className="intro-close">
+              <button className="primary" onClick={() => setIntroOpen(false)} autoFocus>
+                Verstanden, los geht's
+              </button>
             </div>
-          ))}
-          {state.hintsUsed < 3 && (
-            <button
-              className="ghost small"
-              onClick={() =>
-                onProgress(withTask(progress, task.id, { hintsUsed: state.hintsUsed + 1 }))
-              }
-            >
-              {state.hintsUsed === 0
-                ? 'Ich komme nicht weiter'
-                : `${HINT_LABELS[state.hintsUsed]} anzeigen`}
-            </button>
-          )}
-        </div>
-      )}
+          </section>
+        )}
+      </div>
     </div>
   )
 }

@@ -44,12 +44,19 @@ export function Home({
 
   return (
     <div className="home">
-      <h1>Hallo {progress.studentName}!</h1>
-      <p className="lede">
-        {totalSolved === 0
-          ? 'Such dir ein Thema aus und leg los.'
-          : `Du hast schon ${totalSolved} von ${totalTasks} Aufgaben gelöst.`}
-      </p>
+      <div className="home-head">
+        <h1>Hallo {progress.studentName}!</h1>
+        <p className="lede">
+          {totalSolved === 0
+            ? 'Such dir ein Thema aus und leg los.'
+            : `Du hast schon ${totalSolved} von ${totalTasks} Aufgaben gelöst.`}
+        </p>
+        <div className="export">
+          <button className="ghost small" onClick={() => exportProgress(progress)}>
+            Fortschritt speichern
+          </button>
+        </div>
+      </div>
 
       <div className="cards">
         {cards.map(({ lesson, ids, stats, resettable }) => {
@@ -99,11 +106,13 @@ export function Home({
                   </div>
                 ) : (
                   <button
-                    className="link reset"
+                    className="reset"
                     disabled={!resettable}
+                    title={`${lesson.title} zurücksetzen`}
+                    aria-label={`${lesson.title} zurücksetzen`}
                     onClick={() => setConfirming(lesson.id)}
                   >
-                    {resettable ? 'Zurücksetzen' : 'Noch nichts zum Zurücksetzen'}
+                    ⟲
                   </button>
                 )}
               </div>
@@ -112,15 +121,6 @@ export function Home({
         })}
       </div>
 
-      <div className="export">
-        <button className="ghost" onClick={() => exportProgress(progress)}>
-          Fortschritt als Datei speichern
-        </button>
-        <p>
-          Damit sicherst du deinen Stand — praktisch, wenn du an einem anderen Computer
-          weitermachst oder ihn abgeben sollst.
-        </p>
-      </div>
     </div>
   )
 }

@@ -55,6 +55,7 @@ export function App() {
         >
           Informatik<span>-Trainer</span>
         </button>
+        <span className="topbar-where">Informatik 9 · Quali · Mittelschule Glonn</span>
         <div className="topbar-right">
           <span className="who">{progress.studentName}</span>
           <button className="link" onClick={signOut}>
@@ -63,7 +64,7 @@ export function App() {
         </div>
       </header>
 
-      <main className={lesson && lesson.kind !== 'quiz' ? 'wide' : undefined}>
+      <main>
         {lesson ? (
           lesson.kind === 'sheet' ? (
             <SheetLessonView
@@ -131,10 +132,6 @@ export function App() {
           />
         )}
       </main>
-
-      <footer className="foot">
-        Informatik 9 · Vorbereitung auf den Quali · Mittelschule Glonn
-      </footer>
     </div>
   )
 }

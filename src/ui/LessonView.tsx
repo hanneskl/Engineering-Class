@@ -55,7 +55,7 @@ export function LessonView({
   const allDone = solvedCount === tasks.length
 
   return (
-    <div className="lesson">
+    <div className="lesson lesson-quiz">
       <button className="back" onClick={onBack}>
         ← Übersicht
       </button>
@@ -65,15 +65,9 @@ export function LessonView({
         <h1>{lesson.title}</h1>
       </div>
 
-      <details className="intro" open={introOpen} onToggle={(e) => setIntroOpen(e.currentTarget.open)}>
-        <summary>{lesson.intro.heading}</summary>
-        {lesson.intro.body.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-        <p className="quali">
-          <strong>Für den Quali:</strong> {lesson.quali}
-        </p>
-      </details>
+      <button className="intro-open" onClick={() => setIntroOpen(true)}>
+        Erklärung: {lesson.intro.heading}
+      </button>
 
       <ol className="dots" aria-label="Aufgaben">
         {tasks.map((t, i) => {
@@ -104,6 +98,23 @@ export function LessonView({
         onNext={goNext}
         isLast={index === tasks.length - 1}
       />
+
+      {introOpen && (
+        <section className="intro" aria-label={lesson.intro.heading}>
+          <h2>{lesson.intro.heading}</h2>
+          {lesson.intro.body.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+          <p className="quali">
+            <strong>Für den Quali:</strong> {lesson.quali}
+          </p>
+          <div className="intro-close">
+            <button className="primary" onClick={() => setIntroOpen(false)} autoFocus>
+              Verstanden, los geht's
+            </button>
+          </div>
+        </section>
+      )}
 
       {allDone && (
         <div className="done-banner">

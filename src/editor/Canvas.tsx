@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { DEVICES, type Device, type Medium, type Plan, deviceById } from '../model/plan'
 import { DeviceIcon } from './icons'
 
@@ -6,8 +6,37 @@ export const NODE = 64
 
 /** How far the pointer may travel before a press counts as a drag, not a click. */
 const DRAG_THRESHOLD = 5
+/*
+ * The drawing area is 900 units wide and as tall as the pane it is given.
+ *
+ * It used to be a fixed 900x560. Once the module shell stopped scrolling and
+ * handed the canvas the full height of the screen, that fixed ratio letterboxed
+ * itself and left roughly a third of the pane as dead margin. Width stays fixed
+ * so saved coordinates keep their meaning; only the height follows the pane,
+ * and only ever grows — a network drawn on a tall screen must still open on a
+ * short one, so devices are never clamped above the floor.
+ */
 const VIEW_W = 900
-const VIEW_H = 560
+const VIEW_H_MIN = 560
+
+/** Tracks the element's height in view units, so the drawing fills its pane. */
+function useViewHeight(ref: React.RefObject<SVGSVGElement | null>): number {
+  const [height, setHeight] = useState(VIEW_H_MIN)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      const box = entry?.contentRect
+      if (!box || box.width === 0) return
+      setHeight(Math.max(VIEW_H_MIN, Math.round((box.height / box.width) * VIEW_W)))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [ref])
+
+  return height
+}
 
 /** Keeps a dragged device on the canvas — off the edge it is clipped and lost. */
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max)
@@ -44,6 +73,7 @@ export function Canvas({
   onBackgroundClick: () => void
 }) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const viewH = useViewHeight(svgRef)
   const [dragging, setDragging] = useState<
     { id: string; dx: number; dy: number; startX: number; startY: number } | null
   >(null)
@@ -89,7 +119,7 @@ export function Canvas({
       dragging.id,
       Math.round(clamp(p.x - dragging.dx, half, VIEW_W - half)),
       // Extra room at the bottom for the name and IP printed under the box.
-      Math.round(clamp(p.y - dragging.dy, half, VIEW_H - half - 24)),
+      Math.round(clamp(p.y - dragging.dy, half, viewH - half - 24)),
     )
   }
 
@@ -97,7 +127,8 @@ export function Canvas({
     <svg
       ref={svgRef}
       className={`canvas tool-${tool}`}
-      viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+      viewBox={`0 0 ${VIEW_W} ${viewH}`}
+      preserveAspectRatio="xMidYMid meet"
       role="application"
       aria-label="Netzwerkplan"
       onPointerMove={onPointerMove}
@@ -115,7 +146,7 @@ export function Canvas({
           <path d="M20 0H0V20" fill="none" stroke="var(--line)" strokeWidth="1" opacity=".5" />
         </pattern>
       </defs>
-      <rect width={VIEW_W} height={VIEW_H} fill="url(#grid)" />
+      <rect width={VIEW_W} height={viewH} fill="url(#grid)" />
 
       {plan.links.map((l) => {
         const a = deviceById(plan, l.from)
