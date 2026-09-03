@@ -1,7 +1,11 @@
-# Architecture
+# Architecture — M10, Tabellenkalkulation
 
-How the Quali Excel trainer is built and why. The *what* — the skills and tasks to teach — lives
-in [README.md](README.md); this document covers the *how*.
+How the spreadsheet module is built and why. The *what* — the skills and tasks to teach — lives
+in [tabellenkalkulation.md](tabellenkalkulation.md); this document covers the *how*.
+
+This is the module's own architecture: a formula parser, an evaluator and a checker that the
+rest of the trainer has no use for. How M10 plugs into the shell every other module uses is
+[../ARCHITECTURE.md §10](../ARCHITECTURE.md).
 
 ---
 
@@ -152,21 +156,27 @@ A per-class matrix of **student × skill ID** (`S1`, `F10`, `N6` …) showing wh
 failing, derived by joining `attempts` to the task catalogue. This is the payoff for giving every
 skill a stable ID in the README.
 
-## 6. Package layout
+## 6. Module layout
 
 ```
-packages/core/      model, evaluator, checker — zero dependencies, Node + Deno + browser
-packages/scenarios/ the nine exam archetypes as data
-apps/web/           React grid, ribbon, task sidebar
-supabase/           migrations, RLS policies, edge functions
+src/spreadsheet/core/      model, evaluator, checker — zero dependencies, Node + Deno + browser
+src/spreadsheet/scenarios/ the nine exam archetypes as data
+src/spreadsheet/ui/        React grid, ribbon, charts
+src/spreadsheet/SheetEditor.tsx  the editor the module shell wraps
+supabase/                  migrations, RLS policies, edge functions
 ```
 
-`packages/core` having **no dependencies and no platform APIs** is a hard rule — it is what lets
-the same checker run in the browser and in a Deno Edge Function.
+These were three npm workspace packages — `@quali/core`, `@quali/scenarios`, `@quali/web` —
+before the merge. The package names survive as import aliases (`vite.config.ts` and
+`tsconfig.json`), because the edge function resolves the same names through its own Deno import
+map. That is what lets the checker's source read identically in both places.
 
-For the same reason, imports inside `packages/` carry **`.ts` extensions**, not `.js`. Deno
-resolves specifiers literally, so `./values.js` would send it looking for a file that does not
-exist; TypeScript's `allowImportingTsExtensions` and Vite both handle `.ts` fine.
+`core/` having **no dependencies and no platform APIs** is a hard rule — it is what lets the
+same checker run in the browser and in a Deno Edge Function.
+
+For the same reason, imports inside `src/spreadsheet/` carry **`.ts` extensions**, not `.js`.
+Deno resolves specifiers literally, so `./values.js` would send it looking for a file that does
+not exist; TypeScript's `allowImportingTsExtensions` and Vite both handle `.ts` fine.
 
 ### Re-seeding is a security boundary, not a convenience
 

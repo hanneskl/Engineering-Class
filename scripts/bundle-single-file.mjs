@@ -24,7 +24,7 @@ const js = readFileSync(join(dist, 'assets', jsFile), 'utf8')
 // the tag early. Breaking the sequence is safe inside JS source.
 const safeJs = js.replace(/<\/script>/gi, '<\\/script>')
 
-const html = `<title>Netzwerk-Trainer</title>
+const html = `<title>Informatik-Trainer</title>
 <style>
 ${css}
 </style>

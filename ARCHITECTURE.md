@@ -1,8 +1,13 @@
 # Architecture
 
-How the network planning & simulation tool is built. The *what* — the curriculum
-and the task inventory — lives in [README.md](README.md). This document is the
-*how*.
+How the trainer is built. The *what* — the curriculum and the task inventory —
+lives in [README.md](README.md). This document is the *how*.
+
+M10, the spreadsheet module, has a second architecture of its own — a formula
+parser, an evaluator and a checker, none of which the network engine needs.
+That document is
+[docs/tabellenkalkulation-architektur.md](docs/tabellenkalkulation-architektur.md);
+§10 below covers only where the two meet.
 
 ---
 
@@ -226,8 +231,9 @@ src/
   engine/      graph.ts, ping.ts, dns.ts, http.ts, dhcp.ts, world.ts
   editor/      Canvas.tsx, Palette.tsx, Inspector.tsx
   console/     Terminal.tsx, commands/
-  lessons/     m1/…  m8/…      ← content: text, checks, hints
+  lessons/     m1/…  m10/…     ← content: text, checks, hints
   progress/    store.ts, export.ts
+  spreadsheet/ core/, scenarios/, ui/  ← M10, see §10
 ```
 
 `lessons/` is deliberately separated from `engine/` so tasks can be written and
@@ -254,3 +260,58 @@ edited without touching the simulator.
 
 All of it is built and deployed. The one task still open is T1.6, a walkthrough
 of a simulated router web interface.
+
+
+---
+
+## 10. M10: where the two halves meet
+
+The spreadsheet module arrived as its own repository, with its own npm
+workspaces, its own Supabase backend and its own app shell. Merging it meant
+deciding what a "module" actually is here. The answer turned out to be small:
+
+**A module owns a document and a set of rules over it. Everything else is the
+shell's.** M2 owns a `Plan`, M9 a `Flow`, M10 a `Sheet`. All three are drawn by
+their own editor, judged by their own rules, saved into the same progress file,
+and wrapped in the same `LessonShell` — badge, Erklären, numbered tasks, live
+checklist, hint ladder.
+
+So M10 kept `core/` (parser, evaluator, checker), `scenarios/` (the exam papers
+as data) and `ui/` (grid, ribbon, charts), and gave up its header, its scenario
+dropdown, its score bar and its sign-in screen.
+
+### The checklist is the scenario
+
+M10 writes almost no content of its own. `src/lessons/m10-tabellen.ts` names a
+scenario per task and supplies a hint ladder; the goals on the checklist are the
+scenario's own `promptDe` strings, and the ticks come from `gradeSubmission`.
+A failing check's German message becomes the `why` line under its goal, which is
+exactly the shape §5.1 asks every validator for — the Excel checker was already
+written that way, for the same reason.
+
+### Two things stayed non-obvious
+
+**The `@quali/*` aliases survived the merge.** They were workspace package names
+and could have become relative paths. They stay because
+`supabase/functions/check-task` resolves the same two names through a Deno import
+map: the checker's source reads identically in the browser and on the server,
+which is what makes "the server runs the same code" true rather than aspirational.
+
+**`localStorage` keys still say `netzwerk-trainer:`.** The tool outgrew the name,
+but renaming the keys would orphan the progress of every student who has already
+worked in a browser here (§7's known limitation, made worse). The name is cosmetic;
+the key is not.
+
+### Supabase, dormant
+
+The backend is wired and untouched: with no `VITE_SUPABASE_*` set, `submitAttempt`
+is a no-op and the browser's verdict is the only one. That matches §1 — no backend
+— without throwing away a working teacher-dashboard path if it is ever wanted for
+the Datenverarbeitung half.
+
+### Open: one palette, two designs
+
+M10's panel is pinned to `color-scheme: light` while the rest of the trainer
+follows the OS into dark mode. A spreadsheet reads as a spreadsheet partly
+*because* of its white grid and grey headers, so the two palettes need
+reconciling rather than one being dropped. Left for the redesign.

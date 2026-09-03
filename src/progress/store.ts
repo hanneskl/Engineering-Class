@@ -43,6 +43,9 @@ export type Progress = {
   sheets: Record<string, Work>
 }
 
+// The tool outgrew its name when the spreadsheet module arrived, but these two
+// keys must not change: renaming them would orphan the progress of every
+// student who has already worked in a browser here.
 const PREFIX = 'netzwerk-trainer:'
 const LAST_STUDENT = 'netzwerk-trainer:last-student'
 
@@ -162,7 +165,7 @@ export function exportProgress(progress: Progress): void {
   const a = document.createElement('a')
   const safeName = progress.studentName.replace(/[^\wäöüÄÖÜß-]+/g, '_')
   a.href = url
-  a.download = `netzwerk-trainer-${safeName}.json`
+  a.download = `informatik-trainer-${safeName}.json`
   a.click()
   URL.revokeObjectURL(url)
 }

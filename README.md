@@ -1,29 +1,37 @@
-# Network Education
+# Engineering Class
 
-A planned web-based **network planning & simulation tool** for Informatik 9 at
-Mittelschule Glonn — built so students can plan a network visually, learn how the
-internet works, and have the tool *verify that they did the work themselves*.
+The **Quali-Trainer für Informatik 9** at Mittelschule Glonn. Two thirds of the
+90-point exam are covered here: the networking half of *Theorie* (M1–M9) and
+the whole of *Datenverarbeitung* (M10). Students plan a network visually, learn
+how the internet works, drill binary and abbreviations, and build spreadsheets
+— and the tool verifies that they did the work themselves.
 
-This document is the **curriculum analysis and task inventory**. It answers one
-question: *what exactly do the kids have to be able to do for the Quali in
-Informatik?* [ARCHITECTURE.md](ARCHITECTURE.md) covers how the tool is built.
+This document is the **curriculum analysis and task inventory** for the
+networking modules. It answers one question: *what exactly do the kids have to
+be able to do for the Quali?* The same analysis for the spreadsheet module is
+[docs/tabellenkalkulation.md](docs/tabellenkalkulation.md).
+
+How it is built: [ARCHITECTURE.md](ARCHITECTURE.md), and
+[docs/tabellenkalkulation-architektur.md](docs/tabellenkalkulation-architektur.md)
+for the spreadsheet checker.
 
 ## Running it
 
 ```bash
 npm install
 npm run dev      # local development
-npm test         # checker logic
+npm test         # checker logic, both halves
 npm run build    # production build into dist/
 ```
 
 Pushing to `main` deploys to GitHub Pages —
-[hanneskl.github.io/Network-Education](https://hanneskl.github.io/Network-Education/).
+[hanneskl.github.io/Engineering-Class](https://hanneskl.github.io/Engineering-Class/).
 
-**Built so far:** all eight modules — M1 (Geräte & Komponenten), M2 (Netzwerk
-zeichnen), M5 (Netzwerkbefehle), M6 (der Weg einer Internetseite), M7 (Spuren im
-Internet), M4 (Binärzahlen), M8 (Begriffe & Abkürzungen) and M9
-(Flussdiagramme). The one task still open is T1.6, the walkthrough of a
+**Built so far:** all nine networking modules — M1 (Geräte & Komponenten), M2
+(Netzwerk zeichnen), M5 (Netzwerkbefehle), M6 (der Weg einer Internetseite), M7
+(Spuren im Internet), M4 (Binärzahlen), M8 (Begriffe & Abkürzungen) and M9
+(Flussdiagramme) — plus M10 (Tabellenkalkulation) with four of the nine exam
+scenarios. The one networking task still open is T1.6, the walkthrough of a
 simulated router web interface.
 
 ---
@@ -373,12 +381,26 @@ Per Lehrplan and the exams — do **not** teach or require:
 
 ---
 
-## 7. Non-network Quali content (for context, not for this tool)
+### M10 — Tabellenkalkulation (Datenverarbeitung)
+
+Worth 30 of the 90 points on its own — as much as all the networking modules
+together. It has its own curriculum analysis, skill catalogue and exam-archetype
+inventory in [docs/tabellenkalkulation.md](docs/tabellenkalkulation.md), because
+the source corpus is different: seven years of Excel papers rather than the
+networking Theorie section.
+
+Four of the nine archetypes are built: *Felder berechnen*, *SMV-Wahl*,
+*Familienvermögen* and *Klima*.
+
+---
+
+## 7. Quali content still not covered here
 
 The Quali Informatik is 90 points: Theorie 30 / Datenverarbeitung 30 /
-Programmieren 30. Only part of Theorie is networking. The rest —
-**Hardware** (CPU, RAM, Festplatte, Grafikkarte, Peripherie),
-**Excel** (absolute Bezüge `$G$2`, SUMME/MITTELWERT/MAX/MIN/WENN, Währungsformat,
-Säulen- und Kreisdiagramm) and **Scratch** — is taught with other material and
-is not covered here. *(Flussdiagramme were originally in this list; they are
-now module M9 above.)*
+Programmieren 30. M1–M9 cover the networking part of Theorie and M10 covers
+Datenverarbeitung. What is left — **Hardware** (CPU, RAM, Festplatte,
+Grafikkarte, Peripherie) in Theorie, and **Scratch** for the whole
+Programmieren third — is taught with other material.
+
+*(Flussdiagramme and Excel were both on this list once; they are now M9 and
+M10.)*

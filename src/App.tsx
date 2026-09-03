@@ -53,7 +53,7 @@ export function App() {
           onClick={() => setView({ kind: 'home' })}
           aria-label="Zur Übersicht"
         >
-          Netzwerk<span>-Trainer</span>
+          Informatik<span>-Trainer</span>
         </button>
         <div className="topbar-right">
           <span className="who">{progress.studentName}</span>

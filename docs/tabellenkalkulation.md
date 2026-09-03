@@ -1,12 +1,13 @@
-# Spreadsheet Education
+# M10 — Tabellenkalkulation
 
-A web-based Excel clone that guides Mittelschule students through the **Datenverarbeitung**
-(Excel) part of the Bavarian *Qualifizierender Abschluss* in Informatik — and verifies they
-solved each task themselves, with real formulas rather than typed-in results.
+The Excel clone that guides Mittelschule students through the **Datenverarbeitung** part of the
+Bavarian *Qualifizierender Abschluss* in Informatik — and verifies they solved each task
+themselves, with real formulas rather than typed-in results. It is module M10 of the trainer in
+this repository; [../README.md](../README.md) covers the networking modules, M1–M9.
 
 This document is the authoritative inventory of **what has to be taught and what has to be
 checked**. It was compiled by mining every Quali and Probequali exam from 2019 to 2026 plus the
-existing teaching material. No application code exists yet; this catalogue comes first.
+existing teaching material.
 
 **Conventions**
 - Code and documentation: English.
@@ -214,26 +215,30 @@ Catalogue complete. No application code written yet.
 
 ## Running it
 
+The Excel trainer is module **M10** of the trainer in this repository, not a
+separate app. There is one install, one dev server and one test run for
+everything:
+
 ```bash
 npm install
-npm run dev --workspace @quali/web     # → http://localhost:5173
+npm run dev      # → http://localhost:5173, then open M10 on the Übersicht
+npm test         # the whole suite, including the 54 checker tests
+npm run build
 ```
 
-Other tasks:
+### The Playwright drive scripts are stale
 
-```bash
-npm test                               # 43 core tests
-npm run typecheck                      # all packages
-npm run drive --workspace @quali/web           # walk the tasks in Chromium, writes screenshots
-npm run drive:gestures --workspace @quali/web  # drag-to-fill, copy/paste, click-to-reference
-npm run drive:switching --workspace @quali/web # work survives switching scenarios
-npm run drive:formatting --workspace @quali/web# the ribbon against the 2025 Vermögen sheet
-npm run drive:charts --workspace @quali/web     # inserting charts, against the 2026 pie task
-npm run drive:klima --workspace @quali/web      # rename, conditional formatting, row-wise chart
-```
+`scripts/sheet-drive/*.mjs` walk the tasks in Chromium and write screenshots.
+They were written against the standalone app and drive UI that no longer
+exists — a scenario `<select>`, a `.task` list, a „Prüfen" button per task.
+The module shell replaced all three, so **every one of these scripts fails
+today**; they are kept because they encode which gestures are worth checking
+(drag-to-fill, copy/paste, click-to-reference, scenario switching, the ribbon,
+charts), and they should be rewritten against the shell after the UI redesign.
 
-`npm run drive` expects the dev server to already be running. Set `SHOT_DIR` to choose where
-screenshots land, and `CHROMIUM_PATH` if your sandbox ships a browser build Playwright did not
+Run them with `node scripts/sheet-drive/<name>.mjs` against an already-running
+dev server. Set `SHOT_DIR` to choose where screenshots land, and
+`CHROMIUM_PATH` if your sandbox ships a browser build Playwright did not
 download itself.
 
 ## Backend (optional)
@@ -250,7 +255,7 @@ supabase functions deploy check-task   # scoring runs here, not in the browser
 Then point the app at the project:
 
 ```bash
-# apps/web/.env.local
+# .env.local
 VITE_SUPABASE_URL=https://<ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon key>
 ```
