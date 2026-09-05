@@ -28,7 +28,6 @@ export function SheetLessonView({
   const scenario = useMemo(() => scenarioById(task.scenarioId), [task.scenarioId])
 
   const [work, setWork] = useState<Work>(() => loadSheet(progress, task.id) ?? EMPTY)
-  const [resetNonce, setResetNonce] = useState(0)
 
   /**
    * The checklist is the scenario's own Arbeitsaufträge, graded live.
@@ -51,7 +50,6 @@ export function SheetLessonView({
     why: grades[i]!.message || undefined,
   }))
   const done = ziele.every((z) => z.ok)
-  const earned = grades.reduce((sum, g) => sum + g.points, 0)
 
   /**
    * Which scenario tasks have already been sent to the server, so a keystroke
@@ -115,26 +113,9 @@ export function SheetLessonView({
       onProgress={onProgress}
       onBack={onBack}
     >
-      <div className="sheet-meta">
-        <span className="score">
-          {earned} / {totalPoints(scenario)} Punkte
-        </span>
-        <button
-          className="ghost small"
-          onClick={() => {
-            setResetNonce((n) => n + 1)
-            setWork(EMPTY)
-            onProgress(saveSheet(progress, task.id, EMPTY))
-          }}
-        >
-          Blatt zurücksetzen
-        </button>
-      </div>
-
       <SheetEditor
         key={task.id}
         scenarioId={task.scenarioId}
-        resetNonce={resetNonce}
         initialWork={loadSheet(progress, task.id)}
         onWork={change}
       />

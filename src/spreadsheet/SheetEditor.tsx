@@ -51,13 +51,10 @@ interface Clipboard {
  */
 export function SheetEditor({
   scenarioId,
-  resetNonce,
   initialWork,
   onWork,
 }: {
   scenarioId: string
-  /** Bumped by the shell's Zurücksetzen; re-seeds the sheet from the scenario. */
-  resetNonce: number
   /** What the student had here last time, restored from their progress file. */
   initialWork?: Work
   onWork: (work: Work) => void
@@ -106,18 +103,6 @@ export function SheetEditor({
     setClipboard(null)
   }, [scenarioId])
 
-  // Zurücksetzen lives in the shell, and reaches us as a bumped nonce. Skip the
-  // first run, which is mount, not a reset.
-  const seenReset = useRef(resetNonce)
-  useEffect(() => {
-    if (seenReset.current === resetNonce) return
-    seenReset.current = resetNonce
-    sheetsRef.current.set(scenarioId, scenarioById(scenarioId).seed())
-    setSelection(single({ row: 0, col: 0 }))
-    setEdit(null)
-    setClipboard(null)
-    touch()
-  }, [resetNonce, scenarioId])
 
   function commit(a1: string, input: string): void {
     sheet.setInput(a1, input)
