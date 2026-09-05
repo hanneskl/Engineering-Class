@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { LESSONS, lessonById } from './lessons'
+import { hashForRoute, routeFromHash, type Route } from './nav'
 import { NameGate } from './ui/NameGate'
 import { Home } from './ui/Home'
 import { LessonView } from './ui/LessonView'
@@ -12,14 +13,40 @@ import { MatchLessonView } from './ui/MatchLessonView'
 import { SheetLessonView } from './ui/SheetLessonView'
 import { load, save, lastStudent, type Progress } from './progress/store'
 
-type View = { kind: 'home' } | { kind: 'lesson'; lessonId: string }
+const isValidLesson = (id: string) => Boolean(lessonById(id))
 
 export function App() {
   const [progress, setProgress] = useState<Progress | null>(() => {
     const name = lastStudent()
     return name ? load(name) : null
   })
-  const [view, setView] = useState<View>({ kind: 'home' })
+
+  /*
+   * The address bar is the only place this state lives — `view` just mirrors
+   * it. That is what makes the browser's own Back and Forward work: they are
+   * not special-cased here, they simply change `location.hash`, which the
+   * listener below is already reacting to.
+   *
+   * Reading the initial route from the hash rather than hardcoding `home`
+   * also means a shared link to a specific module opens straight into it for
+   * anyone the trainer already recognises (§7, `lastStudent`) — see `start`.
+   */
+  const [view, setView] = useState<Route>(() => routeFromHash(location.hash, isValidLesson))
+
+  useEffect(() => {
+    const onHashChange = () => setView(routeFromHash(location.hash, isValidLesson))
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  /** The one place anything in this component asks to go somewhere else. */
+  const navigate = useCallback((next: Route) => {
+    const hash = hashForRoute(next)
+    // Assigning the same value again would not fire `hashchange`, so the
+    // listener above would never run — update the state directly instead.
+    if (location.hash === hash) setView(next)
+    else location.hash = hash
+  }, [])
 
   const update = useCallback((next: Progress) => {
     setProgress(next)
@@ -30,13 +57,15 @@ export function App() {
     const loaded = load(name)
     save(loaded)
     setProgress(loaded)
-    setView({ kind: 'home' })
+    // Deliberately not routed home: `view` already holds whatever the URL
+    // pointed at when the page loaded, and that is where a returning student
+    // following a shared link expects to land.
   }, [])
 
   const signOut = useCallback(() => {
     setProgress(null)
-    setView({ kind: 'home' })
-  }, [])
+    navigate({ kind: 'home' })
+  }, [navigate])
 
   const lesson = useMemo(
     () => (view.kind === 'lesson' ? lessonById(view.lessonId) : undefined),
@@ -54,7 +83,7 @@ export function App() {
         <header className="topbar">
           <button
             className="brand"
-            onClick={() => setView({ kind: 'home' })}
+            onClick={() => navigate({ kind: 'home' })}
             aria-label="Zur Übersicht"
           >
             Informatik<span>-Trainer</span>
@@ -76,56 +105,56 @@ export function App() {
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : lesson.kind === 'match' ? (
             <MatchLessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : lesson.kind === 'traces' ? (
             <TraceLessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : lesson.kind === 'web' ? (
             <WebLessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : lesson.kind === 'console' ? (
             <ConsoleLessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : lesson.kind === 'flow' ? (
             <FlowLessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : lesson.kind === 'build' ? (
             <BuildLessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           ) : (
             <LessonView
               lesson={lesson}
               progress={progress}
               onProgress={update}
-              onBack={() => setView({ kind: 'home' })}
+              onBack={() => navigate({ kind: 'home' })}
             />
           )
         ) : (
@@ -133,7 +162,7 @@ export function App() {
             lessons={LESSONS}
             progress={progress}
             onProgress={update}
-            onOpen={(id) => setView({ kind: 'lesson', lessonId: id })}
+            onOpen={(id) => navigate({ kind: 'lesson', lessonId: id })}
           />
         )}
       </main>
