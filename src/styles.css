@@ -312,16 +312,10 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .lesson-head h1 { margin: 0; font-size: 1.15rem; }
 
 /*
- * Erklären covers the stage instead of pushing it down. It opens on a first
- * visit, and the rail keeps a button to bring it back — the explanation is
- * part of the teaching loop (ARCHITECTURE.md §5), so it must stay reachable
- * after it has been dismissed.
+ * Erklären covers the stage instead of pushing it down. It opens once, on the
+ * first visit, and the student dismisses it — there is no button to bring it
+ * back, so it never competes for space with the rail again.
  */
-.intro-open {
-  align-self: flex-start;
-  background: var(--surface); color: var(--accent); border: 1px solid var(--line);
-  border-radius: 999px; padding: .25rem .7rem; font-size: .8rem; font-weight: 600;
-}
 .intro {
   position: absolute; inset: 0; z-index: 3;
   background: var(--surface); border: 1px solid var(--line);
@@ -750,18 +744,48 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 /* ---------- M7: the trail you leave ---------- */
 
-/* ---------- M7: what your afternoon left behind ---------- */
+/* ---------- M7: a wizard over what your afternoon left behind ---------- */
 
 .trace {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius);
   flex: 1; min-height: 0; display: flex; flex-direction: column;
 }
-.trace-bar {
-  display: flex; align-items: center; gap: .45rem; flex-wrap: wrap;
-  padding: .55rem .7rem; border-bottom: 1px solid var(--line); flex: none;
+
+/* Three steps, always visible, so the shape of the task — surf, then read one
+   record of it, then answer — is on screen before the student starts. */
+.wizard-steps {
+  list-style: none; margin: 0; padding: 0; flex: none;
+  display: flex; border-bottom: 1px solid var(--line);
 }
-.trace-label { font-size: .85rem; font-weight: 600; }
+.wizard-steps li { flex: 1; display: flex; }
+.wizard-step {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: .4rem;
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: .6rem .5rem; color: var(--muted); font-size: .85rem; font-weight: 600;
+}
+.wizard-step:disabled { opacity: .45; cursor: default; }
+.wizard-step.on { color: var(--accent); border-bottom-color: var(--accent); }
+.wizard-step-n {
+  display: inline-grid; place-items: center; width: 1.35rem; height: 1.35rem;
+  border-radius: 999px; background: var(--line-soft); color: var(--muted);
+  font-size: .75rem; font-weight: 700;
+}
+.wizard-step.on .wizard-step-n { background: var(--accent); color: var(--accent-ink); }
+
+.wizard-page { flex: 1; min-height: 0; overflow-y: auto; }
+.wizard-nav {
+  flex: none; display: flex; justify-content: space-between;
+  padding: .55rem .7rem; border-top: 1px solid var(--line);
+}
+
+.panel { padding: .8rem .9rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.panel h3 { margin: 0; font-size: 1rem; }
+.panel-lede { margin: 0; color: var(--muted); font-size: .87rem; max-width: 78ch; }
+.trace-idle { margin: 0; padding: .6rem 0; color: var(--muted); font-size: .88rem; }
+
+/* Step 1: visiting a site, and the cookie controls that go with it. */
+.trace-bar { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
 .trace-bar-right {
   margin-left: auto; display: inline-flex; align-items: center; gap: .7rem;
   font-size: .8rem; color: var(--muted);
@@ -774,10 +798,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .trace-bar-right .link:disabled { opacity: .4; cursor: default; text-decoration: none; }
 
-/* The student's own actions, in their own words. Everything below is a record
-   of this list — stating that in the markup is what ties the module together. */
-.afternoon { flex: none; padding: .6rem .7rem; border-bottom: 1px solid var(--line); }
-.afternoon h3 { margin: 0 0 .35rem; font-size: .8rem; color: var(--muted); font-weight: 700; }
+/* The student's own actions, in their own words — read back so what the next
+   step's record is a record OF is never in doubt. */
 .afternoon-list {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-wrap: wrap; gap: .35rem;
@@ -790,13 +812,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .af-zeit { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .75rem; }
 .af-was { font-weight: 600; }
 
-.fokus { flex: 1; min-height: 0; overflow-y: auto; }
-.panel { padding: .8rem .9rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
-.panel h3 { margin: 0; font-size: 1rem; }
-.panel-lede { margin: 0; color: var(--muted); font-size: .87rem; max-width: 78ch; }
-.trace-idle { margin: 0; padding: .6rem 0; color: var(--muted); font-size: .88rem; }
-
-/* The log line, decoded into what it is actually made of. */
+/* Step 2: the log line, decoded into what it is actually made of. */
 .felder { display: flex; flex-wrap: wrap; gap: .45rem; }
 .feld {
   display: grid; gap: .1rem; text-align: left;
@@ -856,6 +872,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   border-radius: 8px; padding: .6rem .8rem; max-width: 78ch;
 }
 
+/* Step 3. */
 .trace-fragen { display: grid; gap: .5rem; }
 
 /* ---------- M1: the Zuordnung board ---------- */

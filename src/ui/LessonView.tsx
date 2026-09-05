@@ -65,10 +65,6 @@ export function LessonView({
         <h1>{lesson.title}</h1>
       </div>
 
-      <button className="intro-open" onClick={() => setIntroOpen(true)}>
-        {lesson.intro.heading}
-      </button>
-
       <ol className="dots" aria-label="Aufgaben">
         {tasks.map((t, i) => {
           const s = taskProgress(progress, t.id)

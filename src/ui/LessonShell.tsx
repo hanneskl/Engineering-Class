@@ -48,7 +48,7 @@ export function LessonShell({
   progress,
   onProgress,
   onBack,
-  aside,
+  hideHints,
   children,
 }: {
   module: string
@@ -67,10 +67,12 @@ export function LessonShell({
   onProgress: (next: Progress) => void
   onBack: () => void
   /**
-   * Module content for the rail rather than the stage. M7 puts its questions
-   * here: the stage carries the evidence, the rail carries what to make of it.
+   * M7's rail is deliberately down to the back link, the module head, the
+   * task dots and the brief — its own surfing/record/question flow is a
+   * wizard in the stage, and the hint ladder here would be a fourth voice
+   * telling the student what step 2 already walks them through.
    */
-  aside?: ReactNode
+  hideHints?: boolean
   children: ReactNode
 }) {
   const task = tasks[index]!
@@ -93,10 +95,6 @@ export function LessonShell({
           <span className="badge">{module}</span>
           <h1>{title}</h1>
         </div>
-
-        <button className="intro-open" onClick={() => setIntroOpen(true)}>
-          {intro.heading}
-        </button>
 
         <ol className="dots" aria-label="Aufgaben">
           {tasks.map((t, i) => {
@@ -159,9 +157,7 @@ export function LessonShell({
           )}
         </section>
 
-        {aside}
-
-        {!done && (
+        {!hideHints && !done && (
           <div className="hints">
             {hints.slice(0, state.hintsUsed).map((text, i) => (
               <div key={i} className={`hint hint-${i}`}>

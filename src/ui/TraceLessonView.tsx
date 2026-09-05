@@ -7,7 +7,7 @@ import {
 } from '../model/types'
 import { emptyTraces, type Traces } from '../model/traces'
 import { isTracesSolved, type TraceState } from '../model/traceRules'
-import { TraceFragen, TraceLog } from '../editor/TraceLog'
+import { TraceLog } from '../editor/TraceLog'
 import { LessonShell } from './LessonShell'
 import {
   loadTraces,
@@ -84,18 +84,19 @@ export function TraceLessonView({
       progress={progress}
       onProgress={onProgress}
       onBack={onBack}
-      aside={
-        task.fragen?.length ? (
-          <TraceFragen traces={traces} fragen={task.fragen} onTraces={change} />
-        ) : undefined
-      }
+      hideHints
     >
+      {/* Keyed on the task: switching tasks means a different afternoon and a
+          different focus, so the wizard should open back on step 1 rather
+          than wherever the student left the previous task's. */}
       <TraceLog
+        key={task.id}
         traces={traces}
         seed={progress.seed}
         studentName={progress.studentName}
         fokus={task.fokus}
         markieren={task.markieren}
+        fragen={task.fragen}
         onTraces={change}
       />
     </LessonShell>

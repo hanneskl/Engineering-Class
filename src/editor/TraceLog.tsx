@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   FELDER,
   PUBLIC_IP,
@@ -23,18 +23,23 @@ import { FrageCard } from './FrageCard'
 
 type Fokus = 'seite' | 'tracker' | 'vergleich'
 
+const STEPS = ['Besuchen', 'Auswerten', 'Verstehen'] as const
+
 /**
- * Surf a little, then look at what it left behind.
+ * Surf a little, then look at what it left behind — as three steps, not three
+ * things on screen at once.
  *
- * Two earlier shapes failed here. Tabs hid the comparison the module is about;
- * three permanent columns showed all of it at once, which put three walls of
- * server-log text in front of a fifteen-year-old who needed one. Both also
- * printed raw Apache lines, which nobody at this level can read.
+ * Three earlier shapes failed here. Tabs hid the comparison the module is
+ * about. Permanent columns showed everything at once, three walls of text a
+ * student had to relate to each other unaided. Putting all three under one
+ * task, unstepped, still asked "surf, then read a decoded log, then answer
+ * three questions" to be understood as one screen rather than as three things
+ * that happen in order.
  *
- * So: the surfing, always on top, in plain German — that is the student's own
- * afternoon and the thing every panel below is *about*. Then one panel, chosen
- * by the task: the website's record decoded into labelled fields, the ad
- * company's record with its repeating number, or the comparison of all three.
+ * So: a wizard. Step 1 is the surfing — the part the student does. Step 2 is
+ * one party's record of it, chosen by the task. Step 3 is what to make of
+ * that. Moving forward only when there is something to look at is the one
+ * piece of gating; everything else is free to revisit.
  */
 export function TraceLog({
   traces,
@@ -42,6 +47,7 @@ export function TraceLog({
   studentName,
   fokus,
   markieren,
+  fragen,
   onTraces,
 }: {
   traces: Traces
@@ -49,25 +55,87 @@ export function TraceLog({
   studentName: string
   fokus: Fokus
   markieren?: boolean
+  fragen?: string[]
   onTraces: (next: Traces) => void
 }) {
+  const [step, setStep] = useState(0)
   const cookie = currentCookie(traces, seed)
   const hat = traces.visits.length > 0
 
   // Which record the student is looking at is what the rules record. The
-  // comparison shows all three at once, so it counts as all three.
+  // comparison shows all three parties at once, so reaching it counts as all
+  // three — the rule sawAllViews expects exactly that shape.
   useEffect(() => {
-    if (!hat) return
-    const zeigt = fokus === 'vergleich' ? ['server', 'tracker', 'provider'] : [fokus === 'seite' ? 'server' : 'tracker']
+    if (step !== 1 || !hat) return
+    const zeigt =
+      fokus === 'vergleich' ? ['server', 'tracker', 'provider'] : [fokus === 'seite' ? 'server' : 'tracker']
     const fehlt = zeigt.filter((a) => !traces.seen.includes(`ansicht:${a}`))
     if (fehlt.length === 0) return
     onTraces(fehlt.reduce((t, a) => sawAnsicht(t, a), traces))
-  }, [hat, fokus, traces, onTraces])
+  }, [step, hat, fokus, traces, onTraces])
 
   return (
     <div className="trace">
+      <ol className="wizard-steps" aria-label="Schritte">
+        {STEPS.map((label, i) => (
+          <li key={label}>
+            <button
+              className={i === step ? 'wizard-step on' : 'wizard-step'}
+              aria-current={i === step}
+              disabled={i > 0 && !hat}
+              onClick={() => setStep(i)}
+            >
+              <span className="wizard-step-n">{i + 1}</span>
+              {label}
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      <div className="wizard-page">
+        {step === 0 && <BesuchenStep traces={traces} seed={seed} onTraces={onTraces} />}
+        {step === 1 && hat && (
+          <>
+            {fokus === 'seite' && <SeiteView traces={traces} markieren={markieren} onTraces={onTraces} />}
+            {fokus === 'tracker' && <TrackerView traces={traces} />}
+            {fokus === 'vergleich' && (
+              <VergleichView traces={traces} studentName={studentName} cookie={cookie} />
+            )}
+          </>
+        )}
+        {step === 2 && hat && fragen && fragen.length > 0 && (
+          <FragenStep traces={traces} fragen={fragen} onTraces={onTraces} />
+        )}
+      </div>
+
+      <div className="wizard-nav">
+        <button className="ghost small" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
+          ← Zurück
+        </button>
+        <button className="ghost small" disabled={step === 2 || !hat} onClick={() => setStep((s) => s + 1)}>
+          Weiter →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** Step 1: the surfing, and the student's own afternoon read back to them. */
+function BesuchenStep({
+  traces,
+  seed,
+  onTraces,
+}: {
+  traces: Traces
+  seed: number
+  onTraces: (next: Traces) => void
+}) {
+  const cookie = currentCookie(traces, seed)
+  const hat = traces.visits.length > 0
+  return (
+    <section className="panel">
+      <h3>Besuche eine Seite</h3>
       <div className="trace-bar">
-        <span className="trace-label">Besuche eine Seite:</span>
         {SITES.map((s) => (
           <button
             key={s.id}
@@ -90,38 +158,22 @@ export function TraceLog({
         </span>
       </div>
 
-      {/* The student's own afternoon, in their own language. Everything below
-          is a record OF this — which is the connection that was missing. */}
-      <div className="afternoon">
-        <h3>Das hast du gemacht</h3>
-        {hat ? (
-          <ol className="afternoon-list">
-            {traces.visits.map((v, i) => (
-              <li key={i}>
-                {/* Same date on every chip is noise; the clock is what the
-                    student compares against the logs below. */}
-                <span className="af-zeit">{v.zeit.split(' ').pop()}</span>
-                <span className="af-was">{siteById(v.siteId)!.titel}</span>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="trace-idle">Klick oben auf eine Seite.</p>
-        )}
-      </div>
-
-      {hat && (
-        <div className="fokus">
-          {fokus === 'seite' && (
-            <SeiteView traces={traces} markieren={markieren} onTraces={onTraces} />
-          )}
-          {fokus === 'tracker' && <TrackerView traces={traces} />}
-          {fokus === 'vergleich' && (
-            <VergleichView traces={traces} studentName={studentName} cookie={cookie} />
-          )}
-        </div>
+      <h3>Das hast du gemacht</h3>
+      {hat ? (
+        <ol className="afternoon-list">
+          {traces.visits.map((v, i) => (
+            <li key={i}>
+              {/* Same date on every chip is noise; the clock is what the
+                  student compares against the logs in the next step. */}
+              <span className="af-zeit">{v.zeit.split(' ').pop()}</span>
+              <span className="af-was">{siteById(v.siteId)!.titel}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="trace-idle">Klick oben auf eine Seite — dann geht es weiter.</p>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -348,8 +400,8 @@ function VergleichView({
   )
 }
 
-/** The questions, which live in the rail beside the evidence. */
-export function TraceFragen({
+/** Step 3: what to make of it. */
+function FragenStep({
   traces,
   fragen,
   onTraces,
@@ -359,7 +411,7 @@ export function TraceFragen({
   onTraces: (next: Traces) => void
 }) {
   return (
-    <section className="trace-fragen">
+    <section className="panel trace-fragen">
       {fragen.map((id) => {
         const frage = traceFrage(id)
         if (!frage) return null
