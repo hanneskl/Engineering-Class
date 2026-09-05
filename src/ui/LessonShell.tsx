@@ -185,7 +185,14 @@ export function LessonShell({
         {children}
 
         {introOpen && (
-          <section className="intro" aria-label={intro.heading}>
+          /*
+           * Focus goes to the panel, not to the dismiss button at its foot.
+           * The panel scrolls internally on a short screen, and a button
+           * receiving focus there made the browser auto-scroll straight to
+           * it — opening the explainer already scrolled to its own end, with
+           * the heading and every paragraph hidden above the fold.
+           */
+          <section className="intro" aria-label={intro.heading} tabIndex={-1} autoFocus>
             <h2>{intro.heading}</h2>
             {intro.body.map((p, i) => (
               <p key={i}>{p}</p>
@@ -194,7 +201,7 @@ export function LessonShell({
               <strong>Für den Quali:</strong> {quali}
             </p>
             <div className="intro-close">
-              <button className="primary" onClick={() => setIntroOpen(false)} autoFocus>
+              <button className="primary" onClick={() => setIntroOpen(false)}>
                 Verstanden, los geht's
               </button>
             </div>
