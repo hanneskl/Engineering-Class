@@ -104,6 +104,17 @@ export function visit(
  * Throwing the cookie away. The tracker starts a new file — but the old rows
  * do not disappear, and the IP address in them is unchanged.
  */
+/**
+ * Empty the log without forgetting what the student has worked out.
+ *
+ * Marked fields go with the visits — they point at a line that no longer
+ * exists. Answers and the cookie generation stay: the cookie surviving a
+ * cleared log is the lesson, not a bug.
+ */
+export function clearVisits(traces: Traces): Traces {
+  return { ...traces, visits: [], markiert: [] }
+}
+
 export function deleteCookie(traces: Traces): Traces {
   return {
     ...traces,

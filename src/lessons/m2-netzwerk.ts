@@ -39,7 +39,7 @@ export const m2Netzwerk: BuildLesson = {
         'sorgt ein Access Point (der selbst per Kabel hängt) oder ein Repeater (der ' +
         'selbst per WLAN hängt).',
       'Zeichne unten: links wählst du ein Gerät aus, dann verbindest du zwei Geräte, ' +
-        'indem du oben "Kabel ziehen" oder "WLAN ziehen" anklickst und danach die beiden ' +
+        'indem du oben "Mit Kabel verbinden" oder "Mit WLAN verbinden" anklickst und danach die beiden ' +
         'Geräte. Oben in der Aufgabe siehst du, was schon stimmt.',
     ],
   },

@@ -41,6 +41,7 @@ export const m7Spuren: TraceLesson = {
   tasks: [
     {
       id: 'm7-log',
+      fokus: 'seite',
       title: 'Was steht über dich im Log?',
       brief:
         'Besuch ein paar Seiten und schau dir danach an, was der Betreiber der Seite über ' +
@@ -77,6 +78,7 @@ export const m7Spuren: TraceLesson = {
     },
     {
       id: 'm7-cookies',
+      fokus: 'tracker',
       title: 'Der Keks, der dich wiedererkennt',
       brief:
         'Schau ins Tracker-Log. Dieselbe Nummer taucht auf mehreren Seiten auf — obwohl die ' +
@@ -121,6 +123,7 @@ export const m7Spuren: TraceLesson = {
     },
     {
       id: 'm7-wer',
+      fokus: 'vergleich',
       title: 'Wer weiß was?',
       brief:
         'Drei Beteiligte sehen drei ganz verschiedene Dinge. Sortier, wer was mitbekommt — ' +

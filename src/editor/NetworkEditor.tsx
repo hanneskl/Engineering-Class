@@ -119,7 +119,7 @@ export function NetworkEditor({
               setNotice(null)
             }}
           >
-            {t === 'select' ? 'Auswählen' : MEDIUM_LABEL[t as Medium] + ' ziehen'}
+            {t === 'select' ? 'Auswählen' : `Mit ${MEDIUM_LABEL[t as Medium]} verbinden`}
           </button>
         ))}
         <span className="toolbar-hint">

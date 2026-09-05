@@ -7,7 +7,7 @@ import {
 } from '../model/types'
 import { emptyTraces, type Traces } from '../model/traces'
 import { isTracesSolved, type TraceState } from '../model/traceRules'
-import { TraceLog } from '../editor/TraceLog'
+import { TraceFragen, TraceLog } from '../editor/TraceLog'
 import { LessonShell } from './LessonShell'
 import {
   loadTraces,
@@ -84,13 +84,18 @@ export function TraceLessonView({
       progress={progress}
       onProgress={onProgress}
       onBack={onBack}
+      aside={
+        task.fragen?.length ? (
+          <TraceFragen traces={traces} fragen={task.fragen} onTraces={change} />
+        ) : undefined
+      }
     >
       <TraceLog
         traces={traces}
         seed={progress.seed}
         studentName={progress.studentName}
+        fokus={task.fokus}
         markieren={task.markieren}
-        fragen={task.fragen}
         onTraces={change}
       />
     </LessonShell>

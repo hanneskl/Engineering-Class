@@ -70,7 +70,6 @@ export function Home({
               <button className="card-open" onClick={() => onOpen(lesson.id)}>
                 <span className="card-head">
                   <span className="badge">{lesson.module}</span>
-                  {done && <span className="tick">fertig</span>}
                 </span>
                 <span className="card-title">{lesson.title}</span>
                 <span className="card-sub">{lesson.intro.heading}</span>
@@ -79,43 +78,45 @@ export function Home({
                 </span>
                 <span className="card-meta">
                   {stats.solved} / {stats.total} Aufgaben
+                  {done && <span className="tick"> · fertig</span>}
                 </span>
               </button>
 
-              <div className="card-foot">
-                {asking ? (
-                  <div className="confirm" role="alertdialog" aria-label="Zurücksetzen bestätigen">
-                    <p>
-                      Alles in <strong>{lesson.title}</strong> löschen? Gelöste Aufgaben und
-                      {lesson.kind === 'quiz' ? ' Antworten' : ' Zeichnungen'} sind dann weg.
-                    </p>
-                    <div className="row">
-                      <button
-                        className="ghost danger small"
-                        onClick={() => {
-                          onProgress(resetTasks(progress, ids))
-                          setConfirming(null)
-                        }}
-                      >
-                        Ja, zurücksetzen
-                      </button>
-                      <button className="ghost small" onClick={() => setConfirming(null)}>
-                        Abbrechen
-                      </button>
-                    </div>
+              {/* Outside .card-open, because a button may not nest inside a
+                  button — but a direct child of the card, so the confirmation
+                  below can cover the whole card rather than this corner. */}
+              <button
+                className="reset"
+                disabled={!resettable || asking}
+                title={`${lesson.title} zurücksetzen`}
+                aria-label={`${lesson.title} zurücksetzen`}
+                onClick={() => setConfirming(lesson.id)}
+              >
+                ⟲
+              </button>
+
+              {asking && (
+                <div className="confirm" role="alertdialog" aria-label="Zurücksetzen bestätigen">
+                  <p>
+                    Alles in <strong>{lesson.title}</strong> löschen? Gelöste Aufgaben und
+                    {lesson.kind === 'quiz' ? ' Antworten' : ' Zeichnungen'} sind dann weg.
+                  </p>
+                  <div className="row">
+                    <button
+                      className="danger-solid small"
+                      onClick={() => {
+                        onProgress(resetTasks(progress, ids))
+                        setConfirming(null)
+                      }}
+                    >
+                      Ja, zurücksetzen
+                    </button>
+                    <button className="ghost small" onClick={() => setConfirming(null)}>
+                      Abbrechen
+                    </button>
                   </div>
-                ) : (
-                  <button
-                    className="reset"
-                    disabled={!resettable}
-                    title={`${lesson.title} zurücksetzen`}
-                    aria-label={`${lesson.title} zurücksetzen`}
-                    onClick={() => setConfirming(lesson.id)}
-                  >
-                    ⟲
-                  </button>
-                )}
-              </div>
+                </div>
+              )}
             </article>
           )
         })}

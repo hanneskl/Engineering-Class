@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import {
   FELDER,
   PUBLIC_IP,
   SITES,
   answerTrace,
+  clearVisits,
   currentCookie,
   deleteCookie,
   feldWert,
@@ -16,115 +17,161 @@ import {
   trackerRows,
   visit,
   type Traces,
+  type Visit,
 } from '../model/traces'
 import { FrageCard } from './FrageCard'
 
-type Ansicht = 'server' | 'tracker' | 'provider'
+type Fokus = 'seite' | 'tracker' | 'vergleich'
 
 /**
- * Surf a little, then read the same afternoon from three sides. The three
- * views are deliberately not merged: the point of the module is that no single
- * party sees everything, and that two of them together see plenty.
+ * Surf a little, then look at what it left behind.
+ *
+ * Two earlier shapes failed here. Tabs hid the comparison the module is about;
+ * three permanent columns showed all of it at once, which put three walls of
+ * server-log text in front of a fifteen-year-old who needed one. Both also
+ * printed raw Apache lines, which nobody at this level can read.
+ *
+ * So: the surfing, always on top, in plain German — that is the student's own
+ * afternoon and the thing every panel below is *about*. Then one panel, chosen
+ * by the task: the website's record decoded into labelled fields, the ad
+ * company's record with its repeating number, or the comparison of all three.
  */
 export function TraceLog({
   traces,
   seed,
   studentName,
+  fokus,
   markieren,
-  fragen,
   onTraces,
 }: {
   traces: Traces
   seed: number
   studentName: string
+  fokus: Fokus
   markieren?: boolean
-  fragen?: string[]
   onTraces: (next: Traces) => void
 }) {
-  const [ansicht, setAnsicht] = useState<Ansicht>('server')
   const cookie = currentCookie(traces, seed)
-  const letzte = traces.visits.at(-1)
+  const hat = traces.visits.length > 0
+
+  // Which record the student is looking at is what the rules record. The
+  // comparison shows all three at once, so it counts as all three.
+  useEffect(() => {
+    if (!hat) return
+    const zeigt = fokus === 'vergleich' ? ['server', 'tracker', 'provider'] : [fokus === 'seite' ? 'server' : 'tracker']
+    const fehlt = zeigt.filter((a) => !traces.seen.includes(`ansicht:${a}`))
+    if (fehlt.length === 0) return
+    onTraces(fehlt.reduce((t, a) => sawAnsicht(t, a), traces))
+  }, [hat, fokus, traces, onTraces])
 
   return (
     <div className="trace">
       <div className="trace-bar">
-        <span className="trace-label">Surf ein bisschen:</span>
+        <span className="trace-label">Besuche eine Seite:</span>
         {SITES.map((s) => (
           <button
             key={s.id}
             className="ghost small"
-            onClick={() => onTraces(sawAnsicht(visit(traces, seed, s.id), ansicht))}
+            onClick={() => onTraces(visit(traces, seed, s.id))}
           >
             {s.titel}
           </button>
         ))}
-        <span className="trace-cookie">
-          Dein Cookie: <code>{cookie}</code>
+        <span className="trace-bar-right">
+          <span className="trace-cookie">
+            Dein Cookie <code>{cookie}</code>
+          </span>
           <button className="link" onClick={() => onTraces(deleteCookie(traces))}>
-            löschen
+            Cookie löschen
+          </button>
+          <button className="link" disabled={!hat} onClick={() => onTraces(clearVisits(traces))}>
+            Protokoll leeren
           </button>
         </span>
       </div>
 
-      <div className="trace-tabs" role="tablist">
-        {(
-          [
-            ['server', 'Log der Webseite'],
-            ['tracker', 'Der Tracker'],
-            ['provider', 'Dein Provider'],
-          ] as [Ansicht, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            role="tab"
-            aria-selected={ansicht === id}
-            className={ansicht === id ? 'tab on' : 'tab'}
-            onClick={() => {
-              setAnsicht(id)
-              // Only counts as having looked once there is something to see.
-              if (traces.visits.length) onTraces(sawAnsicht(traces, id))
-            }}
-          >
-            {label}
-          </button>
-        ))}
+      {/* The student's own afternoon, in their own language. Everything below
+          is a record OF this — which is the connection that was missing. */}
+      <div className="afternoon">
+        <h3>Das hast du gemacht</h3>
+        {hat ? (
+          <ol className="afternoon-list">
+            {traces.visits.map((v, i) => (
+              <li key={i}>
+                {/* Same date on every chip is noise; the clock is what the
+                    student compares against the logs below. */}
+                <span className="af-zeit">{v.zeit.split(' ').pop()}</span>
+                <span className="af-was">{siteById(v.siteId)!.titel}</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="trace-idle">Klick oben auf eine Seite.</p>
+        )}
       </div>
 
-      {traces.visits.length === 0 ? (
-        <p className="trace-idle">
-          Noch nichts passiert. Klick oben auf eine Seite — dann füllt sich das Protokoll.
-        </p>
-      ) : (
-        <div className="trace-view">
-          {ansicht === 'server' && <ServerView traces={traces} />}
-          {ansicht === 'tracker' && <TrackerView traces={traces} />}
-          {ansicht === 'provider' && <ProviderView traces={traces} studentName={studentName} />}
+      {hat && (
+        <div className="fokus">
+          {fokus === 'seite' && (
+            <SeiteView traces={traces} markieren={markieren} onTraces={onTraces} />
+          )}
+          {fokus === 'tracker' && <TrackerView traces={traces} />}
+          {fokus === 'vergleich' && (
+            <VergleichView traces={traces} studentName={studentName} cookie={cookie} />
+          )}
         </div>
       )}
+    </div>
+  )
+}
 
-      {markieren && letzte && (
-        <section className="markieren">
-          <h4>Welche Angaben führen zu dir?</h4>
-          <p className="markieren-lede">
-            Das ist deine letzte Zeile, in ihre Bestandteile zerlegt. Klick die an, die
-            verraten, <em>wer</em> da war — nicht die, die sagen wann oder was.
-          </p>
-          <div className="felder">
-            {FELDER.map((f) => {
-              const an = traces.markiert.includes(f.id)
-              return (
-                <button
-                  key={f.id}
-                  className={`feld${an ? ' on' : ''}`}
-                  aria-pressed={an}
-                  onClick={() => onTraces(toggleFeld(traces, f.id))}
-                >
-                  <span className="feld-label">{f.label}</span>
-                  <span className="feld-wert">{feldWert(letzte, f.id)}</span>
-                </button>
-              )
-            })}
-          </div>
+/**
+ * T1 — the website's own record, decoded.
+ *
+ * A server writes one line per visit. The line is shown, but the exercise is
+ * on the fields it is made of: named, with their real values, and clickable.
+ * The raw line sits underneath, small, so the student sees what they have
+ * really been looking at without having to parse it to do the task.
+ */
+function SeiteView({
+  traces,
+  markieren,
+  onTraces,
+}: {
+  traces: Traces
+  markieren?: boolean
+  onTraces: (next: Traces) => void
+}) {
+  const letzte = traces.visits.at(-1)!
+  return (
+    <section className="panel">
+      <h3>Das schreibt die Webseite über deinen letzten Besuch auf</h3>
+      <p className="panel-lede">
+        Jede Seite führt so ein Protokoll — ohne Anmeldung, ohne zu fragen. Das hier ist
+        deine letzte Zeile, in ihre Bestandteile zerlegt.
+        {markieren && ' Klick die Angaben an, die verraten, wer da war — nicht die, die sagen wann oder was.'}
+      </p>
+
+      <div className="felder">
+        {FELDER.map((f) => {
+          const an = traces.markiert.includes(f.id)
+          return (
+            <button
+              key={f.id}
+              className={`feld${an ? ' on' : ''}`}
+              aria-pressed={an}
+              disabled={!markieren}
+              onClick={() => onTraces(toggleFeld(traces, f.id))}
+            >
+              <span className="feld-label">{f.label}</span>
+              <span className="feld-wert">{feldWert(letzte, f.id)}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {traces.markiert.length > 0 && (
+        <div className="feld-warums">
           {traces.markiert.map((id) => {
             const f = FELDER.find((x) => x.id === id)
             if (!f) return null
@@ -134,114 +181,200 @@ export function TraceLog({
               </p>
             )
           })}
-        </section>
+        </div>
       )}
 
-      {fragen?.length ? (
-        <section className="trace-fragen">
-          {fragen.map((id) => {
-            const frage = traceFrage(id)
-            if (!frage) return null
-            return (
-              <FrageCard
-                key={id}
-                text={frage.text}
-                optionen={frage.optionen}
-                chosen={traces.answers[frage.id]}
-                onChoose={(o) =>
-                  onTraces(answerTrace(traces, frage, frage.optionen.find((x) => x.text === o.text)!))
-                }
-              />
-            )
-          })}
-        </section>
-      ) : null}
-    </div>
+      <details className="roh">
+        <summary>So sieht diese Zeile beim Betreiber wirklich aus</summary>
+        <code className="log-line">{serverLine(letzte)}</code>
+      </details>
+    </section>
   )
 }
 
-function ServerView({ traces }: { traces: Traces }) {
-  // One line per visit, in the shape a real web server writes it.
-  const proHost = new Map<string, number>()
-  for (const v of traces.visits) {
-    const host = siteById(v.siteId)!.host
-    proHost.set(host, (proHost.get(host) ?? 0) + 1)
-  }
-  return (
-    <>
-      <p className="view-note">
-        Das schreibt jede Webseite mit, ganz ohne Anmeldung. Jeder Betreiber sieht nur
-        seine eigene Seite — dafür jeden einzelnen Klick darauf.
-      </p>
-      <div className="log">
-        {traces.visits.map((v, i) => (
-          <code key={i} className="log-line">
-            {serverLine(v)}
-          </code>
-        ))}
-      </div>
-      <p className="view-sum">
-        {[...proHost.entries()].map(([host, n]) => `${host}: ${n} Zeile${n === 1 ? '' : 'n'}`).join(' · ')}
-      </p>
-    </>
-  )
-}
-
+/** T2 — the ad company's record: one number, many unrelated sites. */
 function TrackerView({ traces }: { traces: Traces }) {
   const rows = trackerRows(traces)
   const pro = sitesPerCookie(traces)
   const ohne = traces.visits.length - rows.length
+
   return (
-    <>
-      <p className="view-note">
-        Dieselbe Werbefirma ist auf vielen Seiten eingebaut. Sie sieht deinen Namen nicht —
-        sie braucht ihn auch nicht, sie hat ja deine Cookie-Nummer.
+    <section className="panel">
+      <h3>Das schreibt die Werbefirma auf</h3>
+      <p className="panel-lede">
+        Dieselbe Werbefirma steckt in vielen Seiten. Sie kennt deinen Namen nicht — sie
+        braucht ihn nicht, sie hat deine Nummer.
       </p>
+
       {rows.length === 0 ? (
-        <p className="trace-idle">Noch keine Seite mit Tracker besucht.</p>
+        <p className="trace-idle">
+          Noch keine Seite mit Werbung besucht. Nur die Schulhomepage kommt ohne aus —
+          alle anderen tragen dieselbe Werbung, auch die Arztpraxis.
+        </p>
       ) : (
-        <div className="log">
-          {rows.map((v, i) => {
-            const neu = i > 0 && rows[i - 1]!.cookie !== v.cookie
-            return (
-              <code key={i} className={`log-line${neu ? ' log-break' : ''}`}>
-                cookie={v.cookie} · {v.zeit} · {siteById(v.siteId)!.host}
-              </code>
-            )
-          })}
-        </div>
+        <table className="tracker-table">
+          <thead>
+            <tr>
+              <th>Nummer</th>
+              <th>Uhrzeit</th>
+              <th>Seite</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((v, i) => {
+              const neu = i > 0 && rows[i - 1]!.cookie !== v.cookie
+              return (
+                <tr key={i} className={neu ? 'cookie-break' : undefined}>
+                  <td className="nummer">{v.cookie}</td>
+                  <td>{v.zeit}</td>
+                  <td>{siteById(v.siteId)!.host}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       )}
-      <p className="view-sum">
-        {[...pro.entries()].map(
-          ([id, sites]) => `${id}: ${sites.size} verschiedene Seite${sites.size === 1 ? '' : 'n'}`,
-        ).join(' · ')}
-        {ohne > 0 && ` · ${ohne} Besuch${ohne === 1 ? '' : 'e'} ohne Tracker, davon weiß die Firma nichts`}
-      </p>
-    </>
+
+      <ul className="panel-sum">
+        {[...pro.entries()].map(([id, sites]) => (
+          <li key={id}>
+            {sites.size === 1 ? (
+              <>
+                Nummer <code>{id}</code> war bisher auf einer Seite.
+              </>
+            ) : (
+              <>
+                Nummer <code>{id}</code> war auf <strong>{sites.size}</strong> verschiedenen
+                Seiten — die nichts miteinander zu tun haben.
+              </>
+            )}
+          </li>
+        ))}
+        {ohne > 0 && (
+          <li>
+            {ohne} Besuch{ohne === 1 ? '' : 'e'} auf der Schulhomepage — die trägt keine
+            Werbung, davon weiß die Firma nichts.
+          </li>
+        )}
+      </ul>
+    </section>
   )
 }
 
-function ProviderView({ traces, studentName }: { traces: Traces; studentName: string }) {
+/**
+ * T3 — the comparison, as a table rather than three logs.
+ *
+ * The gaps are the lesson: nobody has a full row, and any two of them together
+ * very nearly do. As three separate logs that had to be held in the head; as a
+ * grid it is the first thing you see.
+ */
+function VergleichView({
+  traces,
+  studentName,
+  cookie,
+}: {
+  traces: Traces
+  studentName: string
+  cookie: string
+}) {
+  const seiten = new Set(traces.visits.map((v) => v.siteId)).size
+  const mitTracker = new Set(trackerRows(traces).map((v) => v.siteId)).size
+  const letzte: Visit | undefined = traces.visits.at(-1)
+
+  const zeilen: { was: string; werte: [string | null, string | null, string | null] }[] = [
+    {
+      was: 'Wie du heißt',
+      werte: [null, null, studentName || 'dein Name'],
+    },
+    {
+      was: 'Deine IP-Adresse',
+      werte: [PUBLIC_IP, PUBLIC_IP, PUBLIC_IP],
+    },
+    {
+      was: 'Welche Seiten du besuchst',
+      werte: [
+        `nur die eigene${letzte ? ` (${siteById(letzte.siteId)!.host})` : ''}`,
+        mitTracker ? `${mitTracker} Seiten mit ihrer Werbung` : 'noch keine',
+        `alle ${seiten}`,
+      ],
+    },
+    {
+      was: 'Was auf der Seite steht',
+      werte: ['alles', null, null],
+    },
+    {
+      was: 'Deine Cookie-Nummer',
+      werte: [cookie, cookie, null],
+    },
+  ]
+
   return (
-    <>
-      <p className="view-note">
-        Alles läuft über deinen Internet-Anbieter — und der weiß als Einziger, wer hinter
-        der IP-Adresse steckt: Du hast einen Vertrag mit ihm.
+    <section className="panel">
+      <h3>Wer weiß was über denselben Nachmittag?</h3>
+      <p className="panel-lede">
+        Dieselben Klicks, drei Beteiligte. Achte auf die Lücken — und darauf, wie wenig
+        zwei davon zusammenlegen müssen.
       </p>
-      <div className="log">
-        <code className="log-line log-head">
-          Anschluss {PUBLIC_IP} — Kunde: {studentName || 'dein Name'}, Glonn
-        </code>
-        {traces.visits.map((v, i) => (
-          <code key={i} className="log-line">
-            {v.zeit} · {PUBLIC_IP} → {siteById(v.siteId)!.host}
-          </code>
-        ))}
-      </div>
-      <p className="view-sum">
-        Bei https sieht er nicht, was auf den Seiten steht — aber sehr wohl, dass du dort
-        warst.
+
+      <table className="wer-table">
+        <thead>
+          <tr>
+            <th />
+            <th>Die Webseite</th>
+            <th>Die Werbefirma</th>
+            <th>Dein Internet-Anbieter</th>
+          </tr>
+        </thead>
+        <tbody>
+          {zeilen.map((z) => (
+            <tr key={z.was}>
+              <th scope="row">{z.was}</th>
+              {z.werte.map((w, i) => (
+                <td key={i} className={w ? 'weiss' : 'weiss-nicht'}>
+                  {w ?? '—'}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p className="panel-punchline">
+        Keiner kennt dich ganz. Aber die Webseite hat deine IP-Adresse, und dein Anbieter
+        weiß, wem sie gehörte — <strong>zusammen sind es dein Name und deine Klicks</strong>.
+        Das ist die „vermeintliche Anonymität".
       </p>
-    </>
+    </section>
+  )
+}
+
+/** The questions, which live in the rail beside the evidence. */
+export function TraceFragen({
+  traces,
+  fragen,
+  onTraces,
+}: {
+  traces: Traces
+  fragen: string[]
+  onTraces: (next: Traces) => void
+}) {
+  return (
+    <section className="trace-fragen">
+      {fragen.map((id) => {
+        const frage = traceFrage(id)
+        if (!frage) return null
+        return (
+          <FrageCard
+            key={id}
+            text={frage.text}
+            optionen={frage.optionen}
+            chosen={traces.answers[frage.id]}
+            onChoose={(o) =>
+              onTraces(answerTrace(traces, frage, frage.optionen.find((x) => x.text === o.text)!))
+            }
+          />
+        )
+      })}
+    </section>
   )
 }

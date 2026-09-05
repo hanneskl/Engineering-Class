@@ -256,6 +256,14 @@ export type TraceTask = {
   brief: string
   ziele: TraceZiel[]
   hints: Hints
+  /**
+   * Which of the three onlookers this task is about.
+   *
+   * All three used to be on screen at once, which put three logs in front of a
+   * student who needed one. A task shows the party it is asking about;
+   * 'vergleich' is the last task, where holding them side by side is the point.
+   */
+  fokus: 'seite' | 'tracker' | 'vergleich'
   /** Show the "mark what identifies you" exercise under the server log. */
   markieren?: boolean
   /** Questions to ask under the logs, by id. */

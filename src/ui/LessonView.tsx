@@ -66,7 +66,7 @@ export function LessonView({
       </div>
 
       <button className="intro-open" onClick={() => setIntroOpen(true)}>
-        Erklärung: {lesson.intro.heading}
+        {lesson.intro.heading}
       </button>
 
       <ol className="dots" aria-label="Aufgaben">

@@ -48,6 +48,7 @@ export function LessonShell({
   progress,
   onProgress,
   onBack,
+  aside,
   children,
 }: {
   module: string
@@ -65,6 +66,11 @@ export function LessonShell({
   progress: Progress
   onProgress: (next: Progress) => void
   onBack: () => void
+  /**
+   * Module content for the rail rather than the stage. M7 puts its questions
+   * here: the stage carries the evidence, the rail carries what to make of it.
+   */
+  aside?: ReactNode
   children: ReactNode
 }) {
   const task = tasks[index]!
@@ -89,7 +95,7 @@ export function LessonShell({
         </div>
 
         <button className="intro-open" onClick={() => setIntroOpen(true)}>
-          Erklärung: {intro.heading}
+          {intro.heading}
         </button>
 
         <ol className="dots" aria-label="Aufgaben">
@@ -152,6 +158,8 @@ export function LessonShell({
             </div>
           )}
         </section>
+
+        {aside}
 
         {!done && (
           <div className="hints">

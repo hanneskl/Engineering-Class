@@ -47,22 +47,27 @@ export function App() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <button
-          className="brand"
-          onClick={() => setView({ kind: 'home' })}
-          aria-label="Zur Übersicht"
-        >
-          Informatik<span>-Trainer</span>
-        </button>
-        <span className="topbar-where">Informatik 9 · Quali · Mittelschule Glonn</span>
-        <div className="topbar-right">
-          <span className="who">{progress.studentName}</span>
-          <button className="link" onClick={signOut}>
-            wechseln
+      {/* Only the Übersicht carries the bar. Inside a module every pixel of
+          height belongs to the editor, and the rail already offers the way
+          back — a second one at the top bought nothing for its 41px. */}
+      {!lesson && (
+        <header className="topbar">
+          <button
+            className="brand"
+            onClick={() => setView({ kind: 'home' })}
+            aria-label="Zur Übersicht"
+          >
+            Informatik<span>-Trainer</span>
           </button>
-        </div>
-      </header>
+          <span className="topbar-where">Informatik 9 · Quali · Mittelschule Glonn</span>
+          <div className="topbar-right">
+            <span className="who">{progress.studentName}</span>
+            <button className="link" onClick={signOut}>
+              wechseln
+            </button>
+          </div>
+        </header>
+      )}
 
       <main>
         {lesson ? (
