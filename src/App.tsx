@@ -14,6 +14,7 @@ import { SheetLessonView } from './ui/SheetLessonView'
 import { load, save, lastStudent, type Progress, type TaskProgress } from './progress/store'
 import { ensureSignedIn } from './progress/anonAuth'
 import { pushChangedTaskProgress } from './progress/sync'
+import { joinPresence } from './progress/presence'
 
 const isValidLesson = (id: string) => Boolean(lessonById(id))
 
@@ -60,6 +61,21 @@ export function App() {
    */
   const prevTasksRef = useRef<Record<string, TaskProgress>>(progress?.tasks ?? {})
 
+  /*
+   * Joining Presence has to happen twice, for two different reasons: right
+   * after a fresh sign-in (start, below) so the very first task a brand-new
+   * student opens is already visible, and here, on every mount that already
+   * has a signed-in student — a returning student's page reload restores
+   * their anonymous auth session on its own (supabase-js persists it), but a
+   * Presence channel is a live socket with nothing to restore, so someone
+   * has to open it again. joinPresence itself no-ops on a repeat call for
+   * the same identity, so the overlap between the two costs nothing.
+   */
+  useEffect(() => {
+    if (progress) void joinPresence(progress.studentName)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress?.studentName])
+
   const update = useCallback((next: Progress) => {
     setProgress(next)
     save(next)
@@ -78,8 +94,12 @@ export function App() {
 
     // Fire-and-forget: with no backend configured this resolves instantly to
     // nothing, and even a real, slow, or failed sign-in must never hold up
-    // the local experience — see ensureSignedIn's own doc comment.
-    void ensureSignedIn(name)
+    // the local experience — see ensureSignedIn's own doc comment. Chained
+    // rather than left to the mount effect above: a brand-new sign-in is a
+    // real network round trip, and without this a student's first task
+    // could open before that finishes and race joinPresence's own session
+    // check into a silent no-op for the rest of the session.
+    void ensureSignedIn(name).then(() => joinPresence(name))
   }, [])
 
   const signOut = useCallback(() => {

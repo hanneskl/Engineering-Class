@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { QuizLesson } from '../model/types'
 import { TaskCard } from './TaskCard'
 import { taskProgress, withTask, type Progress } from '../progress/store'
+import { reportActiveTask } from '../progress/presence'
 
 export function LessonView({
   lesson,
@@ -26,6 +27,13 @@ export function LessonView({
   )
 
   const task = tasks[index]
+
+  // Quizzes don't render through LessonShell, so they get their own copy of
+  // the same effect rather than none at all.
+  useEffect(() => {
+    if (task) reportActiveTask(lesson.module, task.id)
+  }, [lesson.module, task?.id])
+
   if (!task) return null
 
   const state = taskProgress(progress, task.id)

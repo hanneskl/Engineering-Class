@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Finding } from '../model/rules'
 import type { Hints } from '../model/types'
 import { taskProgress, withTask, type Progress } from '../progress/store'
+import { reportActiveTask } from '../progress/presence'
 
 /**
  * Everything a task page has around its editor: the way back, the module
@@ -83,6 +84,14 @@ export function LessonShell({
   )
   const isLast = index === tasks.length - 1
   const hints = [task.hints.stups, task.hints.hinweis, task.hints.loesung]
+
+  // Every one of the seven lesson kinds that render through this shell gets
+  // live "currently working on" for free from this one effect — none of
+  // them needs to know Presence exists. A no-op with no backend configured
+  // or before the channel finishes joining; see reportActiveTask.
+  useEffect(() => {
+    reportActiveTask(module, task.id)
+  }, [module, task.id])
 
   return (
     <div className="lesson">
