@@ -1,44 +1,17 @@
 /**
- * Supabase wiring.
+ * M10's own use of the shared Supabase client: posting a submission for
+ * server-side grading.
  *
- * The trainer runs perfectly well with no backend at all — that is the default. Set
- * VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to turn on sign-in and attempt logging.
+ * The nickname+password sign-in that used to live here is gone — its login
+ * screen (Login.tsx) was deleted when the two repos merged, so `signIn` and
+ * `emailForNickname` had no caller left. Identity now comes from the app-wide
+ * anonymous session every student already has by the time they reach a
+ * lesson (src/progress/anonAuth.ts) — the same session `submitAttempt`
+ * relies on for the edge function's own auth check.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Grade, Submission } from '@quali/scenarios'
-
-const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-export const backend: SupabaseClient | null =
-  url && anonKey ? createClient(url, anonKey) : null
-
-export const hasBackend = backend !== null
-
-/**
- * Students get teacher-created nicknames, not email addresses. Supabase Auth is email-shaped,
- * so we synthesise a local address on a reserved TLD that can never receive mail.
- */
-export function emailForNickname(nickname: string): string {
-  return `${nickname.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '-')}@pupils.invalid`
-}
-
-export async function signIn(nickname: string, password: string): Promise<string | null> {
-  if (!backend) return 'Kein Server konfiguriert.'
-  const { error } = await backend.auth.signInWithPassword({
-    email: emailForNickname(nickname),
-    password,
-  })
-  if (!error) return null
-  return error.message.toLowerCase().includes('invalid')
-    ? 'Nickname oder Passwort stimmt nicht.'
-    : error.message
-}
-
-export async function signOut(): Promise<void> {
-  await backend?.auth.signOut()
-}
+import { backend } from '../backend/client'
 
 export interface SubmitResult {
   readonly grade: Grade | null

@@ -3,7 +3,7 @@
 /**
  * Vite's own types cover import.meta.env; these two are ours. They stay
  * optional because the trainer runs with no backend by default — see
- * src/spreadsheet/backend.ts.
+ * src/backend/client.ts.
  */
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string

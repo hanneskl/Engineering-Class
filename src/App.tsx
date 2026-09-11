@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LESSONS, lessonById } from './lessons'
 import { hashForRoute, routeFromHash, type Route } from './nav'
 import { NameGate } from './ui/NameGate'
@@ -11,7 +11,9 @@ import { WebLessonView } from './ui/WebLessonView'
 import { TraceLessonView } from './ui/TraceLessonView'
 import { MatchLessonView } from './ui/MatchLessonView'
 import { SheetLessonView } from './ui/SheetLessonView'
-import { load, save, lastStudent, type Progress } from './progress/store'
+import { load, save, lastStudent, type Progress, type TaskProgress } from './progress/store'
+import { ensureSignedIn } from './progress/anonAuth'
+import { pushChangedTaskProgress } from './progress/sync'
 
 const isValidLesson = (id: string) => Boolean(lessonById(id))
 
@@ -48,18 +50,36 @@ export function App() {
     else location.hash = hash
   }, [])
 
+  /*
+   * The baseline `update()` diffs each new Progress.tasks against, so only
+   * genuinely changed tasks get pushed to Supabase (see sync.ts). Reset
+   * whenever the signed-in student changes — a ref left over from the
+   * previous student would otherwise mask that student B's own task, never
+   * touched yet, happens to already match whatever student A last left it
+   * at, and nothing would be synced for it at all.
+   */
+  const prevTasksRef = useRef<Record<string, TaskProgress>>(progress?.tasks ?? {})
+
   const update = useCallback((next: Progress) => {
     setProgress(next)
     save(next)
+    void pushChangedTaskProgress(next.seed, prevTasksRef.current, next.tasks)
+    prevTasksRef.current = next.tasks
   }, [])
 
   const start = useCallback((name: string) => {
     const loaded = load(name)
     save(loaded)
     setProgress(loaded)
+    prevTasksRef.current = loaded.tasks
     // Deliberately not routed home: `view` already holds whatever the URL
     // pointed at when the page loaded, and that is where a returning student
     // following a shared link expects to land.
+
+    // Fire-and-forget: with no backend configured this resolves instantly to
+    // nothing, and even a real, slow, or failed sign-in must never hold up
+    // the local experience — see ensureSignedIn's own doc comment.
+    void ensureSignedIn(name)
   }, [])
 
   const signOut = useCallback(() => {

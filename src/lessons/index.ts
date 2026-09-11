@@ -34,3 +34,28 @@ export const LESSONS: Lesson[] = [
 export function lessonById(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id)
 }
+
+/**
+ * Every task id in a lesson. Most lessons carry a fixed `tasks` array; the
+ * two quiz modules (M4, M8) generate theirs from the student's seed instead,
+ * so a caller needs the seed to enumerate them at all.
+ */
+export function taskIdsFor(lesson: Lesson, seed: number): string[] {
+  return lesson.kind === 'quiz'
+    ? lesson.buildTasks(seed).map((t) => t.id)
+    : lesson.tasks.map((t) => t.id)
+}
+
+/**
+ * task.id → the module badge of the lesson it belongs to (e.g. 'M2', 'M7').
+ * `Progress.tasks` is a single flat map across every module, with no lesson
+ * of its own attached — this is how anything that needs to group by module
+ * (Home's stats, the progress-sync module) recovers it.
+ */
+export function moduleByTaskId(seed: number): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const lesson of LESSONS) {
+    for (const id of taskIdsFor(lesson, seed)) map.set(id, lesson.module)
+  }
+  return map
+}

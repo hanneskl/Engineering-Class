@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Lesson } from '../model/types'
+import { taskIdsFor } from '../lessons'
 import {
   exportProgress,
   hasProgress,
@@ -25,10 +26,7 @@ export function Home({
   const cards = useMemo(
     () =>
       lessons.map((lesson) => {
-        const ids =
-          lesson.kind === 'quiz'
-            ? lesson.buildTasks(progress.seed).map((t) => t.id)
-            : lesson.tasks.map((t) => t.id)
+        const ids = taskIdsFor(lesson, progress.seed)
         return {
           lesson,
           ids,

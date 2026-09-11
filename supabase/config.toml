@@ -1,4 +1,9 @@
 project_id = "quali-excel-trainer"
 
+[auth]
+# Students never see a password field (src/progress/anonAuth.ts) — this is
+# what makes that possible: a real, RLS-visible auth.uid() with no login UI.
+enable_anonymous_sign_ins = true
+
 [functions.check-task]
 verify_jwt = true
