@@ -5,5 +5,16 @@ project_id = "quali-excel-trainer"
 # what makes that possible: a real, RLS-visible auth.uid() with no login UI.
 enable_anonymous_sign_ins = true
 
+# `config push` fills in every *unlisted* auth field with the CLI's stock
+# local-dev defaults, including site_url — which is exactly what a password
+# recovery or invite email redirects to. Left unlisted once, it silently
+# became `http://127.0.0.1:3000`, a server that doesn't exist for anyone,
+# and broke the teacher account's password reset. Explicit from here on.
+site_url = "https://hanneskl.github.io/Engineering-Class/"
+additional_redirect_urls = [
+  "https://hanneskl.github.io/Engineering-Class/",
+  "http://localhost:5173/Engineering-Class/",
+]
+
 [functions.check-task]
 verify_jwt = true

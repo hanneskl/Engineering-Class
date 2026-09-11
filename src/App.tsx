@@ -3,6 +3,7 @@ import { LESSONS, lessonById } from './lessons'
 import { hashForRoute, routeFromHash, type Route } from './nav'
 import { NameGate } from './ui/NameGate'
 import { TeacherRoute } from './ui/TeacherRoute'
+import { TeacherResetPassword } from './ui/TeacherResetPassword'
 import { Home } from './ui/Home'
 import { LessonView } from './ui/LessonView'
 import { BuildLessonView } from './ui/BuildLessonView'
@@ -16,6 +17,7 @@ import { load, save, lastStudent, type Progress, type TaskProgress } from './pro
 import { ensureSignedIn } from './progress/anonAuth'
 import { pushChangedTaskProgress } from './progress/sync'
 import { joinPresence } from './progress/presence'
+import { backend } from './backend/client'
 
 const isValidLesson = (id: string) => Boolean(lessonById(id))
 
@@ -112,6 +114,36 @@ export function App() {
     () => (view.kind === 'lesson' ? lessonById(view.lessonId) : undefined),
     [view],
   )
+
+  /*
+   * Clicking a Supabase password-recovery email link lands here carrying an
+   * `#access_token=…&type=recovery` fragment — supabase-js's own
+   * `detectSessionInUrl` consumes and clears that before anything of ours
+   * runs, so there is no hash left for `routeFromHash` to read. The
+   * documented way to notice it happened at all is this event, not the URL.
+   */
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
+  useEffect(() => {
+    if (!backend) return
+    const { data } = backend.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  // Takes over the whole screen regardless of whatever route the leftover
+  // hash resolved to — a student's module or the Übersicht would be a
+  // strange thing to land on with a half-finished password change pending.
+  if (passwordRecovery) {
+    return (
+      <TeacherResetPassword
+        onDone={() => {
+          setPasswordRecovery(false)
+          navigate({ kind: 'teacher' })
+        }}
+      />
+    )
+  }
 
   // Checked before the student gate — this has nothing to do with Progress,
   // so it shouldn't need a student name entered on this browser first.
