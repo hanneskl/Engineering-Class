@@ -126,6 +126,7 @@ main { position: relative; min-height: 0; overflow: hidden; display: flex; flex-
 .gate-sub { margin: 0 0 1.5rem; color: var(--muted); }
 .gate-card label { display: block; font-weight: 600; margin-bottom: .4rem; }
 .gate-note { color: var(--muted); font-size: .85rem; margin: 1.25rem 0 0; }
+.gate-error { color: var(--bad); font-size: .88rem; margin: -.3rem 0 .9rem; }
 
 input, textarea, .answer {
   width: 100%; padding: .7rem .8rem; margin-bottom: .9rem;
@@ -950,3 +951,39 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 .board-fragen { display: grid; gap: .7rem; margin-top: 1rem; }
 .board-fragen .frage { margin-top: 0; }
+
+/* ---------- teacher dashboard ----------
+ *
+ * The one screen in the trainer that isn't built to fit without scrolling —
+ * a roster and a progress table both grow with the class, and unlike a
+ * lesson there's no single editor that has to stay fully on screen. `body`
+ * still never scrolls (it's `overflow: hidden`, same as every module), so
+ * this owns its own scroll area instead of relying on that.
+ */
+.teacher {
+  height: 100dvh; overflow-y: auto;
+  padding: 1.25rem 1.5rem 2rem;
+  max-width: 60rem; margin: 0 auto;
+}
+.teacher-bar {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--line);
+}
+.teacher-bar h1 { margin: 0; font-size: 1.3rem; }
+.teacher-bar h1 span { color: var(--muted); font-weight: 500; }
+
+.teacher-body { display: grid; gap: 1.75rem; }
+.teacher-active h2, .teacher-matrix h2 { margin: 0 0 .6rem; font-size: 1rem; }
+
+.teacher-active ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.teacher-active li {
+  padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); font-size: .92rem;
+}
+
+.teacher-matrix table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+.teacher-matrix th, .teacher-matrix td {
+  padding: .4rem .6rem; border-bottom: 1px solid var(--line); text-align: left;
+}
+.teacher-matrix th { color: var(--muted); font-weight: 600; font-size: .8rem; }
+.teacher-matrix td.done { color: var(--good); font-weight: 700; }

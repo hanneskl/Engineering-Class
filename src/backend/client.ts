@@ -21,3 +21,11 @@ export const backend: SupabaseClient | null =
   url && anonKey ? createClient(url, anonKey) : null
 
 export const hasBackend = backend !== null
+
+/**
+ * There is exactly one class, so this is the only place that needs to know
+ * its id — not a secret, RLS is what actually protects a class's data. Used
+ * by `anonAuth.ts` (assigning a new student to it) and the teacher dashboard
+ * (reading its roster).
+ */
+export const CLASS_ID = '20af1454-52cf-4557-b438-87948ccf5ccd'

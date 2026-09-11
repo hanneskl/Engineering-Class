@@ -14,7 +14,7 @@
  * session is already sitting in this browser.
  */
 
-import { backend } from '../backend/client'
+import { backend, CLASS_ID } from '../backend/client'
 
 // Remembers which name the current anonymous session was last synced under,
 // so a second student typing a different name on the same browser gets a
@@ -22,11 +22,6 @@ import { backend } from '../backend/client'
 // the source of truth (that's `students.display_name` on the server) — just
 // enough to decide, cheaply and locally, whether today's name still matches.
 const SYNCED_NAME_KEY = 'netzwerk-trainer:synced-name'
-
-// Not a secret — RLS is what actually protects a class's data, this just
-// says which class a new student belongs to. There is exactly one class, so
-// this is the only place that needs to know its id.
-const CLASS_ID = '20af1454-52cf-4557-b438-87948ccf5ccd'
 
 /**
  * Call once per NameGate submit. No-ops entirely with no backend configured

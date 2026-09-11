@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LESSONS, lessonById } from './lessons'
 import { hashForRoute, routeFromHash, type Route } from './nav'
 import { NameGate } from './ui/NameGate'
+import { TeacherRoute } from './ui/TeacherRoute'
 import { Home } from './ui/Home'
 import { LessonView } from './ui/LessonView'
 import { BuildLessonView } from './ui/BuildLessonView'
@@ -111,6 +112,10 @@ export function App() {
     () => (view.kind === 'lesson' ? lessonById(view.lessonId) : undefined),
     [view],
   )
+
+  // Checked before the student gate — this has nothing to do with Progress,
+  // so it shouldn't need a student name entered on this browser first.
+  if (view.kind === 'teacher') return <TeacherRoute />
 
   if (!progress) return <NameGate onStart={start} />
 

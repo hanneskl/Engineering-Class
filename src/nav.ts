@@ -12,11 +12,16 @@
  * parsing here is what makes it testable without a DOM.
  */
 
-export type Route = { kind: 'home' } | { kind: 'lesson'; lessonId: string }
+export type Route = { kind: 'home' } | { kind: 'lesson'; lessonId: string } | { kind: 'teacher' }
+
+/** Never a real lesson id, so it can never collide with one. */
+const TEACHER_PATH = 'lehrer'
 
 /** What the address bar should say for a route. Home is `#/`, not empty — see hashForRoute. */
 export function hashForRoute(route: Route): string {
-  return route.kind === 'lesson' ? `#/${encodeURIComponent(route.lessonId)}` : '#/'
+  if (route.kind === 'lesson') return `#/${encodeURIComponent(route.lessonId)}`
+  if (route.kind === 'teacher') return `#/${TEACHER_PATH}`
+  return '#/'
 }
 
 /**
@@ -26,5 +31,6 @@ export function hashForRoute(route: Route): string {
  */
 export function routeFromHash(hash: string, isValidLesson: (id: string) => boolean): Route {
   const id = decodeURIComponent(hash.replace(/^#\/?/, ''))
+  if (id === TEACHER_PATH) return { kind: 'teacher' }
   return id && isValidLesson(id) ? { kind: 'lesson', lessonId: id } : { kind: 'home' }
 }

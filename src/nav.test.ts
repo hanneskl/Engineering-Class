@@ -27,6 +27,10 @@ describe('routeFromHash', () => {
       lessonId: 'm2-netzwerk',
     })
   })
+
+  it('reads the teacher route even though "lehrer" is never a valid lesson id', () => {
+    expect(routeFromHash('#/lehrer', knownLesson)).toEqual({ kind: 'teacher' })
+  })
 })
 
 describe('hashForRoute', () => {
@@ -37,5 +41,10 @@ describe('hashForRoute', () => {
 
   it('writes home as "#/", not empty — an explicit hash is what makes leaving a module a distinct, back-able step', () => {
     expect(hashForRoute({ kind: 'home' })).toBe('#/')
+  })
+
+  it('is the inverse of routeFromHash for the teacher route', () => {
+    const route = { kind: 'teacher' } as const
+    expect(routeFromHash(hashForRoute(route), knownLesson)).toEqual(route)
   })
 })
