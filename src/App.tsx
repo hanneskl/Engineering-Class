@@ -73,9 +73,19 @@ export function App() {
    * Presence channel is a live socket with nothing to restore, so someone
    * has to open it again. joinPresence itself no-ops on a repeat call for
    * the same identity, so the overlap between the two costs nothing.
+   *
+   * The same mount is also the one-time backfill for `task_progress`: sync
+   * only ever diffed against `prevTasksRef`'s baseline going forward (see
+   * sync.ts), so a student's history from *before* they first synced — every
+   * task already solved locally the moment this ran for them — never made it
+   * to Supabase on its own. Pushing the full current snapshot against an
+   * empty baseline here catches that, once per mount; the upsert is
+   * idempotent, so re-running it on every reload costs nothing either.
    */
   useEffect(() => {
-    if (progress) void joinPresence(progress.studentName)
+    if (!progress) return
+    void joinPresence(progress.studentName)
+    void pushChangedTaskProgress(progress.seed, {}, progress.tasks)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress?.studentName])
 
@@ -102,7 +112,18 @@ export function App() {
     // real network round trip, and without this a student's first task
     // could open before that finishes and race joinPresence's own session
     // check into a silent no-op for the rest of the session.
-    void ensureSignedIn(name).then(() => joinPresence(name))
+    //
+    // The backfill below races the same way if left to the mount effect
+    // alone: that effect's own `getSession()` call can run — and correctly
+    // find nothing yet — before this very sign-in has finished. Chaining it
+    // here too, after the session genuinely exists, is what makes a brand
+    // new name with pre-existing local history (like a student typing a name
+    // they already used before this feature shipped) actually reach
+    // `task_progress` on the first try instead of silently doing nothing.
+    void ensureSignedIn(name).then(() => {
+      joinPresence(name)
+      void pushChangedTaskProgress(loaded.seed, {}, loaded.tasks)
+    })
   }, [])
 
   const signOut = useCallback(() => {
