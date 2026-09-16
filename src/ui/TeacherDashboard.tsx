@@ -4,7 +4,7 @@ import { backend, CLASS_ID } from '../backend/client'
 import { signOutTeacher } from '../backend/teacherAuth'
 import { subscribePresence, type ActiveTask } from '../progress/presence'
 
-type Student = { id: string; display_name: string | null }
+type Student = { id: string; display_name: string | null; login_code: string | null }
 
 type TaskProgressRow = {
   student_id: string
@@ -26,10 +26,23 @@ type TaskProgressRow = {
 const TOTAL_BY_MODULE = new Map(LESSONS.map((l) => [l.module, taskIdsFor(l, 1).length]))
 
 /**
- * The dashboard `ARCHITECTURE.md` §1 originally ruled out. Two live views
- * over the same class: who is doing what right now (Presence), and how far
- * everyone has gotten (`task_progress`, kept in sync by a Postgres Changes
- * subscription rather than a manual refresh).
+ * `LESSONS`' own order is pedagogical build order (see its doc comment —
+ * M10 sits last despite being worth the most points), which is exactly
+ * right for the student-facing Home screen but reads as random module
+ * numbers here. The matrix's columns are a lookup table, not a curriculum,
+ * so they sort by the M-number itself instead.
+ */
+const LESSONS_BY_MODULE_NUMBER = [...LESSONS].sort(
+  (a, b) => Number(a.module.slice(1)) - Number(b.module.slice(1)),
+)
+
+/**
+ * The dashboard `ARCHITECTURE.md` §1 originally ruled out entirely, now
+ * shipped as an opt-in backend feature (§10). Three things: roster
+ * management (create a student, look up or reissue their code), and two
+ * live views over the same class — who is doing what right now (Presence),
+ * and how far everyone has gotten (`task_progress`, kept in sync by a
+ * Postgres Changes subscription rather than a manual refresh).
  */
 export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [students, setStudents] = useState<Student[]>([])
@@ -57,7 +70,7 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
     let cancelled = false
     async function load() {
       const [{ data: studentRows }, { data: progressRows }] = await Promise.all([
-        client.from('students').select('id, display_name').eq('class_id', CLASS_ID),
+        client.from('students').select('id, display_name, login_code').eq('class_id', CLASS_ID),
         client.from('task_progress').select('*'),
       ])
       if (cancelled) return
@@ -130,6 +143,46 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
     onSignOut()
   }
 
+  const [newName, setNewName] = useState('')
+  const [rosterBusy, setRosterBusy] = useState(false)
+  const [rosterError, setRosterError] = useState<string | null>(null)
+  // The code a create/reset just returned, shown once inline next to that
+  // student's row — `login_code` in `students` already carries the same
+  // value for next time, this is just immediate feedback after the click.
+  const [justIssued, setJustIssued] = useState<{ studentId: string; code: string } | null>(null)
+
+  async function invoke(body: Record<string, unknown>): Promise<{ code?: string; studentId?: string } | null> {
+    if (!backend) return null
+    setRosterBusy(true)
+    setRosterError(null)
+    const { data, error } = await backend.functions.invoke('manage-student', { body })
+    setRosterBusy(false)
+    if (error) {
+      setRosterError((data as { error?: string } | null)?.error ?? error.message)
+      return null
+    }
+    return data
+  }
+
+  async function addStudent(): Promise<void> {
+    const name = newName.trim()
+    if (!name) return
+    const result = await invoke({ action: 'create', name })
+    if (!result?.studentId || !result.code) return
+    setStudents((prev) => [...prev, { id: result.studentId!, display_name: name, login_code: result.code! }])
+    setJustIssued({ studentId: result.studentId, code: result.code })
+    setNewName('')
+  }
+
+  async function resetCode(studentId: string): Promise<void> {
+    const result = await invoke({ action: 'reset', studentId })
+    if (!result?.code) return
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, login_code: result.code! } : s)),
+    )
+    setJustIssued({ studentId, code: result.code })
+  }
+
   return (
     <div className="teacher">
       <header className="teacher-bar">
@@ -164,6 +217,28 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
             )}
           </section>
 
+          <section className="teacher-roster">
+            <h2>Schüler verwalten</h2>
+            <form
+              className="teacher-add"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void addStudent()
+              }}
+            >
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Vorname"
+                autoComplete="off"
+              />
+              <button className="primary" type="submit" disabled={rosterBusy || !newName.trim()}>
+                + Hinzufügen
+              </button>
+            </form>
+            {rosterError && <p className="gate-error">{rosterError}</p>}
+          </section>
+
           <section className="teacher-matrix">
             <h2>Fortschritt</h2>
             {roster.length === 0 ? (
@@ -173,7 +248,8 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    {LESSONS.map((l) => (
+                    <th>Code</th>
+                    {LESSONS_BY_MODULE_NUMBER.map((l) => (
                       <th key={l.module}>{l.module}</th>
                     ))}
                   </tr>
@@ -182,7 +258,17 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
                   {roster.map((s) => (
                     <tr key={s.id}>
                       <td>{s.display_name ?? '(ohne Namen)'}</td>
-                      {LESSONS.map((l) => {
+                      <td className="teacher-code">
+                        <code>{justIssued?.studentId === s.id ? justIssued.code : s.login_code}</code>
+                        <button
+                          className="link"
+                          disabled={rosterBusy}
+                          onClick={() => void resetCode(s.id)}
+                        >
+                          neu vergeben
+                        </button>
+                      </td>
+                      {LESSONS_BY_MODULE_NUMBER.map((l) => {
                         const { solved, total } = summaryFor(s.id, l.module)
                         const done = total > 0 && solved === total
                         return (

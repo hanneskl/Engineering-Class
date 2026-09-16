@@ -14,10 +14,10 @@ import { TraceLessonView } from './ui/TraceLessonView'
 import { MatchLessonView } from './ui/MatchLessonView'
 import { SheetLessonView } from './ui/SheetLessonView'
 import { load, save, lastStudent, type Progress, type TaskProgress } from './progress/store'
-import { ensureSignedIn } from './progress/anonAuth'
-import { pushChangedTaskProgress } from './progress/sync'
+import { signInStudent } from './backend/studentAuth'
+import { pushChangedTaskProgress, pushProgressSnapshot, hydrateFromSnapshot } from './progress/sync'
 import { joinPresence } from './progress/presence'
-import { backend } from './backend/client'
+import { backend, hasBackend } from './backend/client'
 
 const isValidLesson = (id: string) => Boolean(lessonById(id))
 
@@ -65,27 +65,34 @@ export function App() {
   const prevTasksRef = useRef<Record<string, TaskProgress>>(progress?.tasks ?? {})
 
   /*
-   * Joining Presence has to happen twice, for two different reasons: right
-   * after a fresh sign-in (start, below) so the very first task a brand-new
-   * student opens is already visible, and here, on every mount that already
-   * has a signed-in student — a returning student's page reload restores
-   * their anonymous auth session on its own (supabase-js persists it), but a
-   * Presence channel is a live socket with nothing to restore, so someone
-   * has to open it again. joinPresence itself no-ops on a repeat call for
-   * the same identity, so the overlap between the two costs nothing.
+   * Runs once per mount that already has a signed-in student — covers a
+   * returning student's page reload (their session persists on its own,
+   * supabase-js keeps it in localStorage) just as much as the moment
+   * `start()` below just finished signing someone in for the first time.
    *
-   * The same mount is also the one-time backfill for `task_progress`: sync
-   * only ever diffed against `prevTasksRef`'s baseline going forward (see
-   * sync.ts), so a student's history from *before* they first synced — every
-   * task already solved locally the moment this ran for them — never made it
-   * to Supabase on its own. Pushing the full current snapshot against an
-   * empty baseline here catches that, once per mount; the upsert is
-   * idempotent, so re-running it on every reload costs nothing either.
+   * Three things happen here, all safe to repeat on every reload:
+   * - joinPresence: a Presence channel is a live socket, not something that
+   *   survives a reload on its own the way the auth session does.
+   * - pushChangedTaskProgress against an *empty* baseline: a one-time
+   *   backfill for `task_progress`, since ordinary sync (`update()`, below)
+   *   only ever diffs forward — history from before a student's first sync
+   *   would otherwise never reach it. Idempotent, so repeating it costs
+   *   nothing.
+   * - hydrateFromSnapshot: the other side of the same idea, for the *whole*
+   *   Progress object — if another device pushed something newer (or this
+   *   is a genuinely fresh device with nothing local yet), pull it down and
+   *   make it the new local baseline.
    */
   useEffect(() => {
     if (!progress) return
     void joinPresence(progress.studentName)
     void pushChangedTaskProgress(progress.seed, {}, progress.tasks)
+    void hydrateFromSnapshot(progress).then((hydrated) => {
+      if (!hydrated) return
+      save(hydrated)
+      setProgress(hydrated)
+      prevTasksRef.current = hydrated.tasks
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress?.studentName])
 
@@ -94,35 +101,39 @@ export function App() {
     save(next)
     void pushChangedTaskProgress(next.seed, prevTasksRef.current, next.tasks)
     prevTasksRef.current = next.tasks
+    pushProgressSnapshot(next)
   }, [])
 
-  const start = useCallback((name: string) => {
-    const loaded = load(name)
-    save(loaded)
-    setProgress(loaded)
-    prevTasksRef.current = loaded.tasks
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginBusy, setLoginBusy] = useState(false)
+
+  const start = useCallback((name: string, code: string) => {
     // Deliberately not routed home: `view` already holds whatever the URL
     // pointed at when the page loaded, and that is where a returning student
     // following a shared link expects to land.
+    if (!hasBackend) {
+      const loaded = load(name)
+      save(loaded)
+      setProgress(loaded)
+      prevTasksRef.current = loaded.tasks
+      return
+    }
 
-    // Fire-and-forget: with no backend configured this resolves instantly to
-    // nothing, and even a real, slow, or failed sign-in must never hold up
-    // the local experience — see ensureSignedIn's own doc comment. Chained
-    // rather than left to the mount effect above: a brand-new sign-in is a
-    // real network round trip, and without this a student's first task
-    // could open before that finishes and race joinPresence's own session
-    // check into a silent no-op for the rest of the session.
-    //
-    // The backfill below races the same way if left to the mount effect
-    // alone: that effect's own `getSession()` call can run — and correctly
-    // find nothing yet — before this very sign-in has finished. Chaining it
-    // here too, after the session genuinely exists, is what makes a brand
-    // new name with pre-existing local history (like a student typing a name
-    // they already used before this feature shipped) actually reach
-    // `task_progress` on the first try instead of silently doing nothing.
-    void ensureSignedIn(name).then(() => {
-      joinPresence(name)
-      void pushChangedTaskProgress(loaded.seed, {}, loaded.tasks)
+    // With a backend, a name is no longer enough on its own — the code has
+    // to check out before anything local changes, so a wrong one shows an
+    // error instead of quietly dropping someone into the wrong identity.
+    setLoginBusy(true)
+    setLoginError(null)
+    void signInStudent(name, code).then((error) => {
+      setLoginBusy(false)
+      if (error) {
+        setLoginError(error)
+        return
+      }
+      const loaded = load(name)
+      save(loaded)
+      setProgress(loaded)
+      prevTasksRef.current = loaded.tasks
     })
   }, [])
 
@@ -170,7 +181,7 @@ export function App() {
   // so it shouldn't need a student name entered on this browser first.
   if (view.kind === 'teacher') return <TeacherRoute />
 
-  if (!progress) return <NameGate onStart={start} />
+  if (!progress) return <NameGate onStart={start} error={loginError} busy={loginBusy} />
 
   return (
     <div className="app">

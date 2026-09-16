@@ -15,14 +15,17 @@ That document is
 
 | Question | Decision | Consequence |
 | --- | --- | --- |
-| Teacher dashboard / live progress? | **No.** The tool is used *without the teacher.* | No backend, ever. But the tool must **teach**, not just check — see §5. |
+| Teacher dashboard / live progress? | **Yes, opt-in via Supabase** (issue #1). With no `VITE_SUPABASE_*` set, the tool still works exactly as first designed — *without* the teacher. | Backend is optional, never required for the teaching loop itself — see §5 and §10. |
 | Offline capability? | **No.** Internet is always available. | No service worker, no offline sync. Plain hosted SPA. |
 | Verify the student's real home network? | **Plausibility only.** | T2.4 checks structure and value ranges, never exact values. |
 
-The first decision is the important one. It is not merely "skip the dashboard" —
-it means **nobody is there to explain a failure**. That reshapes the whole
-product: the explanation layer is now as much work as the simulator, and
-probably more.
+The teaching loop was designed around the second half of the first row, not
+the first: whether or not a teacher happens to be watching a dashboard,
+**nobody is there in the moment to explain a failure** to the student
+actually doing the task. That reshapes the whole product: the explanation
+layer is now as much work as the simulator, and probably more. The dashboard
+(§10) is oversight and reporting on top of that — it doesn't change how a
+student works through a task.
 
 ---
 
@@ -217,9 +220,18 @@ immediate, specific feedback, not plagiarism detection.
 ### Known limitation: shared school computers
 
 `localStorage` is per-browser, not per-student. On a shared machine, progress can
-collide or be wiped. With no backend there is no clean fix. Mitigation: the
-student enters their name on first run, progress is keyed by name, and export is
-offered as a backup they can re-import. Worth revisiting if it bites in practice.
+collide or be wiped. With no backend there is no clean fix — the student enters
+their name on first run, progress is keyed by name, and export is offered as a
+backup they can re-import.
+
+With a backend configured, this is mostly closed: each student signs in with
+their name and a teacher-issued 6-digit code (§10), a real Supabase Auth
+account rather than whichever session happened to already be in that browser.
+Signing in pulls down their own progress from Supabase regardless of which
+device or browser they're on, and a wrong code is rejected rather than
+silently attaching to someone else's row. The `localStorage` copy this section
+otherwise describes becomes a same-device cache the sign-in reconciles
+against, not the only place progress lives.
 
 ---
 
@@ -302,12 +314,31 @@ but renaming the keys would orphan the progress of every student who has already
 worked in a browser here (§7's known limitation, made worse). The name is cosmetic;
 the key is not.
 
-### Supabase, dormant
+### Supabase, live (opt-in)
 
-The backend is wired and untouched: with no `VITE_SUPABASE_*` set, `submitAttempt`
-is a no-op and the browser's verdict is the only one. That matches §1 — no backend
-— without throwing away a working teacher-dashboard path if it is ever wanted for
-the Datenverarbeitung half.
+With no `VITE_SUPABASE_*` set, the backend is entirely inert: `submitAttempt`
+is a no-op and the browser's own verdict is the only one, exactly as §1
+describes for a student using the trainer with no teacher watching at all.
+
+Configured, it does three things across all ten modules, not just M10:
+
+- **Identity.** Each student signs in with their name and a 6-digit code the
+  teacher issues (`src/backend/studentAuth.ts`, `signInStudent`) — a real
+  Supabase Auth account, provisioned by the teacher through the
+  `manage-student` Edge Function (the same service-role-only shape as
+  `check-task`), never self-registered.
+- **Progress sync.** `src/progress/sync.ts` pushes the solved/attempts/hints
+  summary (`task_progress`, undebounced — it changes rarely) and, separately,
+  the student's *whole* local `Progress` object as a `jsonb` snapshot on
+  `students` (debounced — it changes on nearly every interaction). Signing in
+  anywhere pulls the newer of "what's already local" and "what's on the
+  server" (§7).
+- **The teacher dashboard** (`src/ui/TeacherDashboard.tsx`) reads
+  `task_progress` and a Presence channel live, and is where the teacher
+  creates/reset a student's code in the first place.
+
+M10's own server-side grading (`attempts`, `check-task`) is unrelated to any
+of this and unaffected — it was already real, not dormant.
 
 ### Open: one palette, two designs
 

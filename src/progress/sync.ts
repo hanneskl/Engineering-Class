@@ -20,7 +20,7 @@
 
 import { moduleByTaskId } from '../lessons'
 import { backend } from '../backend/client'
-import type { TaskProgress } from './store'
+import type { Progress, TaskProgress } from './store'
 
 function changed(prev: TaskProgress | undefined, next: TaskProgress): boolean {
   return (
@@ -72,5 +72,83 @@ export async function pushChangedTaskProgress(
   } catch {
     // Offline, or Supabase unreachable — the trainer still works locally,
     // and the next change will retry with a wider diff.
+  }
+}
+
+const SNAPSHOT_DEBOUNCE_MS = 1500
+let snapshotTimer: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * Pushes the student's *whole* local Progress — not just the task summary
+ * above — so signing in on a different device can restore exactly what they
+ * left off with (a drawn network, a filled-in spreadsheet, a console
+ * session), not merely which tasks are solved.
+ *
+ * Debounced, unlike `pushChangedTaskProgress`: `tasks` only changes on a
+ * handful of discrete events, but the *whole* Progress object changes on
+ * effectively every interaction (a canvas drag, a spreadsheet keystroke) —
+ * without this, that would be a network write per pixel dragged.
+ */
+export function pushProgressSnapshot(progress: Progress): void {
+  if (!backend) return
+  if (snapshotTimer) clearTimeout(snapshotTimer)
+  snapshotTimer = setTimeout(() => {
+    snapshotTimer = null
+    void flushProgressSnapshot(progress)
+  }, SNAPSHOT_DEBOUNCE_MS)
+}
+
+async function flushProgressSnapshot(progress: Progress): Promise<void> {
+  if (!backend) return
+  try {
+    const { data } = await backend.auth.getSession()
+    if (!data.session) return
+    await backend
+      .from('students')
+      .update({ progress_snapshot: progress, progress_updated_at: progress.updatedAt })
+      .eq('id', data.session.user.id)
+  } catch {
+    // Offline, or Supabase unreachable — the trainer still works locally,
+    // and the next debounced push will retry with the latest state.
+  }
+}
+
+/** Is this Progress genuinely untouched — the "fresh laptop" case? */
+function isBlank(progress: Progress): boolean {
+  return (
+    Object.keys(progress.tasks).length === 0 &&
+    Object.keys(progress.plans).length === 0 &&
+    Object.keys(progress.flows).length === 0 &&
+    Object.keys(progress.sessions).length === 0 &&
+    Object.keys(progress.walks).length === 0 &&
+    Object.keys(progress.traces).length === 0 &&
+    Object.keys(progress.matches).length === 0 &&
+    Object.keys(progress.sheets).length === 0
+  )
+}
+
+/**
+ * Called once right after a successful sign-in. Last-write-wins by
+ * timestamp — no merge — except a genuinely blank local Progress (the
+ * actual "different laptop" case) always defers to a real server snapshot,
+ * since a fresh `emptyProgress`'s own `updatedAt` (just "now") would
+ * otherwise look newer than any real history.
+ */
+export async function hydrateFromSnapshot(local: Progress): Promise<Progress | null> {
+  if (!backend) return null
+  try {
+    const { data } = await backend.auth.getSession()
+    if (!data.session) return null
+    const { data: row } = await backend
+      .from('students')
+      .select('progress_snapshot, progress_updated_at')
+      .eq('id', data.session.user.id)
+      .maybeSingle()
+    const snapshot = row?.progress_snapshot as Progress | null | undefined
+    if (!snapshot || !row?.progress_updated_at) return null
+    if (!isBlank(local) && row.progress_updated_at <= local.updatedAt) return null
+    return snapshot
+  } catch {
+    return null
   }
 }

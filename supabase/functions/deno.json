@@ -2,6 +2,7 @@
   "imports": {
     "@quali/core": "../../src/spreadsheet/core/index.ts",
     "@quali/scenarios": "../../src/spreadsheet/scenarios/index.ts",
+    "@quali/student-slug": "../../src/backend/studentSlug.ts",
     "@supabase/supabase-js": "jsr:@supabase/supabase-js@2"
   }
 }

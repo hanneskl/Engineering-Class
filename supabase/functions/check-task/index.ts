@@ -12,7 +12,12 @@ import { gradeSubmission } from '@quali/scenarios'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
+  // supabase-js sends `apikey` and `x-client-info` alongside `Authorization`
+  // on every request (see its fetchWithAuth and FunctionsClient) — omitting
+  // any of these fails the browser's CORS preflight before the request is
+  // even sent, surfacing client-side as a bare network/CORS error with no
+  // further detail.
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
