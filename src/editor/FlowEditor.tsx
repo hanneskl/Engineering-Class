@@ -39,9 +39,22 @@ export function FlowEditor({
     (kind: FlowKind) => {
       // Straight down the middle: flowcharts read top to bottom, and a single
       // column keeps the arrows from crossing before the student rearranges.
-      const n = flow.nodes.length
-      const node = makeNode(kind, 400, 70 + n * 88)
-      onChange({ ...flow, nodes: [...flow.nodes, node] })
+      // "Ende" always stays the lowest symbol: a student who places it early
+      // and then keeps adding steps would otherwise get those steps *below*
+      // it, with the arrow between them drawn straight through the end.
+      const below = (ns: typeof flow.nodes) =>
+        ns.length ? Math.max(...ns.map((n) => n.y)) + 88 : 70
+      const isEnd = (n: { kind: FlowKind }) => n.kind === 'end'
+      const y =
+        kind === 'end' || !flow.nodes.some(isEnd)
+          ? below(flow.nodes)
+          : below(flow.nodes.filter((n) => !isEnd(n)))
+      const node = makeNode(kind, 400, y)
+      const nodes =
+        kind === 'end'
+          ? flow.nodes
+          : flow.nodes.map((n) => (isEnd(n) && n.y <= y ? { ...n, y: y + 88 } : n))
+      onChange({ ...flow, nodes: [...nodes, node] })
       setSelectedId(node.id)
       setSelectedEdgeId(null)
       setNotice(null)
