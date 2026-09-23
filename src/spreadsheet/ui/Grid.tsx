@@ -81,7 +81,24 @@ export function Grid(props: GridProps) {
     onEditChange({ a1, draft, caret: draft.length, from: 'cell', point: null })
   }
 
+  /*
+   * Committing fires twice for one Enter — the key handler, then the blur
+   * the refocus below causes — and the input's own `onSelect` can fire once
+   * more on the way out. Every one of those closes over the *old* `edit`,
+   * so the last to run could hand a caret update back to the parent and
+   * resurrect the editor after the cell was already committed: an editor
+   * stuck open on a cell that isn't selected, with every key swallowed by
+   * `if (edit) return` above. Remember that we closed, until the parent
+   * actually opens something new.
+   */
+  const closedRef = useRef(false)
+  useEffect(() => {
+    if (edit) closedRef.current = false
+  }, [edit])
+
   function commitEdit(): void {
+    if (closedRef.current) return
+    closedRef.current = true
     if (edit) props.onCommit(edit.a1, edit.draft)
     onEditChange(null)
     gridRef.current?.focus()
@@ -269,12 +286,13 @@ export function Grid(props: GridProps) {
                               }),
                             )
                           }
-                          onSelect={(event) =>
+                          onSelect={(event) => {
+                            if (closedRef.current) return
                             onEditChange({
                               ...edit,
                               caret: event.currentTarget.selectionStart ?? edit.caret,
                             })
-                          }
+                          }}
                           onBlur={commitEdit}
                           onKeyDown={(event) => {
                             const pointed = handlePointKey(

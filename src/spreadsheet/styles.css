@@ -35,7 +35,7 @@
   background: #fff; border-radius: 4px; font-weight: 600; text-align: center;
 }
 .sheet-pane .formula-input {
-  flex: 1; padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px;
+  flex: 1; padding: 6px 10px; margin: 0; border: 1px solid var(--line); border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: #fff;
 }
 .sheet-pane .tab {
@@ -65,6 +65,10 @@
 .sheet-pane .editor {
   width: 100%; border: none; outline: none; background: transparent;
   font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* The trainer's global `input` rule (styles.css) adds form-field padding,
+     a bottom margin and rounded corners — inside a 24px cell that made the
+     whole row jump to 60px the moment editing started. */
+  padding: 0; margin: 0; border-radius: 0; height: 100%;
 }
 .sheet-pane .tasks-head { display: flex; align-items: center; justify-content: space-between; }
 .sheet-pane .task.passed { border-color: var(--accent); background: #f2f9f5; }
