@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  DEVICES,
   type DeviceType,
   type Medium,
   type Plan,
@@ -14,6 +15,8 @@ import { assignAddresses } from '../model/dhcp'
 import { Canvas, MEDIUM_LABEL, type Tool } from './Canvas'
 import { Palette } from './Palette'
 import { Inspector } from './Inspector'
+
+const ROW_BY_GROUP = { aussen: 0, netz: 1, geraete: 2 } as const
 
 /**
  * The drawing surface plus everything around it. Validation runs on every
@@ -53,10 +56,24 @@ export function NetworkEditor({
 
   const addDevice = useCallback(
     (type: DeviceType) => {
-      // Drop new devices on a loose grid so they never land on top of each other.
-      const n = plan.devices.length
-      const x = 120 + (n % 6) * 130
-      const y = 90 + Math.floor(n / 6) * 130
+      // Drop new devices in rows by role — outside world on top, network
+      // gear in the middle, end devices at the bottom — the same order as
+      // the palette and as the schematics in the Quali. One flat row would
+      // put a switch and its PCs side by side, so every cable to the third
+      // PC ran straight through the first two.
+      const row = ROW_BY_GROUP[DEVICES[type].group]
+      const taken = (x: number, y: number) =>
+        plan.devices.some((d) => Math.abs(d.x - x) < 60 && Math.abs(d.y - y) < 60)
+      // Walk the row's slots until a free one — a device the student dragged
+      // (or one placed by the older flat layout) may already sit there.
+      let slot = 0
+      let x = 0
+      let y = 0
+      do {
+        x = 120 + (slot % 6) * 130
+        y = 80 + row * 170 + Math.floor(slot / 6) * 70
+        slot += 1
+      } while (taken(x, y) && slot < 18)
       const device = makeDevice(plan, type, x, y)
       onChange({ ...plan, devices: [...plan.devices, device] })
       setSelectedId(device.id)

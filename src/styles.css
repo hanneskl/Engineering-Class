@@ -89,6 +89,11 @@ h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
 }
+/* Inside a module there is no topbar (App.tsx), so `main` is the first child
+   and would auto-place into the `auto` row — content-sized, with the `1fr`
+   row left empty below it. Spanning both rows is what actually gives the
+   editor the whole screen height the comment above promises. */
+.app > main:first-child { grid-row: 1 / -1; }
 
 .topbar {
   display: flex; align-items: baseline; gap: .85rem;

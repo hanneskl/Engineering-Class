@@ -285,8 +285,17 @@ export function saveWalk(progress: Progress, taskId: string, walk: Walk): Progre
 /**
  * The network the console runs on: whatever the student built in M2, so the
  * addresses in `ipconfig` are the ones they assigned themselves.
+ *
+ * Only a plan that actually *has* addresses qualifies. M2's first three
+ * tasks are drawn without any — a student who opens M5 after those would
+ * otherwise get their own, unaddressed network, where `ipconfig` can only
+ * answer "(keine)" and the first task cannot be completed at all. Until
+ * they've done M2's addressing task, the console runs on the prepared
+ * network instead.
  */
 export function latestPlan(progress: Progress): Plan | undefined {
-  const drawn = Object.values(progress.plans).filter((p) => p.devices.length > 1)
+  const drawn = Object.values(progress.plans).filter(
+    (p) => p.devices.length > 1 && p.devices.some((d) => d.ip),
+  )
   return drawn.sort((a, b) => b.devices.length - a.devices.length)[0]
 }

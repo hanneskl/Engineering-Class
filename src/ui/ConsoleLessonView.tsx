@@ -105,7 +105,13 @@ function startSession(
   taskId: string,
   plan: import('../model/plan').Plan,
 ): Session {
+  const firstSeat = terminals(plan)[0]?.id ?? null
   const saved = loadSession(progress, taskId)
-  if (saved) return saved
-  return { ...emptySession(), atDeviceId: terminals(plan)[0]?.id ?? null }
+  if (!saved) return { ...emptySession(), atDeviceId: firstSeat }
+  // The plan under a saved session can change between visits — the student
+  // redrew it in M2, or `latestPlan` switched to a different one — leaving
+  // the seat pointing at a device that no longer exists. Reseat rather than
+  // greet them with "Du sitzt an keinem Gerät".
+  const seatExists = saved.atDeviceId && plan.devices.some((d) => d.id === saved.atDeviceId)
+  return seatExists ? saved : { ...saved, atDeviceId: firstSeat }
 }
