@@ -344,8 +344,11 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   min-height: 0; min-width: 0; position: relative;
   display: flex; flex-direction: column;
 }
-/* Whatever a module puts on the stage fills it. */
-.lesson-stage > * { min-height: 0; }
+/* Whatever a module puts on the stage fills it — and scrolls inside itself
+   when it's taller than the screen (M6's map plus its step text on a short
+   laptop), since neither the page nor the stage ever scrolls. The editors
+   below manage their own panes and simply never overflow. */
+.lesson-stage > * { min-height: 0; overflow-y: auto; }
 .lesson-stage > .editor,
 .lesson-stage > .console,
 .lesson-stage > .sheet-pane { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -660,7 +663,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 .walk {
   background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); overflow: hidden;
+  border-radius: var(--radius);
 }
 .walk-bar {
   display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
