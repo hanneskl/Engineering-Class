@@ -141,7 +141,7 @@ export function NetworkEditor({
         ))}
         <span className="toolbar-hint">
           {tool === 'select'
-            ? 'Geräte anklicken und verschieben.'
+            ? 'Geräte anklicken und verschieben. Zum Verbinden ein Kabel vom grünen Punkt zum nächsten Gerät ziehen.'
             : linkFromId
               ? `Klick jetzt das zweite Gerät an — ${deviceById(plan, linkFromId)?.name} ist ausgewählt.`
               : 'Klick zwei Geräte nacheinander an, um sie zu verbinden.'}
@@ -162,6 +162,7 @@ export function NetworkEditor({
           selectedId={selectedId}
           linkFromId={linkFromId}
           faultyIds={faultyIds}
+          onLink={tryLink}
           onSelect={setSelectedId}
           onMove={(id, x, y) =>
             onChange({

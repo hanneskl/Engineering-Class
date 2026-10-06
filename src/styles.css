@@ -539,7 +539,16 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .node.sel .node-box { stroke: var(--accent); stroke-width: 3; }
 .node.linking .node-box { stroke: var(--accent); stroke-dasharray: 5 4; stroke-width: 3; }
 .node.faulty .node-box { stroke: var(--bad); stroke-width: 3; }
+.node.drop .node-box { stroke: var(--good); stroke-width: 3; }
 .node-icon { color: var(--ink); }
+/* The cable being pulled, before it has a second end. */
+.wire-draft { stroke-dasharray: 6 4; opacity: .8; pointer-events: none; }
+/* Ports: green, so they read as "connect here" and never as a fault. */
+.port {
+  fill: var(--good-bright); stroke: var(--surface); stroke-width: 2;
+  cursor: crosshair; transition: r .1s;
+}
+.port:hover { r: 8; }
 .node-label { fill: var(--ink); font-size: 12px; font-weight: 600; pointer-events: none; }
 .node-ip { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; pointer-events: none; }
 

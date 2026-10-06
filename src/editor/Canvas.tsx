@@ -44,12 +44,25 @@ const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min)
 export type Tool = 'select' | 'cable' | 'wifi'
 
 /**
+ * Where the green ports sit on a hovered device: the four corners and the
+ * middle of each edge, so there is always one near wherever the pointer is.
+ */
+const HALF = NODE / 2
+const PORTS: ReadonlyArray<readonly [number, number]> = [
+  [-HALF, -HALF], [0, -HALF], [HALF, -HALF],
+  [-HALF, 0], [HALF, 0],
+  [-HALF, HALF], [0, HALF], [HALF, HALF],
+]
+
+/**
  * The drawing surface. SVG rather than canvas: twenty-odd nodes, and hit
  * testing, focus and text come for free.
  *
- * Linking is two clicks rather than a drag — far more forgiving on a school
- * trackpad, and it lets a refused link explain itself instead of just snapping
- * back.
+ * Two ways to link. Hovering a device shows green ports; dragging one onto
+ * another device lays a cable (or WLAN, with that tool active) in one go.
+ * The older two-click way stays for the link tools — it's more forgiving on
+ * a school trackpad, and a tablet has no hover at all, which is also why a
+ * *selected* device shows its ports too.
  */
 export function Canvas({
   plan,
@@ -61,6 +74,7 @@ export function Canvas({
   onMove,
   onDeviceClick,
   onBackgroundClick,
+  onLink,
 }: {
   plan: Plan
   tool: Tool
@@ -71,6 +85,7 @@ export function Canvas({
   onMove: (id: string, x: number, y: number) => void
   onDeviceClick: (id: string) => void
   onBackgroundClick: () => void
+  onLink: (fromId: string, toId: string, medium: Medium) => void
 }) {
   const svgRef = useRef<SVGSVGElement>(null)
   const viewH = useViewHeight(svgRef)
@@ -78,6 +93,40 @@ export function Canvas({
     { id: string; dx: number; dy: number; startX: number; startY: number } | null
   >(null)
   const [moved, setMoved] = useState(false)
+  const [hoverId, setHoverId] = useState<string | null>(null)
+  /** A cable being pulled from a port: where it's from, and where the pointer is. */
+  const [wiring, setWiring] = useState<
+    { fromId: string; x: number; y: number; overId: string | null } | null
+  >(null)
+  // The click that follows a port drag lands on the <svg> (the common ancestor
+  // of the port and the device it was dropped on) and would read as a
+  // background click, deselecting everything the moment the cable is laid.
+  const justWired = useRef(false)
+
+  const medium: Medium = tool === 'wifi' ? 'wifi' : 'cable'
+
+  function deviceAt(x: number, y: number): Device | undefined {
+    return plan.devices.find((d) => Math.abs(d.x - x) <= HALF && Math.abs(d.y - y) <= HALF)
+  }
+
+  function startWiring(e: React.PointerEvent<SVGCircleElement>, d: Device) {
+    // Not a device drag — the port is inside the device's <g>.
+    e.stopPropagation()
+    e.preventDefault()
+    const p = toSvgPoint(e)
+    setWiring({ fromId: d.id, x: p.x, y: p.y, overId: null })
+  }
+
+  function endWiring(e: React.PointerEvent) {
+    if (!wiring) return
+    const p = toSvgPoint(e)
+    const target = deviceAt(p.x, p.y)
+    if (target && target.id !== wiring.fromId) {
+      onLink(wiring.fromId, target.id, medium)
+      justWired.current = true
+    }
+    setWiring(null)
+  }
 
   function toSvgPoint(e: { clientX: number; clientY: number }) {
     const svg = svgRef.current
@@ -108,6 +157,17 @@ export function Canvas({
   }
 
   function onPointerMove(e: React.PointerEvent) {
+    if (wiring) {
+      const p = toSvgPoint(e)
+      const over = deviceAt(p.x, p.y)
+      setWiring({
+        ...wiring,
+        x: p.x,
+        y: p.y,
+        overId: over && over.id !== wiring.fromId ? over.id : null,
+      })
+      return
+    }
     if (!dragging) return
     const p = toSvgPoint(e)
     if (!moved && Math.hypot(p.x - dragging.startX, p.y - dragging.startY) < DRAG_THRESHOLD) {
@@ -132,9 +192,19 @@ export function Canvas({
       role="application"
       aria-label="Netzwerkplan"
       onPointerMove={onPointerMove}
-      onPointerUp={() => setDragging(null)}
-      onPointerLeave={() => setDragging(null)}
+      onPointerUp={(e) => {
+        setDragging(null)
+        endWiring(e)
+      }}
+      onPointerLeave={() => {
+        setDragging(null)
+        setWiring(null)
+      }}
       onClick={(e) => {
+        if (justWired.current) {
+          justWired.current = false
+          return
+        }
         if (e.target === svgRef.current) {
           onSelect(null)
           onBackgroundClick()
@@ -164,15 +234,33 @@ export function Canvas({
         )
       })}
 
+      {wiring && (() => {
+        const from = deviceById(plan, wiring.fromId)
+        if (!from) return null
+        const to = wiring.overId ? deviceById(plan, wiring.overId) : undefined
+        return (
+          <line
+            className={`wire wire-${medium} wire-draft`}
+            x1={from.x}
+            y1={from.y}
+            x2={to ? to.x : wiring.x}
+            y2={to ? to.y : wiring.y}
+          />
+        )
+      })()}
+
       {plan.devices.map((d) => {
         const spec = DEVICES[d.type]
         const state = [
           d.id === selectedId ? 'sel' : '',
           d.id === linkFromId ? 'linking' : '',
           faultyIds.has(d.id) ? 'faulty' : '',
+          wiring?.overId === d.id ? 'drop' : '',
         ]
           .filter(Boolean)
           .join(' ')
+        const showPorts =
+          !dragging && !wiring && (hoverId === d.id || selectedId === d.id)
         return (
           <g
             key={d.id}
@@ -181,9 +269,15 @@ export function Canvas({
             tabIndex={0}
             role="button"
             aria-label={`${spec.label} ${d.name}`}
+            onPointerEnter={() => setHoverId(d.id)}
+            onPointerLeave={() => setHoverId((h) => (h === d.id ? null : h))}
             onPointerDown={(e) => startDrag(e, d)}
             onClick={(e) => {
               e.stopPropagation()
+              if (justWired.current) {
+                justWired.current = false
+                return
+              }
               // A drag should not also count as a click.
               if (moved) return
               onSelect(d.id)
@@ -216,6 +310,17 @@ export function Canvas({
                 {d.ip}
               </text>
             )}
+            {showPorts &&
+              PORTS.map(([px, py]) => (
+                <circle
+                  key={`${px},${py}`}
+                  className="port"
+                  cx={px}
+                  cy={py}
+                  r={6}
+                  onPointerDown={(e) => startWiring(e, d)}
+                />
+              ))}
           </g>
         )
       })}
