@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { ThemeToggle } from './ThemeToggle'
 import type { Finding } from '../model/rules'
 import type { Hints } from '../model/types'
 import { taskProgress, withTask, type Progress } from '../progress/store'
@@ -96,9 +97,12 @@ export function LessonShell({
   return (
     <div className="lesson">
       <div className="lesson-rail">
-        <button className="back" onClick={onBack}>
-          ← Übersicht
-        </button>
+        <div className="rail-top">
+          <button className="back" onClick={onBack}>
+            ← Übersicht
+          </button>
+          <ThemeToggle />
+        </div>
 
         <div className="lesson-head">
           <span className="badge">{module}</span>

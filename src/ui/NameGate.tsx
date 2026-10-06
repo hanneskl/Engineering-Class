@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { hasBackend } from '../backend/client'
+import { ThemeToggle } from './ThemeToggle'
 
 /**
  * With no backend configured, a name alone is all a shared school computer
@@ -26,6 +27,7 @@ export function NameGate({
 
   return (
     <div className="gate">
+      <ThemeToggle />
       <div className="gate-card">
         <h1>
           Informatik<span>-Trainer</span>

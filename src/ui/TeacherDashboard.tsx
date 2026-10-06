@@ -3,6 +3,7 @@ import { LESSONS, taskIdsFor } from '../lessons'
 import { backend, CLASS_ID } from '../backend/client'
 import { signOutTeacher } from '../backend/teacherAuth'
 import { subscribePresence, type ActiveTask } from '../progress/presence'
+import { ThemeToggle } from './ThemeToggle'
 
 type Student = { id: string; display_name: string | null; login_code: string | null }
 
@@ -189,9 +190,12 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
         <h1>
           Lehrer<span>-Ansicht</span>
         </h1>
-        <button className="link" onClick={() => void handleSignOut()}>
-          Abmelden
-        </button>
+        <span className="teacher-bar-right">
+          <button className="link" onClick={() => void handleSignOut()}>
+            Abmelden
+          </button>
+          <ThemeToggle />
+        </span>
       </header>
 
       {loading ? (

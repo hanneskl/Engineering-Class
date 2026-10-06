@@ -1,6 +1,6 @@
 import type { QuizLesson, Task } from '../model/types'
 import { checkChoice, checkKeywords } from '../model/check'
-import { rng, shuffle } from '../model/rng'
+import { rngFor, shuffle } from '../model/rng'
 import type { Keywords } from '../model/check'
 
 /**
@@ -195,18 +195,11 @@ function choiceTask(spec: ChoiceSpec, seed: number): Task {
     kind: 'choice',
     prompt: spec.prompt,
     // Shuffled per student so the position of the right answer is not a tell.
-    options: shuffle(seededFor(seed, spec.id), spec.options),
+    options: shuffle(rngFor(seed, spec.id), spec.options),
     answer: spec.answer,
     hints: { stups: spec.stups, hinweis: spec.hinweis, loesung: spec.answer },
     check: (raw) => checkChoice(raw, spec.correct),
   }
-}
-
-/** A per-task stream, so shuffling one question does not shift the others. */
-function seededFor(seed: number, id: string): () => number {
-  let h = seed >>> 0
-  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 0x01000193)
-  return rng(h >>> 0)
 }
 
 export const m8Abkuerzungen: QuizLesson = {

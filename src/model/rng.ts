@@ -29,6 +29,16 @@ export function rng(seed: number): () => number {
   }
 }
 
+/**
+ * A stream for one named thing (a question, a card pile) within a student's
+ * seed, so reordering one never shifts the order of another.
+ */
+export function rngFor(seed: number, key: string): () => number {
+  let h = seed >>> 0
+  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 0x01000193)
+  return rng(h >>> 0)
+}
+
 /** Integer in [min, max], inclusive. */
 export function intBetween(next: () => number, min: number, max: number): number {
   return min + Math.floor(next() * (max - min + 1))

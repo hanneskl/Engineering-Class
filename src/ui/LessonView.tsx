@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { QuizLesson } from '../model/types'
 import { TaskCard } from './TaskCard'
+import { ThemeToggle } from './ThemeToggle'
 import { taskProgress, withTask, type Progress } from '../progress/store'
 import { reportActiveTask } from '../progress/presence'
 
@@ -64,9 +65,12 @@ export function LessonView({
 
   return (
     <div className="lesson lesson-quiz">
-      <button className="back" onClick={onBack}>
-        ← Übersicht
-      </button>
+      <div className="rail-top">
+        <button className="back" onClick={onBack}>
+          ← Übersicht
+        </button>
+        <ThemeToggle />
+      </div>
 
       <div className="lesson-head">
         <span className="badge">{lesson.module}</span>

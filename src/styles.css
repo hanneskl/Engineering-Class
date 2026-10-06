@@ -55,6 +55,37 @@
   color-scheme: light;
 }
 
+/*
+ * Dark: Apple's dark system palette, same roles, re-measured against the
+ * dark surfaces. Set by src/theme.ts (and index.html before first paint);
+ * the student's own choice beats the OS. M10's sheet pane keeps its light
+ * grid on purpose — see src/spreadsheet/styles.css.
+ */
+:root[data-theme="dark"] {
+  --accent: #409cff;         /* 5.9:1 on --surface                             */
+  --accent-ink: #ffffff;
+  --accent-wash: #0f2a47;
+
+  --bg: #000000;             /* systemGroupedBackground, dark                  */
+  --surface: #1c1c1e;
+  --ink: #f2f2f7;
+  --ink-strong: #ffffff;
+  --muted: #a1a1a6;          /* 7.1:1 on --surface                             */
+  --line: #3a3a3c;
+  --line-soft: #2c2c2e;
+
+  --good: #4cd964;           /* 9.3:1 on --surface — type, ticks, fills       */
+  --good-bright: #30d158;
+  --good-bg: #0f2a16;
+  --bad: #ff6961;            /* 6.0:1 on --surface                             */
+  --bad-bg: #3a1618;
+
+  --hint-bg: #2c2c2e;
+  --hint-line: #3a3a3c;
+
+  color-scheme: dark;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -114,6 +145,17 @@ h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
   background: none; border: 0; color: var(--muted);
   text-decoration: underline; padding: 0; font-size: .85rem;
 }
+
+.theme-toggle {
+  background: none; border: 1px solid var(--line); border-radius: 999px;
+  color: var(--muted); width: 1.75rem; height: 1.75rem; padding: 0;
+  font-size: .95rem; line-height: 1; display: inline-grid; place-items: center;
+}
+.theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+/* Inside a module the rail's first row is the way back plus the switch. */
+.rail-top { display: flex; align-items: center; justify-content: space-between; }
+.gate { position: relative; }
+.gate > .theme-toggle { position: absolute; top: 1rem; right: 1rem; }
 
 /* Positioned so a quiz module's Erklären panel can cover the work area the
    same way the editor modules' does. */
@@ -976,6 +1018,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .teacher-bar h1 { margin: 0; font-size: 1.3rem; }
 .teacher-bar h1 span { color: var(--muted); font-weight: 500; }
+.teacher-bar-right { display: inline-flex; align-items: center; gap: .7rem; }
 
 .teacher-body { display: grid; gap: 1.75rem; }
 .teacher-active h2, .teacher-matrix h2 { margin: 0 0 .6rem; font-size: 1rem; }

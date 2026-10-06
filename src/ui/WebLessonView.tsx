@@ -87,7 +87,7 @@ export function WebLessonView({
       onProgress={onProgress}
       onBack={onBack}
     >
-      <PacketWalk ctx={ctx} walk={walk} onWalk={change} />
+      <PacketWalk ctx={ctx} walk={walk} seed={progress.seed} onWalk={change} />
       {task.reihenfolge && <StepOrder walk={walk} seed={progress.seed} onWalk={change} />}
     </LessonShell>
   )

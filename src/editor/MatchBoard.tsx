@@ -49,7 +49,7 @@ export function MatchBoard({
   if (!zuordnung) {
     return (
       <div className="board">
-        {fragen && <Fragen fragen={fragen} matches={matches} onMatches={onMatches} />}
+        {fragen && <Fragen fragen={fragen} matches={matches} seed={seed} onMatches={onMatches} />}
       </div>
     )
   }
@@ -161,7 +161,7 @@ export function MatchBoard({
           </div>
       )}
 
-      {fragen && <Fragen fragen={fragen} matches={matches} onMatches={onMatches} />}
+      {fragen && <Fragen fragen={fragen} matches={matches} seed={seed} onMatches={onMatches} />}
     </div>
   )
 }
@@ -169,10 +169,12 @@ export function MatchBoard({
 function Fragen({
   fragen,
   matches,
+  seed,
   onMatches,
 }: {
   fragen: Frage[]
   matches: Matches
+  seed: number
   onMatches: (next: Matches) => void
 }) {
   return (
@@ -182,6 +184,7 @@ function Fragen({
           key={f.id}
           text={f.text}
           optionen={f.optionen}
+          seed={seed}
           chosen={matches.answers[f.id]}
           onChoose={(o) => onMatches(answerMatch(matches, f, o))}
         />

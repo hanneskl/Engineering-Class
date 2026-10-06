@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LESSONS, lessonById } from './lessons'
 import { hashForRoute, routeFromHash, type Route } from './nav'
 import { NameGate } from './ui/NameGate'
+import { ThemeToggle } from './ui/ThemeToggle'
 import { TeacherRoute } from './ui/TeacherRoute'
 import { TeacherResetPassword } from './ui/TeacherResetPassword'
 import { Home } from './ui/Home'
@@ -203,6 +204,7 @@ export function App() {
             <button className="link" onClick={signOut}>
               wechseln
             </button>
+            <ThemeToggle />
           </div>
         </header>
       )}

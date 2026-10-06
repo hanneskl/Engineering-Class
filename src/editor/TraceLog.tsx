@@ -104,7 +104,7 @@ export function TraceLog({
           </>
         )}
         {step === 2 && hat && fragen && fragen.length > 0 && (
-          <FragenStep traces={traces} fragen={fragen} onTraces={onTraces} />
+          <FragenStep traces={traces} fragen={fragen} seed={seed} onTraces={onTraces} />
         )}
       </div>
 
@@ -404,10 +404,12 @@ function VergleichView({
 function FragenStep({
   traces,
   fragen,
+  seed,
   onTraces,
 }: {
   traces: Traces
   fragen: string[]
+  seed: number
   onTraces: (next: Traces) => void
 }) {
   return (
@@ -420,6 +422,7 @@ function FragenStep({
             key={id}
             text={frage.text}
             optionen={frage.optionen}
+            seed={seed}
             chosen={traces.answers[frage.id]}
             onChoose={(o) =>
               onTraces(answerTrace(traces, frage, frage.optionen.find((x) => x.text === o.text)!))

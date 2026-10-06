@@ -60,10 +60,12 @@ function boundaryX(stations: Station[], map: Map<string, { x: number; y: number 
 export function PacketWalk({
   ctx,
   walk,
+  seed,
   onWalk,
 }: {
   ctx: WalkContext
   walk: Walk
+  seed: number
   onWalk: (next: Walk) => void
 }) {
   const stations = useMemo(() => stationsFor(ctx), [ctx])
@@ -261,6 +263,7 @@ export function PacketWalk({
                 ok: o.ok(ctx),
                 warum: o.warum,
               }))}
+              seed={seed}
               chosen={chosen}
               onChoose={(o) =>
                 onWalk(
