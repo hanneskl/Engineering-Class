@@ -218,7 +218,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
    of the page empty. The rows share the leftover height, so the grid fills
    the screen instead of hanging from the top of it. */
 .cards {
-  display: grid; gap: .7rem;
+  display: grid; gap: .7rem; align-content: start;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: minmax(0, 1fr);
   width: min(66rem, 100%); margin-inline: auto;
@@ -427,6 +427,56 @@ button.choice.sel { background: var(--accent-wash); }
 .review-answer.right { color: var(--good); }
 .review-warum { margin: .4rem 0 0; color: var(--muted); font-size: .9rem; }
 .teacher-test-text { max-width: 36rem; }
+.test-nav { display: flex; justify-content: space-between; gap: .6rem; margin-top: .4rem; }
+.dot.answered { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
+.dot.answered.here { background: var(--accent); color: var(--accent-ink); }
+
+/* Home: Üben | Tests */
+.home-tabs { display: flex; gap: .2rem; margin: .9rem 0; border-bottom: 1px solid var(--line); }
+.home-tab {
+  background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  padding: .45rem .9rem; color: var(--muted); font-weight: 600; font-size: .95rem;
+}
+.home-tab:hover { color: var(--ink); }
+.home-tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.home-tab .count {
+  display: inline-block; min-width: 1.3em; padding: 0 .35em; margin-left: .25em;
+  border-radius: 999px; background: var(--line-soft); color: var(--muted);
+  font-size: .72rem; text-align: center;
+}
+.export { display: flex; gap: .4rem; }
+.ghost.danger { color: var(--bad); }
+.ghost.danger:disabled { opacity: .4; }
+.confirm-all {
+  margin-top: .8rem; padding: .8rem 1rem;
+  background: var(--surface); border: 1px solid var(--bad); border-radius: var(--radius);
+}
+.confirm-all p { margin: 0 0 .7rem; font-size: .9rem; }
+.confirm-all .row { display: flex; gap: .4rem; }
+
+/* The corner ribbon on a test card. The card clips it; the reset button
+   moves out of its corner. */
+.card-test { overflow: hidden; }
+/* The Tests tab holds one or two cards — don't stretch them to the full
+   height the way the three-by-three grid of modules is. */
+.cards-few { grid-auto-rows: auto; flex: none; }
+.cards-few .card { min-height: 11rem; }
+.ribbon {
+  position: absolute; top: .95rem; right: -2.3rem; z-index: 1;
+  transform: rotate(45deg); transform-origin: center;
+  width: 9rem; text-align: center;
+  background: var(--brand); color: #fff;
+  font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: .18rem 0; box-shadow: 0 1px 4px rgb(0 0 0 / .18);
+  pointer-events: none;
+}
+.card-done .ribbon { background: var(--good); }
+.card-test .reset { right: 3.6rem; }
+
+.confetti {
+  position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 50;
+  pointer-events: none;
+}
 
 .feedback { border-radius: 8px; padding: .8rem 1rem; margin-top: 1rem; }
 .feedback p { margin: .35rem 0 0; font-size: .93rem; }

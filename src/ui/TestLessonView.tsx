@@ -1,15 +1,29 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { TestLesson } from '../model/types'
-import { answer, chosenOption, isSubmitted, nextOpen, optionOrder, score } from '../model/test'
+import {
+  CELEBRATE_FROM,
+  allAnswered,
+  answer,
+  chosenOption,
+  isAnswered,
+  isSubmitted,
+  nextOpen,
+  optionOrder,
+  score,
+  submit,
+} from '../model/test'
 import type { Progress } from '../progress/store'
 import { reportActiveTask } from '../progress/presence'
 import { DeviceBild } from '../editor/DeviceBild'
 import { ThemeToggle } from './ThemeToggle'
+import { Confetti } from './Confetti'
+import { playFanfare } from './fanfare'
 
 /**
- * A test, start to finish: a start page, one question per screen with no
- * way back, and the result page — which is also where anyone who already
- * handed in lands when they open the module again.
+ * A test, start to finish: a start page, the questions — free to move back
+ * and forth and change a pick until "Abgeben" — and the result page, which
+ * is also where anyone who already handed in lands when they open the
+ * module again.
  */
 export function TestLessonView({
   lesson,
@@ -22,27 +36,33 @@ export function TestLessonView({
   onProgress: (next: Progress) => void
   onBack: () => void
 }) {
-  const open = nextOpen(progress, lesson)
   const submitted = isSubmitted(progress, lesson)
   // Someone who answered a question and reloaded is mid-test, not at the start.
-  const [started, setStarted] = useState(submitted || open > 0)
-  /** The option tapped on the current question — provisional until "Weiter". */
-  const [picked, setPicked] = useState<number | null>(null)
-
-  const task = open >= 0 ? lesson.tasks[open] : undefined
-  const order = useMemo(
-    () => (task ? optionOrder(progress.seed, task) : []),
-    [progress.seed, task],
+  const [started, setStarted] = useState(
+    () => submitted || lesson.tasks.some((t) => isAnswered(progress, t.id)),
   )
+  const [index, setIndex] = useState(() => {
+    const open = nextOpen(progress, lesson)
+    return open === -1 ? lesson.tasks.length - 1 : open
+  })
+  const [celebrate, setCelebrate] = useState(false)
+  const stopCelebrating = useCallback(() => setCelebrate(false), [])
+
+  const task = lesson.tasks[index]!
+  const order = useMemo(() => optionOrder(progress.seed, task), [progress.seed, task])
+  const chosen = progress.tests[task.id]?.chosen
 
   useEffect(() => {
-    reportActiveTask(lesson.module, task ? task.id : `${lesson.id}-ergebnis`)
-  }, [lesson.module, lesson.id, task?.id])
+    reportActiveTask(lesson.module, submitted ? `${lesson.id}-ergebnis` : task.id)
+  }, [lesson.module, lesson.id, task.id, submitted])
 
-  function commit() {
-    if (!task || picked === null) return
-    onProgress(answer(progress, task, picked))
-    setPicked(null)
+  function handIn() {
+    const next = submit(progress, lesson)
+    onProgress(next)
+    if (score(next, lesson).correct >= CELEBRATE_FROM) {
+      setCelebrate(true)
+      playFanfare()
+    }
   }
 
   const head = (
@@ -64,12 +84,17 @@ export function TestLessonView({
     const { correct, total } = score(progress, lesson)
     return (
       <div className="lesson lesson-quiz">
+        {celebrate && <Confetti onDone={stopCelebrating} />}
         {head}
         <div className="done-banner test-result">
           <strong>
             {correct} von {total} richtig
           </strong>
-          <p>Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.</p>
+          <p>
+            {correct >= CELEBRATE_FROM
+              ? 'Stark! Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'
+              : 'Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'}
+          </p>
         </div>
         <ol className="test-review">
           {lesson.tasks.map((t, i) => {
@@ -88,7 +113,9 @@ export function TestLessonView({
                   {own?.ok ? '✓' : '✗'} Deine Antwort: <strong>{own?.text}</strong>
                 </p>
                 {!own?.ok && right && (
-                  <p className="review-answer right">Richtig wäre: <strong>{right.text}</strong></p>
+                  <p className="review-answer right">
+                    Richtig wäre: <strong>{right.text}</strong>
+                  </p>
                 )}
                 {own && <p className="review-warum">{own.warum}</p>}
               </li>
@@ -102,7 +129,7 @@ export function TestLessonView({
     )
   }
 
-  if (!started || !task) {
+  if (!started) {
     return (
       <div className="lesson lesson-quiz">
         {head}
@@ -112,7 +139,7 @@ export function TestLessonView({
             <p key={i}>{p}</p>
           ))}
           <p className="task-note">
-            {lesson.tasks.length} Fragen · jede Frage nur ein Versuch · keine Hinweise
+            {lesson.tasks.length} Fragen · Antworten kannst du bis zum Abgeben noch ändern · keine Hinweise
           </p>
           <button className="primary" onClick={() => setStarted(true)}>
             Test starten
@@ -122,12 +149,35 @@ export function TestLessonView({
     )
   }
 
+  const isLast = index === lesson.tasks.length - 1
+  const open = lesson.tasks.filter((t) => !isAnswered(progress, t.id)).length
+
   return (
     <div className="lesson lesson-quiz">
       {head}
+
+      <ol className="dots" aria-label="Fragen">
+        {lesson.tasks.map((t, i) => {
+          const done = isAnswered(progress, t.id)
+          const cls = `dot${done ? ' answered' : ''}${i === index ? ' here' : ''}`
+          return (
+            <li key={t.id}>
+              <button
+                className={cls}
+                aria-label={`Frage ${i + 1}${done ? ', beantwortet' : ''}`}
+                aria-current={i === index}
+                onClick={() => setIndex(i)}
+              >
+                {i + 1}
+              </button>
+            </li>
+          )
+        })}
+      </ol>
+
       <section className="task" key={task.id}>
         <p className="test-count">
-          Frage {open + 1} von {lesson.tasks.length}
+          Frage {index + 1} von {lesson.tasks.length}
         </p>
         {task.bild && (
           <div className="test-bild">
@@ -143,19 +193,33 @@ export function TestLessonView({
                 key={i}
                 type="button"
                 role="radio"
-                aria-checked={picked === i}
-                className={`choice${picked === i ? ' sel' : ''}`}
-                onClick={() => setPicked(i)}
+                aria-checked={chosen === i}
+                className={`choice${chosen === i ? ' sel' : ''}`}
+                onClick={() => onProgress(answer(progress, task, i))}
               >
                 {o.text}
               </button>
             )
           })}
         </div>
-        <p className="task-note">Nur ein Versuch — nach „Weiter“ steht die Antwort fest.</p>
-        <button className="primary" onClick={commit} disabled={picked === null}>
-          {open === lesson.tasks.length - 1 ? 'Abgeben' : 'Weiter'}
-        </button>
+
+        <div className="test-nav">
+          <button className="ghost" onClick={() => setIndex(index - 1)} disabled={index === 0}>
+            ← Zurück
+          </button>
+          {isLast ? (
+            <button className="primary" onClick={handIn} disabled={!allAnswered(progress, lesson)}>
+              {open > 0 ? `Noch ${open} ${open === 1 ? 'Frage' : 'Fragen'} offen` : 'Abgeben'}
+            </button>
+          ) : (
+            <button className="primary" onClick={() => setIndex(index + 1)}>
+              Weiter →
+            </button>
+          )}
+        </div>
+        {isLast && open === 0 && (
+          <p className="task-note">Nach dem Abgeben kannst du nichts mehr ändern.</p>
+        )}
       </section>
     </div>
   )

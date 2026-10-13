@@ -22,8 +22,12 @@ export type TaskProgress = {
   hintsUsed: number
 }
 
-/** Which option a student picked on a test question — by the question's own index, not the shuffled slot. */
-export type TestAnswer = { chosen: number }
+/**
+ * Which option a student picked on a test question — by the question's own
+ * index, not the shuffled slot. `locked` is set when the test is handed in;
+ * until then the pick can still be changed.
+ */
+export type TestAnswer = { chosen: number; locked?: boolean }
 
 export type Progress = {
   studentName: string
