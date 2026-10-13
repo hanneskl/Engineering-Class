@@ -1116,7 +1116,7 @@ button.choice.sel { background: var(--accent-wash); }
   padding: .4rem .6rem; border-bottom: 1px solid var(--line); text-align: left;
 }
 .teacher-matrix th { color: var(--muted); font-weight: 600; font-size: .8rem; }
-.teacher-matrix td.done { color: var(--good); font-weight: 700; }
+.teacher-matrix td.done { color: var(--good); font-weight: 700; font-size: 1.05rem; }
 
 .teacher-add { display: flex; gap: .6rem; align-items: center; }
 .teacher-add input { width: 14rem; margin: 0; }

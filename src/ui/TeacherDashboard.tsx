@@ -323,8 +323,12 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
                         const { solved, total } = summaryFor(s.id, l.module)
                         const done = total > 0 && solved === total
                         return (
-                          <td key={l.module} className={done ? 'done' : undefined}>
-                            {solved}/{total}
+                          <td
+                            key={l.module}
+                            className={done ? 'done' : undefined}
+                            title={done ? `${solved}/${total} — alle Aufgaben gelöst` : undefined}
+                          >
+                            {done ? <span aria-label={`${solved} von ${total}, fertig`}>✓</span> : `${solved}/${total}`}
                           </td>
                         )
                       })}
