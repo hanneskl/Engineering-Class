@@ -8,6 +8,7 @@ import { m7Spuren } from './m7-spuren'
 import { m8Abkuerzungen } from './m8-abkuerzungen'
 import { m9Flussdiagramm } from './m9-flussdiagramm'
 import { m10Tabellen } from './m10-tabellen'
+import { t1TestM1 } from './t1-test-m1'
 
 /**
  * Lessons are content, deliberately kept clear of the engine (ARCHITECTURE.md
@@ -18,8 +19,12 @@ import { m10Tabellen } from './m10-tabellen'
  *
  * M10 is the Datenverarbeitung third of the Quali rather than a networking
  * module, which is why it sits last despite being worth the most points.
+ *
+ * Test M1 comes first: it's done at the start of the lesson that follows M1,
+ * so it should be the first thing on the screen that day.
  */
 export const LESSONS: Lesson[] = [
+  t1TestM1,
   m1Geraete,
   m2Netzwerk,
   m5Befehle,

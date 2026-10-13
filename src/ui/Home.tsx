@@ -31,7 +31,8 @@ export function Home({
           lesson,
           ids,
           stats: moduleStats(progress, ids),
-          resettable: hasProgress(progress, ids),
+          // A test is handed in once; its result stays (docs/briefing-test-m1.md).
+          resettable: lesson.kind !== 'test' && hasProgress(progress, ids),
         }
       }),
     [lessons, progress],
@@ -67,7 +68,7 @@ export function Home({
                   button may not be nested inside another button. */}
               <button className="card-open" onClick={() => onOpen(lesson.id)}>
                 <span className="card-head">
-                  <span className="badge">{lesson.module}</span>
+                  <span className="badge">{lesson.kind === 'test' ? 'Test' : lesson.module}</span>
                 </span>
                 <span className="card-title">{lesson.title}</span>
                 <span className="card-sub">{lesson.intro.heading}</span>
@@ -97,7 +98,7 @@ export function Home({
                 <div className="confirm" role="alertdialog" aria-label="Zurücksetzen bestätigen">
                   <p>
                     Alles in <strong>{lesson.title}</strong> löschen? Gelöste Aufgaben und
-                    {lesson.kind === 'quiz' ? ' Antworten' : ' Zeichnungen'} sind dann weg.
+                    {lesson.kind === 'quiz' || lesson.kind === 'test' ? ' Antworten' : ' Zeichnungen'} sind dann weg.
                   </p>
                   <div className="row">
                     <button

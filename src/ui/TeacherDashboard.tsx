@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LESSONS, taskIdsFor } from '../lessons'
+import { t1TestM1 } from '../lessons/t1-test-m1'
 import { backend, CLASS_ID } from '../backend/client'
 import { signOutTeacher } from '../backend/teacherAuth'
 import { subscribePresence, type ActiveTask } from '../progress/presence'
@@ -131,6 +132,26 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
     [active],
   )
 
+  /**
+   * Test M1, question by question: how many of those who answered got it
+   * right, worst first — the questions the whole class missed are the ones
+   * to go over again.
+   */
+  const testByQuestion = useMemo(() => {
+    const tally = new Map<string, { answered: number; correct: number }>()
+    for (const row of rows.values()) {
+      if (row.lesson_id !== t1TestM1.module) continue
+      const t = tally.get(row.task_id) ?? { answered: 0, correct: 0 }
+      t.answered += 1
+      if (row.solved) t.correct += 1
+      tally.set(row.task_id, t)
+    }
+    return t1TestM1.tasks
+      .map((task, i) => ({ nr: i + 1, text: task.frage.text, ...(tally.get(task.id) ?? { answered: 0, correct: 0 }) }))
+      .filter((q) => q.answered > 0)
+      .sort((a, b) => a.correct / a.answered - b.correct / b.answered || a.nr - b.nr)
+  }, [rows])
+
   function summaryFor(studentId: string, moduleId: string): { solved: number; total: number } {
     let solved = 0
     for (const row of rows.values()) {
@@ -242,6 +263,32 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
             </form>
             {rosterError && <p className="gate-error">{rosterError}</p>}
           </section>
+
+          {testByQuestion.length > 0 && (
+            <section className="teacher-matrix teacher-test">
+              <h2>{t1TestM1.title} — pro Frage</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nr.</th>
+                    <th>Frage</th>
+                    <th>Richtig</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testByQuestion.map((q) => (
+                    <tr key={q.nr}>
+                      <td>{q.nr}</td>
+                      <td className="teacher-test-text">{q.text}</td>
+                      <td className={q.correct === q.answered ? 'done' : undefined}>
+                        {q.correct} von {q.answered} · {Math.round((q.correct / q.answered) * 100)} %
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
 
           <section className="teacher-matrix">
             <h2>Fortschritt</h2>

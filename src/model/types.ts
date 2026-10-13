@@ -360,6 +360,24 @@ export type SheetLesson = LessonBase & {
   tasks: SheetTask[]
 }
 
+/**
+ * A test: the opposite of an exercise. One attempt per question, no hints,
+ * and no feedback until the last question is answered — then every question
+ * comes back with the `warum` of whatever was chosen (§5.1 still holds).
+ * Content only; the one-attempt rule lives in `./test`.
+ */
+export type TestTask = {
+  id: string
+  frage: import('./frage').Frage
+  /** Shown above the question — "Welches Gerät ist das?" needs a picture. */
+  bild?: import('./plan').DeviceType
+}
+
+export type TestLesson = LessonBase & {
+  kind: 'test'
+  tasks: TestTask[]
+}
+
 export type Lesson =
   | QuizLesson
   | BuildLesson
@@ -369,3 +387,4 @@ export type Lesson =
   | TraceLesson
   | MatchLesson
   | SheetLesson
+  | TestLesson

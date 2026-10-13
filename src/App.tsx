@@ -14,6 +14,7 @@ import { WebLessonView } from './ui/WebLessonView'
 import { TraceLessonView } from './ui/TraceLessonView'
 import { MatchLessonView } from './ui/MatchLessonView'
 import { SheetLessonView } from './ui/SheetLessonView'
+import { TestLessonView } from './ui/TestLessonView'
 import { load, save, lastStudent, type Progress, type TaskProgress } from './progress/store'
 import { signInStudent } from './backend/studentAuth'
 import { pushChangedTaskProgress, pushProgressSnapshot, hydrateFromSnapshot } from './progress/sync'
@@ -211,7 +212,14 @@ export function App() {
 
       <main>
         {lesson ? (
-          lesson.kind === 'sheet' ? (
+          lesson.kind === 'test' ? (
+            <TestLessonView
+              lesson={lesson}
+              progress={progress}
+              onProgress={update}
+              onBack={() => navigate({ kind: 'home' })}
+            />
+          ) : lesson.kind === 'sheet' ? (
             <SheetLessonView
               lesson={lesson}
               progress={progress}

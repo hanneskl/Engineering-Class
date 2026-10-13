@@ -117,6 +117,7 @@ async function flushProgressSnapshot(progress: Progress): Promise<void> {
 function isBlank(progress: Progress): boolean {
   return (
     Object.keys(progress.tasks).length === 0 &&
+    Object.keys(progress.tests).length === 0 &&
     Object.keys(progress.plans).length === 0 &&
     Object.keys(progress.flows).length === 0 &&
     Object.keys(progress.sessions).length === 0 &&

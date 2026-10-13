@@ -407,6 +407,26 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .choice.sel { border-color: var(--accent); background: var(--accent-wash); }
 .choice input { width: auto; margin: .25rem 0 0; }
+/* A test's options are buttons, not radios-in-labels — same look. */
+button.choice { width: 100%; text-align: left; background: var(--surface); color: var(--ink); font: inherit; }
+button.choice.sel { background: var(--accent-wash); }
+
+/* ---------- tests (T1 …) ---------- */
+.test-count { margin: 0 0 .4rem; color: var(--muted); font-size: .82rem; font-weight: 600; }
+.test-bild { margin: 0 0 .6rem; }
+.test-bild .device-bild, .test-bild svg { border-radius: 10px; }
+.test-start p { max-width: 60ch; }
+.test-result strong { font-size: 1.3rem; }
+.test-review { list-style: none; margin: 0; padding: 0; display: grid; gap: .7rem; }
+.review-item h2 { font-size: .98rem; }
+.review-ok { border-color: var(--good); }
+.review-bad { border-color: var(--bad); }
+.review-answer { margin: .2rem 0; font-size: .92rem; }
+.review-answer.ok { color: var(--good); }
+.review-answer.bad { color: var(--bad); }
+.review-answer.right { color: var(--good); }
+.review-warum { margin: .4rem 0 0; color: var(--muted); font-size: .9rem; }
+.teacher-test-text { max-width: 36rem; }
 
 .feedback { border-radius: 8px; padding: .8rem 1rem; margin-top: 1rem; }
 .feedback p { margin: .35rem 0 0; font-size: .93rem; }

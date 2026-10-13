@@ -22,11 +22,16 @@ export type TaskProgress = {
   hintsUsed: number
 }
 
+/** Which option a student picked on a test question — by the question's own index, not the shuffled slot. */
+export type TestAnswer = { chosen: number }
+
 export type Progress = {
   studentName: string
   seed: number
   updatedAt: string
   tasks: Record<string, TaskProgress>
+  /** Test answers, one per test question, so the result page survives a reload. */
+  tests: Record<string, TestAnswer>
   /** Drawn networks, one per build task. */
   plans: Record<string, Plan>
   /** Drawn flowcharts, one per flow task. */
@@ -59,6 +64,7 @@ export function emptyProgress(studentName: string): Progress {
     seed: seedFromName(studentName),
     updatedAt: new Date().toISOString(),
     tasks: {},
+    tests: {},
     plans: {},
     flows: {},
     sessions: {},
@@ -82,6 +88,7 @@ export function load(studentName: string): Progress {
       ...emptyProgress(studentName),
       ...parsed,
       tasks: parsed.tasks,
+      tests: parsed.tests ?? {},
       plans: parsed.plans ?? {},
       flows: parsed.flows ?? {},
       sessions: parsed.sessions ?? {},
@@ -206,6 +213,7 @@ export function hasProgress(progress: Progress, taskIds: string[]): boolean {
       t?.solved ||
         t?.attempts ||
         t?.hintsUsed ||
+        progress.tests[id] ||
         progress.plans[id] ||
         progress.flows[id] ||
         progress.sessions[id]?.entries.length ||
@@ -232,6 +240,7 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
   return {
     ...progress,
     tasks: keep(progress.tasks),
+    tests: keep(progress.tests),
     plans: keep(progress.plans),
     flows: keep(progress.flows),
     sessions: keep(progress.sessions),
