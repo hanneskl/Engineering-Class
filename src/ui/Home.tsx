@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Lesson } from '../model/types'
 import { taskIdsFor } from '../lessons'
 import { isSubmitted, score } from '../model/test'
+import { Rosette, tierFor } from './Rosette'
 import {
   exportProgress,
   hasProgress,
@@ -131,9 +132,14 @@ export function Home({
               key={lesson.id}
               className={`card${done ? ' card-done' : ''}${test ? ' card-test' : ''}`}
             >
-              {test && (
-                <span className="ribbon" aria-hidden="true">
-                  {test.submitted ? `${test.correct} / ${test.total}` : 'Test'}
+              {test?.submitted && (
+                <span className="card-rosette">
+                  <Rosette
+                    tier={tierFor(test.correct, test.total)}
+                    label={`${test.correct}/${test.total}`}
+                    size={58}
+                    title={`${test.correct} von ${test.total} richtig`}
+                  />
                 </span>
               )}
               {/* The card body is the button; Reset sits beside it, since a

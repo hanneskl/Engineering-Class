@@ -17,6 +17,7 @@ import { reportActiveTask } from '../progress/presence'
 import { DeviceBild } from '../editor/DeviceBild'
 import { ThemeToggle } from './ThemeToggle'
 import { Confetti } from './Confetti'
+import { Rosette, tierFor } from './Rosette'
 import { playFanfare } from './fanfare'
 
 /**
@@ -87,14 +88,22 @@ export function TestLessonView({
         {celebrate && <Confetti onDone={stopCelebrating} />}
         {head}
         <div className="done-banner test-result">
-          <strong>
-            {correct} von {total} richtig
-          </strong>
-          <p>
-            {correct >= CELEBRATE_FROM
-              ? 'Stark! Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'
-              : 'Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'}
-          </p>
+          <Rosette
+            tier={tierFor(correct, total)}
+            label={`${correct}/${total}`}
+            size={88}
+            title={`${correct} von ${total} richtig`}
+          />
+          <div>
+            <strong>
+              {correct} von {total} richtig
+            </strong>
+            <p>
+              {correct >= CELEBRATE_FROM
+                ? 'Stark! Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'
+                : 'Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'}
+            </p>
+          </div>
         </div>
         <ol className="test-review">
           {lesson.tasks.map((t, i) => {

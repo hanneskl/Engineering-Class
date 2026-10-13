@@ -454,24 +454,20 @@ button.choice.sel { background: var(--accent-wash); }
 .confirm-all p { margin: 0 0 .7rem; font-size: .9rem; }
 .confirm-all .row { display: flex; gap: .4rem; }
 
-/* The corner ribbon on a test card. The card clips it; the reset button
-   moves out of its corner. */
-.card-test { overflow: hidden; }
 /* The Tests tab holds one or two cards — don't stretch them to the full
    height the way the three-by-three grid of modules is. */
 .cards-few { grid-auto-rows: auto; flex: none; }
 .cards-few .card { min-height: 11rem; }
-.ribbon {
-  position: absolute; top: .95rem; right: -2.3rem; z-index: 1;
-  transform: rotate(45deg); transform-origin: center;
-  width: 9rem; text-align: center;
-  background: var(--brand); color: #fff;
-  font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-  padding: .18rem 0; box-shadow: 0 1px 4px rgb(0 0 0 / .18);
-  pointer-events: none;
+/* The rosette a handed-in test wears, pinned to the card's top-right corner;
+   the reset button moves out of its way. */
+.card-rosette {
+  position: absolute; top: .5rem; right: .7rem; z-index: 1; pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / .2));
 }
-.card-done .ribbon { background: var(--good); }
 .card-test .reset { right: 3.6rem; }
+.rosette { display: block; }
+.test-result { display: flex; align-items: center; gap: 1rem; }
+.test-result .rosette { flex: none; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .2)); }
 
 .confetti {
   position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 50;
