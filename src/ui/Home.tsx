@@ -147,7 +147,7 @@ export function Home({
               <button className="card-open" onClick={() => onOpen(lesson.id)}>
                 <span className="card-head">
                   <span className="badge">
-                    {test ? (test.submitted ? 'abgegeben' : 'Test') : lesson.module}
+                    {test ? (test.submitted ? 'Abgegeben' : 'Test') : lesson.module}
                   </span>
                 </span>
                 <span className="card-title">{lesson.title}</span>

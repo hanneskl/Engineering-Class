@@ -250,7 +250,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 /* Reset sits over the card, not inside its button — a button may not nest. */
 .reset {
-  position: absolute; top: .45rem; right: .5rem; z-index: 1;
+  position: absolute; bottom: .45rem; right: .5rem; z-index: 1;
   display: grid; place-items: center; width: 1.6rem; height: 1.6rem;
   background: none; border: 1px solid transparent; border-radius: 6px;
   color: var(--muted); font-size: .9rem; line-height: 1;
@@ -458,13 +458,11 @@ button.choice.sel { background: var(--accent-wash); }
    height the way the three-by-three grid of modules is. */
 .cards-few { grid-auto-rows: auto; flex: none; }
 .cards-few .card { min-height: 11rem; }
-/* The rosette a handed-in test wears, pinned to the card's top-right corner;
-   the reset button moves out of its way. */
+/* The rosette a handed-in test wears, pinned to the card's top-right corner. */
 .card-rosette {
   position: absolute; top: .5rem; right: .7rem; z-index: 1; pointer-events: none;
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / .2));
 }
-.card-test .reset { right: 3.6rem; }
 .rosette { display: block; }
 .test-result { display: flex; align-items: center; gap: 1rem; }
 .test-result .rosette { flex: none; filter: drop-shadow(0 2px 3px rgb(0 0 0 / .2)); }

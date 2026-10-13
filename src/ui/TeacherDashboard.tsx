@@ -316,7 +316,7 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
                           disabled={rosterBusy}
                           onClick={() => void resetCode(s.id)}
                         >
-                          neu vergeben
+                          Neu vergeben
                         </button>
                       </td>
                       {LESSONS_BY_MODULE_NUMBER.map((l) => {
