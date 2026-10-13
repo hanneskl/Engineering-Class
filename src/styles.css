@@ -399,6 +399,12 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .task-solved { border-color: var(--good); }
 .task h2 { margin: 0 0 .3rem; font-size: 1.05rem; }
 .task-note { color: var(--muted); font-size: .9rem; margin: 0 0 1rem; }
+.task-pre {
+  margin: 0 0 1rem; padding: .7rem .9rem; overflow-x: auto;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  font: .84rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--ink);
+}
 
 .choices { display: grid; gap: .5rem; margin-bottom: 1rem; }
 .choice {

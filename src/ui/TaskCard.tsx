@@ -42,6 +42,7 @@ export function TaskCard({
     <section className={`task${locked ? ' task-solved' : ''}`}>
       <h2>{task.prompt}</h2>
       {task.note && <p className="task-note">{task.note}</p>}
+      {task.pre && <pre className="task-pre">{task.pre}</pre>}
 
       {task.kind === 'choice' ? (
         <div className="choices">

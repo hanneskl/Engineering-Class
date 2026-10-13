@@ -41,6 +41,8 @@ export type Task = {
   prompt: string
   /** Optional second line — units, format, worked-example pointer. */
   note?: string
+  /** A verbatim block under the prompt — an `ipconfig` printout to read from. */
+  pre?: string
   /** Options for `kind: 'choice'`. */
   options?: string[]
   /** The model answer, shown after a correct answer or on "Lösung zeigen". */

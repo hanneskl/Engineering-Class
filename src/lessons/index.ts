@@ -1,6 +1,7 @@
 import type { Lesson } from '../model/types'
 import { m1Geraete } from './m1-geraete'
 import { m2Netzwerk } from './m2-netzwerk'
+import { m3Adressen } from './m3-adressen'
 import { m4Binaer } from './m4-binaer'
 import { m5Befehle } from './m5-befehle'
 import { m6Internetseite } from './m6-internetseite'
@@ -14,8 +15,9 @@ import { t1TestM1 } from './t1-test-m1'
  * Lessons are content, deliberately kept clear of the engine (ARCHITECTURE.md
  * §8) so tasks can be added or reworded without touching simulation code.
  *
- * M3's addressing work lives inside M2's last two tasks; M1 T1.6 (the
- * router's own web interface) is still open.
+ * M3's addressing *work* (giving every device an address) lives inside M2's
+ * last two tasks and M5's console; M3 itself is the knowledge around it, as
+ * the Quali asks it. M1 T1.6 (the router's own web interface) is still open.
  *
  * M10 is the Datenverarbeitung third of the Quali rather than a networking
  * module, which is why it sits last despite being worth the most points.
@@ -27,6 +29,7 @@ export const LESSONS: Lesson[] = [
   t1TestM1,
   m1Geraete,
   m2Netzwerk,
+  m3Adressen,
   m5Befehle,
   m6Internetseite,
   m7Spuren,
