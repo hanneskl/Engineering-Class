@@ -132,10 +132,10 @@ export function Home({
               key={lesson.id}
               className={`card${done ? ' card-done' : ''}${test ? ' card-test' : ''}`}
             >
-              {test?.submitted && (
+              {test?.submitted && tierFor(test.correct, test.total) && (
                 <span className="card-rosette">
                   <Rosette
-                    tier={tierFor(test.correct, test.total)}
+                    tier={tierFor(test.correct, test.total)!}
                     label={`${test.correct}/${test.total}`}
                     size={58}
                     title={`${test.correct} von ${test.total} richtig`}

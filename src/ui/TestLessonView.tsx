@@ -88,12 +88,14 @@ export function TestLessonView({
         {celebrate && <Confetti onDone={stopCelebrating} />}
         {head}
         <div className="done-banner test-result">
-          <Rosette
-            tier={tierFor(correct, total)}
-            label={`${correct}/${total}`}
-            size={88}
-            title={`${correct} von ${total} richtig`}
-          />
+          {tierFor(correct, total) && (
+            <Rosette
+              tier={tierFor(correct, total)!}
+              label={`${correct}/${total}`}
+              size={88}
+              title={`${correct} von ${total} richtig`}
+            />
+          )}
           <div>
             <strong>
               {correct} von {total} richtig

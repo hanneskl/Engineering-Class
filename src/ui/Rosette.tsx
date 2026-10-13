@@ -6,11 +6,16 @@
 
 export type Tier = 'gold' | 'silber' | 'bronze'
 
-export function tierFor(correct: number, total: number): Tier {
+/**
+ * On a twelve-question test: 11 or 12 right is gold, 10 silver, 9 bronze,
+ * fewer no rosette at all. Expressed as shares so a longer test scales.
+ */
+export function tierFor(correct: number, total: number): Tier | null {
   const share = total ? correct / total : 0
-  if (share >= 10 / 12) return 'gold'
-  if (share >= 7 / 12) return 'silber'
-  return 'bronze'
+  if (share >= 11 / 12) return 'gold'
+  if (share >= 10 / 12) return 'silber'
+  if (share >= 9 / 12) return 'bronze'
+  return null
 }
 
 const COLOURS: Record<Tier, { light: string; dark: string; ink: string }> = {
