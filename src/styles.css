@@ -174,6 +174,11 @@ main { position: relative; min-height: 0; overflow: hidden; display: flex; flex-
 .gate-card label { display: block; font-weight: 600; margin-bottom: .4rem; }
 .gate-note { color: var(--muted); font-size: .85rem; margin: 1.25rem 0 0; }
 .gate-error { color: var(--bad); font-size: .88rem; margin: -.3rem 0 .9rem; }
+.gate-teacher {
+  display: inline-block; margin-top: 1rem; font-size: .85rem;
+  color: var(--muted); text-decoration: underline; text-underline-offset: 2px;
+}
+.gate-teacher:hover { color: var(--accent); }
 
 input, textarea, .answer {
   width: 100%; padding: .7rem .8rem; margin-bottom: .9rem;
@@ -571,17 +576,35 @@ button.choice.sel { background: var(--accent-wash); }
   border-radius: 8px; padding: .4rem .85rem; font-size: .9rem; font-weight: 600;
 }
 .tool.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.toolbar-hint { color: var(--muted); font-size: .85rem; }
+.toolbar-hint { color: var(--muted); font-size: .85rem; flex: 1; min-width: 12rem; }
+.zoom { display: flex; gap: .2rem; margin-left: auto; }
+.zoom .tool { padding: .4rem .6rem; min-width: 2.2rem; }
+.zoom .tool:disabled { opacity: .4; }
+.zoom-level { font-variant-numeric: tabular-nums; min-width: 4rem; }
+.insp-multi { font-size: .88rem; margin: 0 0 .8rem; }
 
 .notice {
   background: var(--bad-bg); color: var(--bad);
   padding: .6rem .9rem; font-size: .92rem; border-bottom: 1px solid var(--line);
 }
 
-.editor-body { display: grid; grid-template-columns: 132px minmax(0, 1fr) 210px; flex: 1; min-height: 0; }
-@media (max-width: 900px) { .editor-body { grid-template-columns: 1fr; } }
+.editor-body {
+  display: grid; grid-template-columns: 132px minmax(0, 1fr) 210px;
+  grid-template-rows: minmax(0, 1fr); flex: 1; min-height: 0;
+}
+@media (max-width: 900px) { .editor-body { grid-template-columns: 1fr; grid-template-rows: none; } }
 
-.palette { border-right: 1px solid var(--line); padding: .7rem .55rem; overflow-y: auto; }
+.palette {
+  border-right: 1px solid var(--line); padding: .7rem .55rem; overflow-y: auto;
+  position: relative;
+}
+/* A device dragged back here gets deleted (#3). */
+.palette.trash { background: var(--bad-bg); box-shadow: inset 0 0 0 2px var(--bad); }
+.palette-trash {
+  position: sticky; top: 0; z-index: 1; margin-bottom: .4rem;
+  background: var(--bad); color: #fff; border-radius: 7px;
+  padding: .4rem .5rem; font-size: .8rem; font-weight: 700; text-align: center;
+}
 .palette h3 {
   margin: .5rem 0 .35rem; font-size: .7rem; text-transform: uppercase;
   letter-spacing: .06em; color: var(--muted);
@@ -594,8 +617,16 @@ button.choice.sel { background: var(--accent-wash); }
 }
 .pal-item:hover { border-color: var(--accent); background: var(--bg); }
 
+/* The canvas scrolls inside this pane once it is zoomed in or has grown past
+   the screen (#6). A stable gutter keeps a scrollbar appearing from changing
+   the width the zoom is measured against. */
+.canvas-pane {
+  min-width: 0; min-height: 0; overflow: auto; background: var(--bg);
+  scrollbar-gutter: stable;
+}
+@media (max-width: 900px) { .canvas-pane { height: 60vh; } }
 .canvas {
-  display: block; width: 100%; height: 100%;
+  display: block;
   background: var(--bg); touch-action: none;
   /* Dragging a device must not sweep a text selection across the diagram. */
   user-select: none; -webkit-user-select: none;
@@ -605,6 +636,19 @@ button.choice.sel { background: var(--accent-wash); }
 /* Named .wire, not .link — .link is already the text-button style. */
 .wire { stroke: var(--muted); stroke-width: 2.5; }
 .wire-wifi { stroke-dasharray: 5 5; stroke: var(--accent); }
+.wire-hover { stroke-width: 4; }
+.wire-hit { stroke: transparent; stroke-width: 16; cursor: pointer; }
+.wire-delete { cursor: pointer; }
+.wire-delete circle { fill: var(--surface); stroke: var(--bad); stroke-width: 2; }
+.wire-delete path { stroke: var(--bad); stroke-width: 2.2; stroke-linecap: round; }
+.wire-delete:hover circle, .wire-delete:focus-visible circle { fill: var(--bad); }
+.wire-delete:hover path, .wire-delete:focus-visible path { stroke: #fff; }
+.wire-delete:focus { outline: none; }
+.marquee {
+  fill: var(--accent-wash); fill-opacity: .5; stroke: var(--accent);
+  stroke-dasharray: 4 3; pointer-events: none;
+}
+.node.trash { opacity: .45; }
 
 .node { cursor: grab; }
 .node:focus { outline: none; }

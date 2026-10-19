@@ -9,9 +9,26 @@ const GROUPS: Array<{ key: 'aussen' | 'netz' | 'geraete'; title: string }> = [
 
 const TYPES = Object.keys(DEVICES) as DeviceType[]
 
-export function Palette({ onAdd }: { onAdd: (type: DeviceType) => void }) {
+/**
+ * Where devices come from — and where they go back to: a device dragged off
+ * the canvas and dropped here is deleted (#3). `trash` is set while one hovers.
+ */
+export function Palette({
+  onAdd,
+  boxRef,
+  trash,
+}: {
+  onAdd: (type: DeviceType) => void
+  boxRef?: React.Ref<HTMLDivElement>
+  trash?: boolean
+}) {
   return (
-    <div className="palette">
+    <div ref={boxRef} className={`palette${trash ? ' trash' : ''}`}>
+      {trash && (
+        <div className="palette-trash" aria-live="polite">
+          Loslassen zum Löschen
+        </div>
+      )}
       {GROUPS.map((g) => (
         <section key={g.key}>
           <h3>{g.title}</h3>

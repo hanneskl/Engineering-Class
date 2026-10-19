@@ -76,6 +76,13 @@ export function NameGate({
             : 'Dein Name bleibt auf diesem Computer. Er sorgt dafür, dass du deine eigenen ' +
               'Aufgaben bekommst und dein Fortschritt gespeichert wird.'}
         </p>
+
+        {/* A plain hash link — App's hashchange listener does the rest. */}
+        {hasBackend && (
+          <a className="gate-teacher" href="#/lehrer">
+            Anmeldung für Lehrkräfte
+          </a>
+        )}
       </div>
     </div>
   )
