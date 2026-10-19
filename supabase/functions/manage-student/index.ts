@@ -61,7 +61,7 @@ Deno.serve(async (request) => {
   // Only a real teacher may provision student accounts — anyone else,
   // including a signed-in student, gets 403.
   const { data: taughtClass } = await asService
-    .from('classes')
+    .from('engineering_class_classes')
     .select('id')
     .eq('teacher_id', auth.user.id)
     .maybeSingle()
@@ -79,7 +79,7 @@ Deno.serve(async (request) => {
     if (!name) return json({ error: 'Name fehlt.' }, 400)
 
     const { data: existing } = await asService
-      .from('students')
+      .from('engineering_class_students')
       .select('id')
       .eq('class_id', taughtClass.id)
       .ilike('display_name', name)
@@ -96,7 +96,7 @@ Deno.serve(async (request) => {
       return json({ error: createError?.message ?? 'Anlegen fehlgeschlagen.' }, 500)
     }
 
-    const { error: upsertError } = await asService.from('students').upsert({
+    const { error: upsertError } = await asService.from('engineering_class_students').upsert({
       id: created.user.id,
       display_name: name,
       class_id: taughtClass.id,
@@ -117,7 +117,7 @@ Deno.serve(async (request) => {
     // it here every time makes a reset self-healing for exactly that case,
     // not just "forgot the code".
     const { data: student } = await asService
-      .from('students')
+      .from('engineering_class_students')
       .select('display_name')
       .eq('id', body.studentId)
       .maybeSingle()
@@ -132,7 +132,7 @@ Deno.serve(async (request) => {
     if (updateError) return json({ error: updateError.message }, 500)
 
     const { error: rowError } = await asService
-      .from('students')
+      .from('engineering_class_students')
       .update({ login_code: code })
       .eq('id', body.studentId)
     if (rowError) return json({ error: rowError.message }, 500)

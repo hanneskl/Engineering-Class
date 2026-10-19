@@ -70,7 +70,7 @@ Deno.serve(async (request) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
-  const { error: insertError } = await asService.from('attempts').insert({
+  const { error: insertError } = await asService.from('engineering_class_attempts').insert({
     student_id: auth.user.id,
     scenario_id: submission.scenarioId,
     task_id: submission.taskId,

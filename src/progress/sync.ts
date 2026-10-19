@@ -68,7 +68,7 @@ export async function pushChangedTaskProgress(
     })
     if (rows.length === 0) return
 
-    await backend.from('task_progress').upsert(rows)
+    await backend.from('engineering_class_task_progress').upsert(rows)
   } catch {
     // Offline, or Supabase unreachable — the trainer still works locally,
     // and the next change will retry with a wider diff.
@@ -104,7 +104,7 @@ async function flushProgressSnapshot(progress: Progress): Promise<void> {
     const { data } = await backend.auth.getSession()
     if (!data.session) return
     await backend
-      .from('students')
+      .from('engineering_class_students')
       .update({ progress_snapshot: progress, progress_updated_at: progress.updatedAt })
       .eq('id', data.session.user.id)
   } catch {
@@ -141,7 +141,7 @@ export async function hydrateFromSnapshot(local: Progress): Promise<Progress | n
     const { data } = await backend.auth.getSession()
     if (!data.session) return null
     const { data: row } = await backend
-      .from('students')
+      .from('engineering_class_students')
       .select('progress_snapshot, progress_updated_at')
       .eq('id', data.session.user.id)
       .maybeSingle()

@@ -72,8 +72,8 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
     let cancelled = false
     async function load() {
       const [{ data: studentRows }, { data: progressRows }] = await Promise.all([
-        client.from('students').select('id, display_name, login_code').eq('class_id', CLASS_ID),
-        client.from('task_progress').select('*'),
+        client.from('engineering_class_students').select('id, display_name, login_code').eq('class_id', CLASS_ID),
+        client.from('engineering_class_task_progress').select('*'),
       ])
       if (cancelled) return
       setStudents((studentRows as Student[] | null) ?? [])
@@ -93,7 +93,7 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
       .channel('task_progress_changes')
       .on<TaskProgressRow>(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'task_progress' },
+        { event: '*', schema: 'public', table: 'engineering_class_task_progress' },
         (payload) => {
           setRows((prev) => {
             const next = new Map(prev)
