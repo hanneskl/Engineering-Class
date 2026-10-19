@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ThemeToggle } from './ThemeToggle'
+import { Confetti } from './Confetti'
 import type { Finding } from '../model/rules'
 import type { Hints } from '../model/types'
 import { taskProgress, withTask, type Progress } from '../progress/store'
@@ -91,6 +92,24 @@ export function LessonShell({
     () => !tasks.some((t) => taskProgress(progress, t.id).solved),
   )
   const isLast = index === tasks.length - 1
+  const moduleDone = tasks.every((t) => taskProgress(progress, t.id).solved)
+
+  /*
+   * Confetti the moment a task turns done (#7) — not when a task that was
+   * already done is opened again, so the ref starts at whatever state the
+   * task opened in and is reset whenever another task is opened.
+   */
+  const [celebrate, setCelebrate] = useState(false)
+  const wasDone = useRef({ id: task.id, done })
+  useEffect(() => {
+    if (wasDone.current.id !== task.id) {
+      wasDone.current = { id: task.id, done }
+      return
+    }
+    if (done && !wasDone.current.done) setCelebrate(true)
+    wasDone.current.done = done
+  }, [task.id, done])
+  const stopCelebrating = useCallback(() => setCelebrate(false), [])
   const hints = [task.hints.stups, task.hints.hinweis, task.hints.loesung]
 
   // Every one of the seven lesson kinds that render through this shell gets
@@ -103,6 +122,7 @@ export function LessonShell({
 
   return (
     <div className="lesson">
+      {celebrate && <Confetti onDone={stopCelebrating} />}
       <div className="lesson-rail">
         <div className="rail-top">
           <button className="back" onClick={onBack}>
@@ -171,10 +191,18 @@ export function LessonShell({
           {done && (
             <div className="brief-done-row">
               <strong>{doneText}</strong>
-              {!isLast && (
+              {!isLast ? (
                 <button className="primary" onClick={() => onOpenTask(index + 1)}>
                   Weiter
                 </button>
+              ) : (
+                <>
+                  {/* The end of the module says so, and where to go next (#7). */}
+                  {moduleDone && <span>Damit hast du das ganze Modul geschafft.</span>}
+                  <button className="primary" onClick={onBack}>
+                    Zurück zur Übersicht
+                  </button>
+                </>
               )}
             </div>
           )}
