@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LESSONS, taskIdsFor } from '../lessons'
-import { t1TestM1 } from '../lessons/t1-test-m1'
+import type { TestLesson } from '../model/types'
 import { backend, CLASS_ID } from '../backend/client'
 import { signOutTeacher } from '../backend/teacherAuth'
 import { subscribePresence, type ActiveTask } from '../progress/presence'
@@ -25,6 +25,9 @@ type TaskProgressRow = {
  * An arbitrary fixed seed is therefore fine here; nobody's real seed is
  * known server-side, and none is needed.
  */
+/** Every test module, in the same order as on the students' home screen. */
+const TESTS = LESSONS.filter((l): l is TestLesson => l.kind === 'test')
+
 const TOTAL_BY_MODULE = new Map(LESSONS.map((l) => [l.module, taskIdsFor(l, 1).length]))
 
 /**
@@ -133,23 +136,26 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
   )
 
   /**
-   * Test M1, question by question: how many of those who answered got it
+   * Each test, question by question: how many of those who answered got it
    * right, worst first — the questions the whole class missed are the ones
-   * to go over again.
+   * to go over again. A test nobody has answered yet is left out.
    */
-  const testByQuestion = useMemo(() => {
+  const testsByQuestion = useMemo(() => {
     const tally = new Map<string, { answered: number; correct: number }>()
     for (const row of rows.values()) {
-      if (row.lesson_id !== t1TestM1.module) continue
+      if (!TESTS.some((t) => t.module === row.lesson_id)) continue
       const t = tally.get(row.task_id) ?? { answered: 0, correct: 0 }
       t.answered += 1
       if (row.solved) t.correct += 1
       tally.set(row.task_id, t)
     }
-    return t1TestM1.tasks
-      .map((task, i) => ({ nr: i + 1, text: task.frage.text, ...(tally.get(task.id) ?? { answered: 0, correct: 0 }) }))
-      .filter((q) => q.answered > 0)
-      .sort((a, b) => a.correct / a.answered - b.correct / b.answered || a.nr - b.nr)
+    return TESTS.map((test) => ({
+      test,
+      questions: test.tasks
+        .map((task, i) => ({ nr: i + 1, text: task.frage.text, ...(tally.get(task.id) ?? { answered: 0, correct: 0 }) }))
+        .filter((q) => q.answered > 0)
+        .sort((a, b) => a.correct / a.answered - b.correct / b.answered || a.nr - b.nr),
+    })).filter((t) => t.questions.length > 0)
   }, [rows])
 
   function summaryFor(studentId: string, moduleId: string): { solved: number; total: number } {
@@ -264,9 +270,9 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
             {rosterError && <p className="gate-error">{rosterError}</p>}
           </section>
 
-          {testByQuestion.length > 0 && (
-            <section className="teacher-matrix teacher-test">
-              <h2>{t1TestM1.title} — pro Frage</h2>
+          {testsByQuestion.map(({ test, questions }) => (
+            <section key={test.id} className="teacher-matrix teacher-test">
+              <h2>{test.title} — pro Frage</h2>
               <table>
                 <thead>
                   <tr>
@@ -276,7 +282,7 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {testByQuestion.map((q) => (
+                  {questions.map((q) => (
                     <tr key={q.nr}>
                       <td>{q.nr}</td>
                       <td className="teacher-test-text">{q.text}</td>
@@ -288,7 +294,7 @@ export function TeacherDashboard({ onSignOut }: { onSignOut: () => void }) {
                 </tbody>
               </table>
             </section>
-          )}
+          ))}
 
           <section className="teacher-matrix">
             <h2>Fortschritt</h2>

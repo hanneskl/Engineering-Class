@@ -10,23 +10,33 @@ import {
   submit,
 } from './test'
 import { t1TestM1 } from '../lessons/t1-test-m1'
+import { LESSONS } from '../lessons'
+import type { TestLesson } from './types'
 import { emptyProgress, taskProgress } from '../progress/store'
 
 const first = t1TestM1.tasks[0]!
 const right = (task: typeof first) => task.frage.optionen.findIndex((o) => o.ok)
 const wrong = (task: typeof first) => task.frage.optionen.findIndex((o) => !o.ok)
 
-describe('Test M1 content', () => {
+const TESTS = LESSONS.filter((l): l is TestLesson => l.kind === 'test')
+
+describe.each(TESTS.map((t) => [t.title, t] as const))('%s content', (_, test) => {
   it('has twelve questions, each with exactly one right option and a warum on every option', () => {
-    expect(t1TestM1.tasks).toHaveLength(12)
-    for (const t of t1TestM1.tasks) {
+    expect(test.tasks).toHaveLength(12)
+    for (const t of test.tasks) {
       expect(t.frage.optionen.filter((o) => o.ok)).toHaveLength(1)
       for (const o of t.frage.optionen) expect(o.warum.length).toBeGreaterThan(10)
     }
   })
+})
 
-  it('uses globally unique task ids', () => {
-    const ids = t1TestM1.tasks.map((t) => t.id)
+describe('test modules', () => {
+  it('are all found — the content checks above run on every one', () => {
+    expect(TESTS.map((t) => t.id)).toEqual(expect.arrayContaining(['t1', 't2']))
+  })
+
+  it('use globally unique task ids, across every test', () => {
+    const ids = TESTS.flatMap((t) => t.tasks.map((task) => task.id))
     expect(new Set(ids).size).toBe(ids.length)
   })
 })
