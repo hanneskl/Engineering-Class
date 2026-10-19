@@ -94,8 +94,21 @@ export function BuildLessonView({
     )
   }
 
+  /**
+   * A task that extends the previous network opens only once that one is
+   * solved. Opened early, it inherits an older network instead, gets solved on
+   * that, and the task in between is skipped without anyone noticing (#8).
+   * Already solved stays open, so nobody is locked out of their own work.
+   */
+  function isLocked(i: number): boolean {
+    const t = lesson.tasks[i]
+    const before = lesson.tasks[i - 1]
+    if (!t || !before || t.startFrom !== 'previous') return false
+    return !taskProgress(progress, t.id).solved && !taskProgress(progress, before.id).solved
+  }
+
   function openTask(i: number) {
-    if (!lesson.tasks[i]) return
+    if (!lesson.tasks[i] || isLocked(i)) return
     setIndex(i)
     setPlan(initialPlan(progress, lesson, i))
   }
@@ -109,6 +122,7 @@ export function BuildLessonView({
       tasks={lesson.tasks}
       index={index}
       onOpenTask={openTask}
+      isLocked={isLocked}
       ziele={ziele.map((z) => ({ text: z.text, ok: z.ok, why: z.findings[0]?.message }))}
       probleme={general}
       done={done}

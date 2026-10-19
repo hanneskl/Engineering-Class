@@ -51,6 +51,7 @@ export function LessonShell({
   onProgress,
   onBack,
   hideHints,
+  isLocked,
   children,
 }: {
   module: string
@@ -75,6 +76,12 @@ export function LessonShell({
    * telling the student what step 2 already walks them through.
    */
   hideHints?: boolean
+  /**
+   * A task that can't be opened yet — its dot shows but does nothing. M2's
+   * "Erweitere das Netz" tasks use it: opened early, they inherit an older
+   * network, get solved on that, and the task in between stays grey for good.
+   */
+  isLocked?: (index: number) => boolean
   children: ReactNode
 }) {
   const task = tasks[index]!
@@ -113,12 +120,15 @@ export function LessonShell({
           {tasks.map((t, i) => {
             const s = taskProgress(progress, t.id)
             const cls = s.solved ? 'dot done' : i === index ? 'dot here' : 'dot'
+            const locked = isLocked?.(i) ?? false
             return (
               <li key={t.id}>
                 <button
                   className={i === index && s.solved ? 'dot done here' : cls}
                   aria-current={i === index}
-                  aria-label={`Aufgabe ${i + 1}: ${t.title}`}
+                  aria-label={`Aufgabe ${i + 1}: ${t.title}${locked ? ` — erst Aufgabe ${i} lösen` : ''}`}
+                  title={locked ? `Erst Aufgabe ${i} lösen` : undefined}
+                  disabled={locked}
                   onClick={() => onOpenTask(i)}
                 >
                   {i + 1}

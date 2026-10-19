@@ -391,6 +391,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .dot.here { border-color: var(--accent); background: var(--accent-wash); color: var(--accent); }
 .dot.done { background: var(--good); border-color: var(--good); color: #fff; }
 .dot.done.here { box-shadow: 0 0 0 2px var(--accent); }
+.dot:disabled { opacity: .45; cursor: not-allowed; }
 
 .task {
   background: var(--surface); border: 1px solid var(--line);
