@@ -373,6 +373,11 @@ export type TestTask = {
   frage: import('./frage').Frage
   /** Shown above the question — "Welches Gerät ist das?" needs a picture. */
   bild?: import('./plan').DeviceType
+  /**
+   * Shown above the question, line for line in monospace — Test M3 asks
+   * about a piece of ipconfig output, which only reads right as it prints.
+   */
+  ausschnitt?: string
 }
 
 export type TestLesson = LessonBase & {

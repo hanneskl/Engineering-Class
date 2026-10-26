@@ -426,6 +426,12 @@ button.choice.sel { background: var(--accent-wash); }
 /* ---------- tests (T1 …) ---------- */
 .test-count { margin: 0 0 .4rem; color: var(--muted); font-size: .82rem; font-weight: 600; }
 .test-bild { margin: 0 0 .6rem; }
+.test-ausschnitt {
+  margin: 0 0 .7rem; padding: .7rem .9rem; border-radius: 8px;
+  background: var(--bg); border: 1px solid var(--line); color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .9rem; line-height: 1.5; white-space: pre; overflow-x: auto;
+}
 .test-bild .device-bild, .test-bild svg { border-radius: 10px; }
 .test-start p { max-width: 60ch; }
 .test-result strong { font-size: 1.3rem; }

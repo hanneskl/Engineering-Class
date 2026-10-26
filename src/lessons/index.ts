@@ -11,6 +11,7 @@ import { m9Flussdiagramm } from './m9-flussdiagramm'
 import { m10Tabellen } from './m10-tabellen'
 import { t1TestM1 } from './t1-test-m1'
 import { t2TestM2 } from './t2-test-m2'
+import { t3TestM3 } from './t3-test-m3'
 
 /**
  * Lessons are content, deliberately kept clear of the engine (ARCHITECTURE.md
@@ -24,10 +25,12 @@ import { t2TestM2 } from './t2-test-m2'
  * module, which is why it sits last despite being worth the most points.
  *
  * The tests come first, newest on top: each is done at the start of the
- * lesson that follows its module (Test M2 at the start of M3), so the current
- * one should be the first thing on the screen that day.
+ * lesson that follows its module (Test M2 at the start of M3, Test M3 at the
+ * start of M5), so the current one should be the first thing on the screen
+ * that day.
  */
 export const LESSONS: Lesson[] = [
+  t3TestM3,
   t2TestM2,
   t1TestM1,
   m1Geraete,

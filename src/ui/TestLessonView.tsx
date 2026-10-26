@@ -119,6 +119,7 @@ export function TestLessonView({
                     <DeviceBild type={t.bild} size={72} />
                   </div>
                 )}
+                {t.ausschnitt && <pre className="test-ausschnitt">{t.ausschnitt}</pre>}
                 <h2>{t.frage.text}</h2>
                 <p className={`review-answer ${own?.ok ? 'ok' : 'bad'}`}>
                   {own?.ok ? '✓' : '✗'} Deine Antwort: <strong>{own?.text}</strong>
@@ -195,6 +196,7 @@ export function TestLessonView({
             <DeviceBild type={task.bild} size={120} />
           </div>
         )}
+        {task.ausschnitt && <pre className="test-ausschnitt">{task.ausschnitt}</pre>}
         <h2>{task.frage.text}</h2>
         <div className="choices" role="radiogroup" aria-label="Antworten">
           {order.map((i) => {
