@@ -12,6 +12,10 @@ import { intBetween, rng, rngFor, shuffle } from '../model/rng'
  * IP-Adresse?", "Wer vergibt sie?", and reading an `ipconfig` printout for
  * the own address and the router's (README §3). The printout is built from
  * the student's seed, so neighbours read different numbers.
+ *
+ * Netzanteil/Hostanteil, the three private ranges, fixed addresses and the
+ * DHCP range come from the school book and its sample Quali
+ * (docs/briefing-m3-erweiterung.md). The two calculated tasks are seeded too.
  */
 
 type ChoiceSpec = {
@@ -57,6 +61,17 @@ const CHOICES: ChoiceSpec[] = [
       'IP steht für Internet Protocol.',
   },
   {
+    id: 'anteile',
+    prompt: 'Eine IP-Adresse besteht aus zwei Teilen. Wie heißen sie?',
+    correct: 'Netzanteil und Hostanteil',
+    wrong: ['Vorwahl und Rufnummer', 'Router-Teil und Geräte-Teil', 'Innen-Teil und Außen-Teil'],
+    stups: 'Denk an eine Postadresse: Ein Teil sagt die Straße, der andere das Haus.',
+    hinweis: 'Der eine Teil benennt das Netz, der andere das einzelne Gerät, den "Host".',
+    answer:
+      'Netzanteil und Hostanteil. Der Netzanteil ist wie die Straße, der Hostanteil wie die ' +
+      'Hausnummer: Bei 192.168.178.20 ist 192.168.178 der Netzanteil und 20 der Hostanteil.',
+  },
+  {
     id: 'gueltig',
     prompt: 'Welche dieser Adressen ist eine gültige IPv4-Adresse?',
     correct: '192.168.178.20',
@@ -83,15 +98,59 @@ const CHOICES: ChoiceSpec[] = [
       'fragt beim Router nach und bekommt eine freie Adresse.',
   },
   {
+    id: 'statisch',
+    prompt: 'Warum bekommt ein Netzwerkdrucker meist eine feste (statische) IP-Adresse?',
+    correct: 'Damit ihn alle Geräte immer unter derselben Adresse finden',
+    wrong: [
+      'Damit er schneller druckt',
+      'Weil Drucker kein DHCP verstehen',
+      'Damit er aus dem Internet erreichbar ist',
+    ],
+    stups: 'Stell dir vor, die Werkstatt zieht jede Woche um. Was hätten die Kunden für ein Problem?',
+    hinweis: 'Alle Rechner im Netz schicken ihre Druckaufträge an dieselbe Adresse. Was darf die also nicht?',
+    answer:
+      'Damit ihn alle Geräte immer unter derselben Adresse finden. Eine dynamische Adresse ' +
+      'vom DHCP-Server könnte wechseln, und die Rechner fänden den Drucker nicht mehr.',
+  },
+  {
+    id: 'apipa',
+    prompt: 'ipconfig zeigt bei einem Laptop die Adresse 169.254.31.7. Was ist passiert?',
+    correct: 'Er hat keine Adresse vom DHCP-Server (Router) bekommen',
+    wrong: [
+      'Er ist mit dem Internet verbunden',
+      'Er hat eine statische Adresse',
+      'Er ist im Netz der Schule',
+    ],
+    stups: 'Die Adresse beginnt weder mit 10, noch mit 172.16 bis 31, noch mit 192.168. Wer hat sie also nicht vergeben?',
+    hinweis: 'Wenn niemand antwortet, gibt sich das Gerät selbst eine Notadresse, die mit 169.254 beginnt.',
+    answer:
+      'Er hat keine Adresse vom DHCP-Server bekommen. Dann gibt sich das Gerät selbst eine ' +
+      'Notadresse mit 169.254.…, und ins Internet kommt es damit nicht.',
+  },
+  {
     id: 'privat',
     prompt: 'Welche dieser Adressen ist eine private Adresse aus einem Heimnetz?',
     correct: '192.168.178.20',
     wrong: ['142.250.185.78', '8.8.8.8', '217.237.148.22'],
     stups: 'Eine Adresse fängt so an wie die, die du in M2 vergeben hast.',
-    hinweis: 'Heimnetze nutzen fast immer 192.168.x.x — die anderen sind Adressen im Internet.',
+    hinweis:
+      'Private Adressen gibt es in drei Bereichen: 10.x.x.x, 172.16.x.x bis 172.31.x.x und ' +
+      '192.168.x.x. Heimnetze nutzen fast immer 192.168.',
     answer:
-      '192.168.178.20. Adressen mit 192.168.… gibt es nur innerhalb eines Heimnetzes; ' +
-      'im Internet kommen sie nicht vor.',
+      '192.168.178.20. Private Adressen gibt es in drei Bereichen: 10.x.x.x, 172.16.x.x bis ' +
+      '172.31.x.x und 192.168.x.x. Heimnetze nutzen fast immer 192.168; im Internet kommen ' +
+      'private Adressen nicht vor.',
+  },
+  {
+    id: 'bereiche',
+    prompt: 'Welche dieser Adressen ist auch eine private Adresse?',
+    correct: '10.0.0.15',
+    wrong: ['84.153.12.7', '8.8.8.8', '172.32.5.1'],
+    stups: 'Nicht nur 192.168 ist privat. Es gibt noch zwei weitere Bereiche.',
+    hinweis: 'Die drei privaten Bereiche: 10.x.x.x, 172.16.x.x bis 172.31.x.x und 192.168.x.x.',
+    answer:
+      '10.0.0.15 — alles, was mit 10 beginnt, ist privat. 172.32.5.1 liegt knapp außerhalb: ' +
+      'privat sind nur 172.16 bis 172.31.',
   },
   {
     id: 'extern',
@@ -199,6 +258,120 @@ export function checkAddress(raw: string, wanted: string, other: string, otherIs
   }
 }
 
+/** An address for the Hostanteil task: taking turns through the three private ranges. */
+export function hostanteilFor(seed: number): { ip: string; netz: string; host: string } {
+  const next = rngFor(seed, 'hostanteil')
+  const third = intBetween(next, 0, 255)
+  const netz = [
+    `10.${intBetween(next, 0, 255)}.${third}`,
+    `172.${intBetween(next, 16, 31)}.${third}`,
+    `192.168.${third}`,
+  ][(seed >>> 0) % 3]!
+  const host = String(intBetween(next, 2, 254))
+  return { ip: `${netz}.${host}`, netz, host }
+}
+
+/** The last number only — with the two classic wrong cuts through the address named. */
+export function checkHostanteil(raw: string, ip: string): CheckResult {
+  const given = normalize(raw)
+  const parts = ip.split('.')
+  if (given === parts[3]) return { ok: true }
+  if (given === parts.join(' ')) {
+    return {
+      ok: false,
+      code: 'WHOLE_ADDRESS',
+      message: 'Das ist die ganze Adresse.',
+      why: 'Gesucht ist nur der Teil, der das einzelne Gerät benennt.',
+    }
+  }
+  if (given === parts.slice(0, 3).join(' ')) {
+    return {
+      ok: false,
+      code: 'NETZANTEIL',
+      message: 'Das ist der Netzanteil.',
+      why: 'Das ist die Straße. Gesucht ist die Hausnummer.',
+    }
+  }
+  return {
+    ok: false,
+    code: 'WRONG',
+    message: 'Das ist nicht der Hostanteil.',
+    why: 'Bei der Subnetzmaske 255.255.255.0 gehört nur eine der vier Zahlen dazu.',
+  }
+}
+
+function hostanteilTask(seed: number): Task {
+  const { ip, netz, host } = hostanteilFor(seed)
+  return {
+    id: 'm3-hostanteil',
+    kind: 'text',
+    prompt: `Wie lautet der Hostanteil von ${ip}?`,
+    note: 'Die Subnetzmaske ist 255.255.255.0.',
+    answer: host,
+    hints: {
+      stups: 'Der Netzanteil ist die Straße, der Hostanteil die Hausnummer.',
+      hinweis: 'Bei 255.255.255.0 gehören die ersten drei Zahlen zum Netz.',
+      loesung: `${host} — ${netz} ist der Netzanteil, die letzte Zahl ist der Hostanteil.`,
+    },
+    check: (raw) => checkHostanteil(raw, ip),
+  }
+}
+
+/** The range a student's DHCP server hands out. */
+export function rangeFor(seed: number): { net: number; a: number; b: number; count: number } {
+  const next = rngFor(seed, 'range')
+  const net = [0, 1, 2, 178][intBetween(next, 0, 3)]!
+  const a = intBetween(next, 2, 150)
+  const b = a + intBetween(next, 9, 60)
+  return { net, a, b, count: b - a + 1 }
+}
+
+/** Digits only, "Geräte" or "Adressen" may follow — and the classic miscount gets its own line. */
+export function checkRange(raw: string, a: number, b: number): CheckResult {
+  const match = /^(\d+)\s*(geräte|geraete|adressen)?$/.exec(raw.trim().toLowerCase())
+  if (!match) {
+    return {
+      ok: false,
+      code: 'FORMAT',
+      message: 'Gib die Anzahl als Zahl ein.',
+      why: 'Nur die Ziffern, zum Beispiel 25.',
+    }
+  }
+  const given = Number(match[1])
+  if (given === b - a + 1) return { ok: true }
+  if (given === b - a) {
+    return {
+      ok: false,
+      code: 'OFF_BY_ONE',
+      message: 'Fast – zähl die erste und die letzte Adresse mit.',
+    }
+  }
+  return {
+    ok: false,
+    code: 'WRONG',
+    message: 'Das stimmt noch nicht.',
+    why: 'Schau nur auf die letzte Zahl der beiden Adressen.',
+  }
+}
+
+function rangeTask(seed: number): Task {
+  const { net, a, b, count } = rangeFor(seed)
+  return {
+    id: 'm3-range',
+    kind: 'text',
+    prompt:
+      `Der DHCP-Server vergibt Adressen von 192.168.${net}.${a} bis 192.168.${net}.${b}. ` +
+      'Wie viele Geräte können eine Adresse bekommen?',
+    answer: String(count),
+    hints: {
+      stups: 'Nur die letzte Zahl ändert sich. Die untere und die obere Grenze zählen beide mit.',
+      hinweis: 'Rechne: obere Grenze minus untere Grenze, plus 1.',
+      loesung: `${count} — ${b} − ${a} + 1, weil auch die erste und die letzte Adresse vergeben werden.`,
+    },
+    check: (raw) => checkRange(raw, a, b),
+  }
+}
+
 function ipconfigTasks(seed: number): Task[] {
   const out = ipconfigFor(seed)
   const note = 'Lies die Antwort aus der Ausgabe unten ab.'
@@ -256,22 +429,41 @@ export const m3Adressen: QuizLesson = {
   quali:
     '"Was ist eine IP-Adresse?" und "Wer vergibt sie?" sind jedes Jahr dabei, und eine ' +
     'ipconfig-Ausgabe zum Ablesen war 2022 und 2023 abgedruckt — eigene Adresse, ' +
-    'Router-Adresse, welcher Befehl.',
+    'Router-Adresse, welcher Befehl. Das Beispiel-Quali im Schulbuch fragt außerdem: ' +
+    '"Wie ist eine IP-Adresse aufgebaut? Benenne die beiden Bereiche."',
   intro: {
     heading: 'Wer ist wer im Netzwerk?',
     body: [
       'Jedes Gerät im Netzwerk braucht eine eigene Adresse, sonst käme kein Paket an. ' +
         'Die IP-Adresse ist diese Nummer: vier Zahlen mit Punkten, zum Beispiel 192.168.178.20.',
-      'Verteilt werden die Adressen vom Router — automatisch, per DHCP. Der Router hat dabei ' +
+      'Sie hat zwei Teile: Der Netzanteil ist wie die Straße, der Hostanteil wie die Hausnummer. ' +
+        'Private Adressen gibt es in drei Bereichen: 10.…, 172.16.… bis 172.31.… und 192.168.…',
+      'Verteilt werden die Adressen vom Router — automatisch, per DHCP, aus einem festgelegten ' +
+        'Bereich. Geräte wie Drucker bekommen eine feste Adresse. Der Router hat dabei ' +
         'zwei Gesichter: nach innen seine private Adresse (meist …178.1, das Standardgateway), ' +
         'nach außen eine einzige externe Adresse, mit der das ganze Haus im Internet auftritt.',
       'Daneben gibt es die MAC-Adresse: die feste Nummer der Netzwerkkarte, die der Hersteller ' +
         'eingebrannt hat. Die IP-Adresse kann wechseln, die MAC-Adresse nicht.',
     ],
   },
-  buildTasks: (seed) => [
-    ...CHOICES.slice(0, 4).map((spec) => choiceTask(spec, seed)),
-    ...ipconfigTasks(seed),
-    ...CHOICES.slice(4).map((spec) => choiceTask(spec, seed)),
-  ],
+  buildTasks: (seed) => {
+    const choice = (id: string) => choiceTask(CHOICES.find((c) => c.id === id)!, seed)
+    return [
+      choice('warum'),
+      choice('was'),
+      choice('anteile'),
+      choice('gueltig'),
+      hostanteilTask(seed),
+      choice('wer'),
+      rangeTask(seed),
+      choice('statisch'),
+      choice('apipa'),
+      ...ipconfigTasks(seed),
+      choice('privat'),
+      choice('bereiche'),
+      choice('extern'),
+      choice('gateway'),
+      choice('mac'),
+    ]
+  },
 }
