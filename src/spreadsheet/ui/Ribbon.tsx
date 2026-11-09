@@ -1,4 +1,4 @@
-import type { BorderWeight, CellStyle, CfRule, ChartKind, NumberFormat } from '@quali/core'
+import type { BorderWeight, CellStyle, CfRule, ChartKind, NumberFormat, SortDirection } from '@quali/core'
 import { useEffect, useRef, useState } from 'react'
 
 export type BorderPreset = 'all' | 'outer' | 'thickOuter' | 'none'
@@ -14,6 +14,10 @@ interface RibbonProps {
   onInsertChart: (kind: ChartKind) => void
   onConditionalFormat: (condition: CfRule['condition'], format: Partial<CellStyle>) => void
   onClearConditionalFormats: () => void
+  /** The columns of the selection, as sort keys. */
+  sortColumns: readonly { readonly col: number; readonly label: string }[]
+  canSort: boolean
+  onSort: (col: number, direction: SortDirection) => void
 }
 
 const FONTS = ['Calibri', 'Aptos Narrow', 'Arial', 'Arial Black', 'Times New Roman', 'Courier New']
@@ -93,8 +97,15 @@ export function Ribbon({
   onInsertChart,
   onConditionalFormat,
   onClearConditionalFormats,
+  sortColumns,
+  canSort,
+  onSort,
 }: RibbonProps) {
   const [menu, setMenu] = useState<string | null>(null)
+  const [pickedSortCol, setPickedSortCol] = useState<number | null>(null)
+  const sortCol = sortColumns.some(({ col }) => col === pickedSortCol)
+    ? pickedSortCol!
+    : sortColumns[0]!.col
   const toggle = (name: string) => setMenu((open) => (open === name ? null : name))
   const close = () => setMenu(null)
 
@@ -173,6 +184,37 @@ export function Ribbon({
               </button>
             </Menu>
           </div>
+        </div>
+
+        <div className="rgroup">
+          <span className="rlabel">Sortieren nach</span>
+          <select
+            className="sortcol"
+            value={sortCol}
+            disabled={!canSort}
+            title={canSort ? 'Spalte, nach der sortiert wird' : 'Markiere erst die ganze Tabelle'}
+            onChange={(event) => setPickedSortCol(Number(event.target.value))}
+          >
+            {sortColumns.map(({ col, label }) => (
+              <option key={col} value={col}>Spalte {label}</option>
+            ))}
+          </select>
+          <button
+            className="tool wide"
+            title="Aufsteigend sortieren"
+            disabled={!canSort}
+            onClick={() => onSort(sortCol, 'asc')}
+          >
+            A→Z
+          </button>
+          <button
+            className="tool wide"
+            title="Absteigend sortieren"
+            disabled={!canSort}
+            onClick={() => onSort(sortCol, 'desc')}
+          >
+            Z→A
+          </button>
         </div>
       </div>
 

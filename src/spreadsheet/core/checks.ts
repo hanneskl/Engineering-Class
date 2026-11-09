@@ -8,9 +8,9 @@
 
 import { isKnownFunction, unknownFunctionError } from './functions.ts'
 import { canonical, formatNode, parseFormula, translateNode, walk, type Node } from './parser.ts'
-import { expandRange, formatA1, parseA1, type RangeRef } from './refs.ts'
+import { expandRange, formatA1, lettersToCol, parseA1, type RangeRef } from './refs.ts'
 import type { CellStyle, CfRule, ChartKind, ChartSpec, NumberFormat } from './model.ts'
-import { isFormulaInput, type Sheet } from './sheet.ts'
+import { compareValues, isFormulaInput, type Sheet, type SortDirection } from './sheet.ts'
 import { isError, toText, type CellValue } from './values.ts'
 
 export interface CheckResult {
@@ -104,6 +104,21 @@ export function usesFunction(...names: string[]): Check {
 
     const list = wanted.join(' oder ')
     return fail(`Verwende in ${target} die Funktion ${list}.`)
+  }
+}
+
+/** The function must appear at least this often — a nested WENN is two of them. */
+export function usesFunctionTimes(name: string, times: number, message?: string): Check {
+  const wanted = name.toUpperCase()
+  return ({ sheet, target }) => {
+    const ast = astOf(sheet, target)
+    if (!ast) return fail(`In ${target} steht keine gültige Formel.`)
+
+    let count = 0
+    walk(ast, (node) => {
+      if (node.type === 'call' && node.name === wanted) count++
+    })
+    return count >= times ? OK : fail(message ?? `Verwende in ${target} ${times}-mal ${wanted}.`)
   }
 }
 
@@ -472,9 +487,15 @@ export interface ChartRequirement {
   readonly kind: ChartKind
   /** The range the chart must read from — skill D6, and the part students get wrong. */
   readonly source: string
+  /** A separate range for the category names, marked with Strg. */
+  readonly labels?: string
   readonly title?: string
   readonly dataLabels?: ChartSpec['dataLabels']
   readonly axisTitles?: { readonly x?: string; readonly y?: string }
+}
+
+function sameRange(a: RangeRef, b: RangeRef): boolean {
+  return formatA1(a.start) === formatA1(b.start) && formatA1(a.end) === formatA1(b.end)
 }
 
 /**
@@ -498,13 +519,23 @@ export function hasChart(requirement: ChartRequirement): Check {
       )
     }
 
+    const wantedLabels = requirement.labels ? parseRangeText(requirement.labels) : null
+    if (requirement.labels && !wantedLabels) {
+      throw new Error(`Ungültiger Bereich „${requirement.labels}".`)
+    }
+
     const onRange = ofKind.filter(
       (chart) =>
-        formatA1(chart.source.start) === formatA1(wanted.start) &&
-        formatA1(chart.source.end) === formatA1(wanted.end),
+        sameRange(chart.source, wanted) &&
+        (!wantedLabels || (chart.labels !== undefined && sameRange(chart.labels, wantedLabels))),
     )
     if (onRange.length === 0) {
-      return fail(`Das ${name} muss die Daten aus ${requirement.source} verwenden.`)
+      return fail(
+        requirement.labels
+          ? `Das ${name} muss die Daten aus ${requirement.labels} und ${requirement.source} ` +
+              'verwenden. Markiere den zweiten Bereich mit gedrückter Strg-Taste.'
+          : `Das ${name} muss die Daten aus ${requirement.source} verwenden.`,
+      )
     }
 
     if (requirement.title !== undefined) {
@@ -537,6 +568,57 @@ export function hasChart(requirement: ChartRequirement): Check {
       if (!ok) return fail(`Beschrifte die Achsen des ${name}s.`)
     }
 
+    return OK
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sort checks (skill S2)                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The rows of `range` must be sorted by `column` — and still belong together.
+ *
+ * `original` lists the seeded rows, leftmost columns first. Without it nobody could tell a
+ * properly sorted table from one where the names stayed behind while the numbers moved.
+ */
+export function rowOrder(
+  range: string,
+  column: string,
+  direction: SortDirection,
+  original?: readonly (readonly (string | number)[])[],
+): Check {
+  return ({ sheet }) => {
+    const parsed = parseRangeText(range)
+    if (!parsed) throw new Error(`Ungültiger Bereich „${range}".`)
+
+    const left = Math.min(parsed.start.col, parsed.end.col)
+    const key = lettersToCol(column.toUpperCase())
+    const cells = expandRange(parsed)
+    const rowNumbers = [...new Set(cells.map((ref) => ref.row))]
+    const cell = (row: number, col: number) => sheet.getValue({ row, col, colAbs: false, rowAbs: false })
+
+    if (original) {
+      const textOf = (values: readonly CellValue[]) => values.map(toText).join('|').toUpperCase()
+      const expected = original.map(textOf)
+      for (const row of rowNumbers) {
+        const found = expected.indexOf(
+          textOf(original[0]!.map((_, offset) => cell(row, left + offset))),
+        )
+        if (found === -1) return fail('Du hast nur eine Spalte sortiert – markiere die ganze Tabelle.')
+        expected.splice(found, 1)
+      }
+    }
+
+    const sign = direction === 'asc' ? 1 : -1
+    for (const [index, row] of rowNumbers.entries()) {
+      const value = cell(row, key)
+      if (value === null) return fail(`${column}${row + 1} ist noch leer.`)
+      if (index > 0 && sign * compareValues(cell(rowNumbers[index - 1]!, key), value) > 0) {
+        const word = direction === 'asc' ? 'aufsteigend' : 'absteigend'
+        return fail(`Die Tabelle ist noch nicht ${word} nach Spalte ${column} sortiert.`)
+      }
+    }
     return OK
   }
 }

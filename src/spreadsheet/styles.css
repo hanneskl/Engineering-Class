@@ -108,6 +108,8 @@
 .sheet-pane .ribbon-row { display: flex; align-items: center; }
 .sheet-pane .rgroup { display: flex; align-items: center; gap: 2px; padding: 0 8px; }
 .sheet-pane .rgroup + .rgroup { border-left: 1px solid #e5e7eb; }
+.sheet-pane .rlabel { font-size: 12px; color: #4b5563; margin-right: 4px; white-space: nowrap; }
+.sheet-pane .tool:disabled { opacity: .4; cursor: default; }
 .sheet-pane .tool {
   display: inline-flex; align-items: center; justify-content: center; gap: 1px;
   min-width: 28px; height: 26px; padding: 0 5px;

@@ -1,4 +1,4 @@
-import { formatValue, toText, type ChartSpec, type Sheet } from '@quali/core'
+import { expandRange, formatValue, toText, type ChartSpec, type Sheet } from '@quali/core'
 
 /**
  * Excel's own Office accent colours.
@@ -26,6 +26,20 @@ export interface ChartData {
  * shapes appear in the corpus.
  */
 export function readChartData(sheet: Sheet, spec: ChartSpec): ChartData {
+  if (spec.labels) {
+    // Two separate ranges, paired cell by cell; a header row drops out for having no number.
+    const names = expandRange(spec.labels)
+    const data: { labels: string[]; values: number[] } = { labels: [], values: [] }
+    expandRange(spec.source).forEach((ref, index) => {
+      const value = sheet.getValue(ref)
+      if (typeof value !== 'number') return
+      const name = names[index]
+      data.labels.push(name ? toText(sheet.getValue(name)) : String(index + 1))
+      data.values.push(value)
+    })
+    return data
+  }
+
   const left = Math.min(spec.source.start.col, spec.source.end.col)
   const right = Math.max(spec.source.start.col, spec.source.end.col)
   const top = Math.min(spec.source.start.row, spec.source.end.row)

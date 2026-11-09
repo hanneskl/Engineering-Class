@@ -209,7 +209,19 @@ answer. The checker must:
 
 ## 6. Status
 
-Catalogue complete. No application code written yet.
+Catalogue complete. M10 has five scenarios, and these skills have a task in at least one of them:
+
+| Group | Skills with a task |
+|---|---|
+| Sheet | S1, **S2** |
+| Formatting | F1, F2, F3, F6, F12, F13, **F16**, F17 |
+| Calculation | C5, C7 |
+| Functions | N1, N2, N3, N4, **N5**, N6, **N7**, **N8**, N10, N11 |
+| Charts | **D1**, D3, D6, **D7**, **D9** |
+
+Bold ones arrived with the scenario `umsaetze` (briefing:
+`docs/briefing-m10-umsaetze.md`). D9 is checked there with values rather than
+percentages.
 
 ---
 

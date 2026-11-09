@@ -26,7 +26,7 @@ export const m10Tabellen: SheetLesson = {
     ],
   },
   quali:
-    'Datenverarbeitung ist ein volles Drittel der Prüfung, 30 von 90 Punkten. Geprüft werden fast jedes Jahr dieselben Dinge: SUMME, MITTELWERT, MAX, MIN, WENN, absolute Bezüge mit $, Prozent- und Währungsformat, Zellen verbinden, und ein Säulen- oder Kreisdiagramm.',
+    'Datenverarbeitung ist ein volles Drittel der Prüfung, 30 von 90 Punkten. Geprüft werden fast jedes Jahr dieselben Dinge: SUMME, MITTELWERT, MAX, MIN, WENN, ANZAHL, ZÄHLENWENN, absolute Bezüge mit $, Prozent- und Währungsformat, Zellen verbinden, Sortieren, und ein Säulen- oder Kreisdiagramm.',
   tasks: [
     {
       id: 't10.1',
@@ -70,6 +70,17 @@ export const m10Tabellen: SheetLesson = {
           'MITTELWERT, MAX und MIN funktionieren wie SUMME: Funktionsname, Klammer, Bereich. Der Niederschlag steht in Zeile 3, die Temperatur in Zeile 4 — jeweils von Spalte B bis M. Die bedingte Formatierung findest du im Menüband; markiere vorher den Bereich, für den die Regel gelten soll.',
         loesung:
           'Niederschlag gesamt =SUMME(B3:M3), Durchschnittstemperatur =MITTELWERT(B4:M4), höchste Temperatur =MAX(B4:M4), geringster Niederschlag =MIN(B3:M3). Die beiden Farbregeln legst du für B4:M4 an: kleiner als 5 blau, größer als 15 rot.',
+      },
+    },
+    {
+      id: 't10.5',
+      scenarioId: 'umsaetze',
+      hints: {
+        stups: 'Die Formeln zuerst, das Sortieren erst am Schluss. Eine Spalte Gesamt, die noch leer ist, kannst du nicht sortieren.',
+        hinweis:
+          'Beim Bonus gibt es drei Fälle, ein WENN kennt aber nur zwei. Darum steht im Sonst-Teil ein zweites WENN. ANZAHL zählt Zellen mit Zahlen, ZÄHLENWENN nur die Zellen, die zu einem Kriterium passen. Zum Sortieren markierst du die ganze Tabelle, sonst reißt du die Zeilen auseinander.',
+        loesung:
+          'Gesamt =SUMME(C4:E4), bis F11 herunterziehen. Summe =SUMME(C4:C11), bis F12 nach rechts ziehen. Bonus =WENN(F4>30000;300;WENN(F4>20000;100;0)), bis G11 herunterziehen. Anzahl =ANZAHL(F4:F11). Grafing =ZÄHLENWENN(B4:B11;"Grafing"). Zum Sortieren A3:G11 markieren, Spalte F wählen und absteigend sortieren. Fürs Diagramm A3:A11 markieren, mit gedrückter Strg-Taste F3:F11 dazu markieren und das Säulendiagramm einfügen.',
       },
     },
   ],

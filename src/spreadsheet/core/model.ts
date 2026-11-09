@@ -87,6 +87,11 @@ export interface ChartSpec {
   readonly kind: ChartKind
   /** Where the chart reads its data from — the thing D6 checks. */
   readonly source: RangeRef
+  /**
+   * Category names from a separate range — names in column A, totals in column F, marked with
+   * Strg in Excel. Absent when the labels sit inside `source`.
+   */
+  readonly labels?: RangeRef
   readonly title: string | null
   readonly axisTitles: { readonly x: string | null; readonly y: string | null }
   readonly dataLabels: 'none' | 'value' | 'percent'

@@ -7,10 +7,10 @@
 
 import { evaluateNode, type EvalScope } from './evaluate.ts'
 import { DEFAULT_STYLE, type Cell, type CellStyle, type CfRule, type ChartSpec } from './model.ts'
-import { ParseError, parseFormula, type Node } from './parser.ts'
+import { ParseError, parseFormula, translateInput, type Node } from './parser.ts'
 import { TokenizeError } from './tokenizer.ts'
 import { expandRange, formatA1, parseA1, refKey, type CellRef, type RangeRef } from './refs.ts'
-import { err, type CellValue } from './values.ts'
+import { err, isError, type CellValue } from './values.ts'
 
 export function isFormulaInput(input: string): boolean {
   return input.trimStart().startsWith('=')
@@ -31,6 +31,23 @@ export function parseLiteral(input: string): CellValue {
   }
 
   return input
+}
+
+export type SortDirection = 'asc' | 'desc'
+
+/** Excel's order for mixed columns: numbers, then text, then logical values, then errors. */
+function sortRank(value: CellValue): number {
+  if (typeof value === 'number') return 0
+  if (typeof value === 'string') return 1
+  if (typeof value === 'boolean') return 2
+  return isError(value) ? 3 : 4
+}
+
+/** Negative when `a` comes first in ascending order. Empty cells are not handled here. */
+export function compareValues(a: CellValue, b: CellValue): number {
+  if (typeof a === 'number' && typeof b === 'number') return a - b
+  if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b, 'de')
+  return sortRank(a) - sortRank(b)
 }
 
 export class Sheet {
@@ -184,6 +201,54 @@ export class Sheet {
       }
       throw error
     }
+  }
+
+  /**
+   * Sort the rows of a range by one column (skill S2). Whole rows travel, formatting included.
+   *
+   * Formulas behave as in Excel: a moved formula is translated by the distance its row moved,
+   * so references to its own row stay on that row and `$` references stay put. Empty cells go
+   * last in both directions, and rows with equal keys keep their order.
+   */
+  sortRows(range: RangeRef, column: number, direction: SortDirection): void {
+    const top = Math.min(range.start.row, range.end.row)
+    const bottom = Math.max(range.start.row, range.end.row)
+    const left = Math.min(range.start.col, range.end.col)
+    const right = Math.max(range.start.col, range.end.col)
+    const ref = (row: number, col: number): CellRef => ({ row, col, colAbs: false, rowAbs: false })
+
+    const rows: { row: number; key: CellValue; cells: (Cell | undefined)[] }[] = []
+    for (let row = top; row <= bottom; row++) {
+      const cells: (Cell | undefined)[] = []
+      for (let col = left; col <= right; col++) cells.push(this.cells.get(refKey(ref(row, col))))
+      rows.push({ row, key: this.getValue(ref(row, column)), cells })
+    }
+
+    const sign = direction === 'asc' ? 1 : -1
+    rows.sort((a, b) => {
+      if (a.key === null || b.key === null) return Number(a.key === null) - Number(b.key === null)
+      return sign * compareValues(a.key, b.key)
+    })
+
+    rows.forEach((source, offset) => {
+      const row = top + offset
+      source.cells.forEach((cell, index) => {
+        const key = refKey(ref(row, left + index))
+        if (cell) this.cells.set(key, { ...cell, input: translateInput(cell.input, row - source.row, 0) })
+        else this.cells.delete(key)
+      })
+    })
+    this.invalidate()
+  }
+
+  /** A first row holding only text is a header — a data row would have a number in it. */
+  hasHeaderRow(range: RangeRef): boolean {
+    const top = Math.min(range.start.row, range.end.row)
+    const first = expandRange(range)
+      .filter((ref) => ref.row === top)
+      .map((ref) => this.getValue(ref))
+      .filter((value) => value !== null)
+    return first.length > 0 && first.every((value) => typeof value === 'string')
   }
 
   /** Merge a range (skill F1). Merging an already-merged range is a no-op. */

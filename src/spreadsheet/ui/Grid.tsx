@@ -27,6 +27,9 @@ interface GridProps {
   rows: number
   selection: Selection
   onSelectionChange: (selection: Selection) => void
+  /** What was already marked when Strg was held for a further range. */
+  secondRange: Rect | null
+  onSecondRangeChange: (range: Rect | null) => void
   edit: EditState | null
   onEditChange: (edit: EditState | null) => void
   onCommit: (a1: string, input: string) => void
@@ -121,6 +124,8 @@ export function Grid(props: GridProps) {
     if (event.shiftKey) {
       onSelectionChange({ anchor: selection.anchor, focus: pos })
     } else {
+      // Strg keeps what is marked as a second range — one is all a chart ever needs.
+      props.onSecondRangeChange(event.ctrlKey || event.metaKey ? rect : null)
       onSelectionChange(single(pos))
     }
     setDrag({ kind: 'select' })
@@ -147,6 +152,7 @@ export function Grid(props: GridProps) {
     const row = Math.min(Math.max(from.row + dRow, 0), rows - 1)
     const col = Math.min(Math.max(from.col + dCol, 0), columns - 1)
     const pos = { row, col }
+    if (!extend) props.onSecondRangeChange(null)
     onSelectionChange(extend ? { anchor: selection.anchor, focus: pos } : single(pos))
   }
 
@@ -231,7 +237,9 @@ export function Grid(props: GridProps) {
                   const isHandle = row === rect.bottom && col === rect.right
 
                   const classes = ['cell']
-                  if (inRange) classes.push('in-range')
+                  if (inRange || (props.secondRange && rectContains(props.secondRange, pos))) {
+                    classes.push('in-range')
+                  }
                   if (isAnchor) classes.push('anchor')
                   if (fillPreview && rectContains(fillPreview, pos)) classes.push('fill-preview')
                   if (props.copiedRect && rectContains(props.copiedRect, pos)) classes.push('copied')

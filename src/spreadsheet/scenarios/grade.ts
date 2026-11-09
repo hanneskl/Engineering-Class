@@ -7,8 +7,10 @@
  */
 
 import {
+  expandRange,
   formatA1,
   parseA1,
+  refKey,
   runChecks,
   Sheet,
   type CellStyle,
@@ -60,13 +62,17 @@ export function taskById(scenario: Scenario, taskId: string): TaskDef {
  * stops a crafted request from rewriting the source numbers so that a wrong answer becomes
  * "correct" — the answer key is a formula evaluated against this same data, so tampering with
  * the data would otherwise move the target as well.
+ *
+ * The one exception is a scenario's `sortable` range, where seeded cells may change place: see
+ * `movedBySorting`.
  */
 export function rebuildSheet(scenario: Scenario, submission: Omit<Submission, 'scenarioId' | 'taskId'>): Sheet {
   const sheet = scenario.seed()
   const seeded = new Set(sheet.populatedCells())
+  const moved = movedBySorting(scenario, sheet, submission.inputs)
 
   for (const [a1, input] of Object.entries(submission.inputs)) {
-    if (seeded.has(a1.toUpperCase())) continue
+    if (seeded.has(a1.toUpperCase()) && !moved.has(a1.toUpperCase())) continue
     sheet.setInput(a1, input)
   }
   for (const [a1, style] of Object.entries(submission.styles ?? {})) {
@@ -84,6 +90,34 @@ export function rebuildSheet(scenario: Scenario, submission: Omit<Submission, 's
   }
   if (submission.sheetName) sheet.name = submission.sheetName
   return sheet
+}
+
+/**
+ * The seeded cells a student may legitimately have moved by sorting.
+ *
+ * Sorting rewrites seeded cells, which the re-seeding rule above would otherwise throw away.
+ * It is accepted only if every column of the range still holds exactly its seeded values, just
+ * in another order, so no number can be altered this way. Columns are compared one by one on
+ * purpose: rows torn apart by a half-marked sort must reach the checker, whose message is the
+ * teaching.
+ */
+function movedBySorting(
+  scenario: Scenario,
+  seed: Sheet,
+  inputs: Readonly<Record<string, string>>,
+): Set<string> {
+  const range = scenario.sortable ? parseRange(scenario.sortable) : null
+  if (!range) return new Set()
+
+  const cells = expandRange(range)
+  const given = new Map(Object.entries(inputs).map(([a1, input]) => [a1.toUpperCase(), input]))
+  for (const col of new Set(cells.map((ref) => ref.col))) {
+    const inColumn = cells.filter((ref) => ref.col === col)
+    const before = inColumn.map((ref) => seed.getInput(ref)).sort()
+    const after = inColumn.map((ref) => given.get(refKey(ref)) ?? '').sort()
+    if (before.join('\n') !== after.join('\n')) return new Set()
+  }
+  return new Set(cells.map(refKey))
 }
 
 function parseRange(text: string): RangeRef | null {

@@ -1,4 +1,5 @@
 import {
+  colToLetters,
   DEFAULT_STYLE,
   formatValue,
   translateInput,
@@ -6,7 +7,9 @@ import {
   type CfRule,
   type ChartKind,
   type NumberFormat,
+  type RangeRef,
   type Sheet,
+  type SortDirection,
 } from '@quali/core'
 import {
   rebuildSheet,
@@ -34,6 +37,13 @@ import {
 
 /** Everything the student has typed, formatted and drawn — what gets graded. */
 export type Work = Omit<Submission, 'scenarioId' | 'taskId'>
+
+function toRange(rect: Rect): RangeRef {
+  return {
+    start: { row: rect.top, col: rect.left, colAbs: false, rowAbs: false },
+    end: { row: rect.bottom, col: rect.right, colAbs: false, rowAbs: false },
+  }
+}
 
 interface Clipboard {
   readonly rect: Rect
@@ -84,6 +94,7 @@ export function SheetEditor({
 
   const [revision, setRevision] = useState(0)
   const [selection, setSelection] = useState<Selection>(single({ row: 0, col: 0 }))
+  const [secondRange, setSecondRange] = useState<Rect | null>(null)
   const [edit, setEdit] = useState<EditState | null>(null)
   const [clipboard, setClipboard] = useState<Clipboard | null>(null)
   const [renamingTab, setRenamingTab] = useState(false)
@@ -99,6 +110,7 @@ export function SheetEditor({
   // over so the student is not left selecting a cell from the sheet they just left.
   useEffect(() => {
     setSelection(single({ row: 0, col: 0 }))
+    setSecondRange(null)
     setEdit(null)
     setClipboard(null)
   }, [scenarioId])
@@ -266,15 +278,31 @@ export function SheetEditor({
     touch()
   }
 
-  /** Insert a chart reading the current selection — Excel's "Einfügen → Diagramm". */
+  /** Sort the selection by one column; a header row stays where it is. */
+  function sort(col: number, direction: SortDirection): void {
+    const range = toRange(rect)
+    sheet.sortRows(
+      sheet.hasHeaderRow(range) ? toRange({ ...rect, top: rect.top + 1 }) : range,
+      col,
+      direction,
+    )
+    touch()
+  }
+
+  /**
+   * Insert a chart reading the current selection — Excel's "Einfügen → Diagramm". With a second
+   * range marked, the one without numbers names the columns, in whichever order they were
+   * marked; if that does not settle it, the first-marked does, as in Excel.
+   */
   function insertChart(kind: ChartKind): void {
+    const hasNumbers = (range: Rect) =>
+      cellsOf(range).some((pos) => typeof sheet.getValue(toA1(pos)) === 'number')
+    const swapped = secondRange !== null && hasNumbers(secondRange) && !hasNumbers(rect)
     sheet.addChart({
       id: `chart-${Date.now()}`,
       kind,
-      source: {
-        start: { row: rect.top, col: rect.left, colAbs: false, rowAbs: false },
-        end: { row: rect.bottom, col: rect.right, colAbs: false, rowAbs: false },
-      },
+      source: toRange(swapped ? secondRange : rect),
+      ...(secondRange ? { labels: toRange(swapped ? rect : secondRange) } : {}),
       title: null,
       axisTitles: { x: null, y: null },
       dataLabels: kind === 'pie' ? 'percent' : 'none',
@@ -336,9 +364,17 @@ export function SheetEditor({
             onInsertChart={insertChart}
             onConditionalFormat={addConditionalFormat}
             onClearConditionalFormats={() => { sheet.clearConditionalFormats(); touch() }}
+            sortColumns={Array.from({ length: rect.right - rect.left + 1 }, (_, offset) => ({
+              col: rect.left + offset,
+              label: colToLetters(rect.left + offset),
+            }))}
+            canSort={rect.bottom > rect.top}
+            onSort={sort}
           />
           <div className="formula-bar">
-            <span className="address">{rectLabel(rect)}</span>
+            <span className="address">
+              {secondRange ? `${rectLabel(secondRange)}; ${rectLabel(rect)}` : rectLabel(rect)}
+            </span>
             <input
               className="formula-input"
               value={barValue}
@@ -420,6 +456,8 @@ export function SheetEditor({
             rows={scenario.rows}
             selection={selection}
             onSelectionChange={setSelection}
+            secondRange={secondRange}
+            onSecondRangeChange={setSecondRange}
             edit={edit}
             onEditChange={setEdit}
             onCommit={commit}
@@ -473,7 +511,8 @@ export function SheetEditor({
 
           <p className="hint">
             Ziehen am kleinen Quadrat unten rechts füllt die Formel weiter · Strg+C / Strg+V
-            kopiert und fügt ein · beim Schreiben einer Formel fügt ein Klick auf eine Zelle
+            kopiert und fügt ein · mit gedrückter Strg-Taste markierst du einen zweiten Bereich ·
+            beim Schreiben einer Formel fügt ein Klick auf eine Zelle
             deren Bezug ein
           </p>
     </div>

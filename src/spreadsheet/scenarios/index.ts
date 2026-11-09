@@ -16,8 +16,10 @@ import {
   isMerged,
   matchesSolution,
   numberFormatIs,
+  rowOrder,
   sheetNamed,
   usesFunction,
+  usesFunctionTimes,
   usesOperator,
   valueEquals,
   type Check,
@@ -44,6 +46,8 @@ export interface Scenario {
   readonly columns: number
   readonly rows: number
   readonly seed: () => Sheet
+  /** Seeded cells a sort may rearrange, as `"A4:E11"`. See `rebuildSheet`. */
+  readonly sortable?: string
   readonly tasks: readonly TaskDef[]
 }
 
@@ -245,6 +249,7 @@ export const PALETTE = {
   gelb: '#fff2cc',
   rot: '#f4cccc',
   gruen: '#d9ead3',
+  blau: '#1d4ed8',
   weiss: '#ffffff',
   schwarz: '#000000',
 } as const
@@ -486,7 +491,176 @@ const klima: Scenario = {
   ],
 }
 
-export const SCENARIOS: readonly Scenario[] = [smvWahl, felderBerechnen, vermoegen, klima]
+/* -------------------------------------------------------------------------- */
+/* Umsätze und Bonus — Quali-Typ 2022/2023.                                    */
+/* The totals hit every branch of the bonus: 300, 100 and 0.                   */
+/* -------------------------------------------------------------------------- */
+
+const SALES: readonly (readonly [string, string, number, number, number])[] = [
+  ['Huber', 'Grafing', 9800, 11200, 10500],
+  ['Maier', 'Moosach', 7200, 6900, 8100],
+  ['Schneider', 'Ebersberg', 5400, 6100, 5800],
+  ['Kovač', 'Grafing', 8800, 9400, 7900],
+  ['Bauer', 'Moosach', 10200, 9900, 11300],
+  ['Neumann', 'Ebersberg', 6600, 7100, 6200],
+  ['Wagner', 'Grafing', 4900, 5200, 6100],
+  ['Petrović', 'Moosach', 7700, 8300, 9100],
+]
+
+const BONUS = '=WENN(F4>30000;300;WENN(F4>20000;100;0))'
+
+const umsaetze: Scenario = {
+  id: 'umsaetze',
+  titleDe: 'Umsätze und Bonus',
+  subtitleDe: 'Quali-Typ 2022/2023 · Datenverarbeitung',
+  columns: 7,
+  rows: 15,
+  sortable: 'A4:E11',
+  seed() {
+    const sheet = new Sheet('Umsätze')
+    sheet.load({
+      A3: 'Name', B3: 'Filiale', C3: 'Januar', D3: 'Februar', E3: 'März', F3: 'Gesamt', G3: 'Bonus',
+      A12: 'Summe',
+      A14: 'Anzahl Mitarbeiter',
+      A15: 'Mitarbeiter in Grafing',
+    })
+    SALES.forEach(([name, filiale, januar, februar, maerz], index) => {
+      const row = index + 4
+      sheet.load({
+        [`A${row}`]: name, [`B${row}`]: filiale,
+        [`C${row}`]: januar, [`D${row}`]: februar, [`E${row}`]: maerz,
+      })
+    })
+    for (const column of 'ABCDEFG') sheet.setStyle(`${column}3`, { bold: true })
+    return sheet
+  },
+  tasks: [
+    {
+      id: 'ums-titel',
+      skills: ['F1'],
+      promptDe: 'Verbinde und zentriere die Zellen A1 - G1 und füge dort die Überschrift „Umsätze 1. Quartal" ein.',
+      target: 'A1',
+      checks: [
+        valueEquals('Umsätze 1. Quartal'),
+        isMerged('A1:G1'),
+        hasStyle({ hAlign: 'center' }, 'A1'),
+      ],
+      points: 1,
+    },
+    {
+      id: 'ums-gesamt',
+      skills: ['N1'],
+      promptDe: 'Berechne in F4 den Gesamtumsatz des ersten Mitarbeiters und ziehe die Formel bis F11 herunter.',
+      target: 'F4',
+      solution: '=SUMME(C4:E4)',
+      checks: [
+        isFormula(),
+        usesFunction('SUMME'),
+        matchesSolution(),
+        filledDown('F4:F11', '=SUMME(C4:E4)'),
+      ],
+      points: 1,
+    },
+    {
+      id: 'ums-summe',
+      skills: ['N1'],
+      promptDe: 'Berechne in C12 bis F12 die Summen der Spalten. Ziehe die Formel nach rechts.',
+      target: 'C12',
+      solution: '=SUMME(C4:C11)',
+      checks: [
+        isFormula(),
+        usesFunction('SUMME'),
+        matchesSolution(),
+        filledDown('C12:F12', '=SUMME(C4:C11)'),
+      ],
+      points: 1,
+    },
+    {
+      id: 'ums-bonus',
+      skills: ['N7'],
+      promptDe:
+        'Berechne in G4 den Bonus und ziehe die Formel bis G11 herunter: Bei einem ' +
+        'Gesamtumsatz über 30 000 € gibt es 300 €, über 20 000 € gibt es 100 €, sonst 0 €.',
+      target: 'G4',
+      solution: BONUS,
+      checks: [
+        isFormula(),
+        usesFunction('WENN'),
+        usesFunctionTimes('WENN', 2, 'Es gibt drei Fälle – du brauchst ein zweites WENN im Sonst-Teil.'),
+        matchesSolution(),
+        filledDown('G4:G11', BONUS),
+      ],
+      points: 2,
+    },
+    {
+      id: 'ums-anzahl',
+      skills: ['N5'],
+      promptDe: 'Berechne in B14, wie viele Mitarbeiter Umsätze haben. Verwende die Funktion ANZAHL.',
+      target: 'B14',
+      solution: '=ANZAHL(F4:F11)',
+      checks: [isFormula(), usesFunction('ANZAHL'), matchesSolution()],
+      points: 1,
+    },
+    {
+      id: 'ums-grafing',
+      skills: ['N8'],
+      promptDe: 'Berechne in B15, wie viele Mitarbeiter in Grafing arbeiten. Verwende die Funktion ZÄHLENWENN.',
+      target: 'B15',
+      solution: '=ZÄHLENWENN(B4:B11;"Grafing")',
+      checks: [isFormula(), usesFunction('ZÄHLENWENN'), matchesSolution()],
+      points: 1,
+    },
+    {
+      id: 'ums-euro',
+      skills: ['F12'],
+      promptDe: 'Formatiere die Zellen C4 - G12 als Währung Euro ohne Nachkommastellen.',
+      target: 'C4',
+      checks: [
+        numberFormatIs({ kind: 'currency', decimals: 0, symbol: '€', negativeRed: false }, 'C4:G12'),
+      ],
+      points: 1,
+    },
+    {
+      id: 'ums-filiale',
+      skills: ['F16'],
+      promptDe: 'Lege für B4 - B11 eine bedingte Formatierung an: Steht dort „Grafing", soll die Schrift blau sein.',
+      target: 'B4',
+      checks: [
+        hasConditionalFormat('B4:B11', { kind: 'equalText', text: 'Grafing' }, { color: PALETTE.blau }),
+      ],
+      points: 1,
+    },
+    {
+      id: 'ums-sortieren',
+      skills: ['S2'],
+      promptDe: 'Sortiere die Tabelle A3:G11 nach dem Gesamtumsatz absteigend.',
+      target: 'F4',
+      checks: [rowOrder('A4:G11', 'F', 'desc', SALES)],
+      points: 1,
+    },
+    {
+      id: 'ums-diagramm',
+      skills: ['D1', 'D7', 'D9'],
+      promptDe:
+        'Erstelle ein Säulendiagramm mit dem Gesamtumsatz pro Mitarbeiter (A3:A11 und F3:F11, ' +
+        'den zweiten Bereich mit gedrückter Strg-Taste markieren), dem Titel „Umsatz 1. Quartal" ' +
+        'und Datenbeschriftungen mit Werten.',
+      target: 'F3',
+      checks: [
+        hasChart({
+          kind: 'column',
+          source: 'F3:F11',
+          labels: 'A3:A11',
+          title: 'Umsatz 1. Quartal',
+          dataLabels: 'value',
+        }),
+      ],
+      points: 2,
+    },
+  ],
+}
+
+export const SCENARIOS: readonly Scenario[] = [smvWahl, felderBerechnen, vermoegen, klima, umsaetze]
 
 export function scenarioById(id: string): Scenario {
   const found = SCENARIOS.find((scenario) => scenario.id === id)
