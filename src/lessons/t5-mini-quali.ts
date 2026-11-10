@@ -2,7 +2,7 @@ import type { TestLesson, TestTask } from '../model/types'
 import type { Option } from '../model/frage'
 
 /**
- * Mini-Quali Teil A — sixteen questions across M1 to M6, for the stocktake
+ * Mini-Quali Teil A — sixteen questions across M1 to M5, for the stocktake
  * after the autumn holidays (Downloads briefing „Mini-Quali"). Four of them
  * (t5-07 … t5-10) are Knobelfragen on things the class looks at closely
  * right afterwards. Teil B is the spreadsheet lesson t6; Teil C, the Scratch
@@ -46,7 +46,7 @@ const TASKS: TestTask[] = [
     ok('Er verbindet Geräte im selben Netz per Kabel und schickt jedes Paket nur an das richtige Gerät', 'Richtig — der Switch verteilt innerhalb deines Netzes, gezielt an das Gerät, für das ein Paket bestimmt ist.'),
     no('Er verbindet das Netz mit dem Internet', 'Das ist der Router. Der Switch bleibt im eigenen Netz.'),
     no('Er verstärkt das WLAN', 'Das ist der Repeater. Der Switch verbindet Geräte per Kabel.'),
-    no('Er übersetzt Namen in IP-Adressen', 'Das ist DNS. Der Switch verteilt Pakete im eigenen Netz.'),
+    no('Er zeigt die Webseiten an', 'Das macht der Browser. Der Switch verteilt Pakete im eigenen Netz.'),
   ]),
   frage('t5-04', 'Was ist der Unterschied zwischen LAN und WLAN?', [
     ok('LAN geht über Kabel, WLAN über Funk', 'Genau — das W steht für „wireless“, also kabellos.'),
@@ -84,13 +84,13 @@ const TASKS: TestTask[] = [
   ]),
   frage('t5-09', 'Knobelfrage: Welche Adresse gibt es nur im Heimnetz (private Adresse)?', [
     ok('192.168.0.15', 'Richtig — private Adressen gibt es in drei Bereichen: 10.…, 172.16.… bis 172.31.… und 192.168.….'),
-    no('8.8.8.8', 'Das ist der öffentliche DNS-Server von Google. Privat ist 192.168.0.15.'),
+    no('8.8.8.8', 'Das ist ein öffentlicher Server von Google. Privat ist 192.168.0.15.'),
     no('185.15.59.224', 'Das ist Wikipedia, im Internet erreichbar. Privat ist 192.168.0.15.'),
     no('142.250.185.78', 'Das ist ein Google-Server im Internet. Privat ist 192.168.0.15.'),
   ]),
   frage('t5-10', 'Knobelfrage: Wer gibt im Heimnetz den Geräten automatisch ihre IP-Adresse?', [
     ok('Der Router (DHCP)', 'Genau — der Router vergibt sie per DHCP. Drucker und Server bekommen oft eine feste (statische) Adresse, damit man sie immer wiederfindet.'),
-    no('Der DNS-Server', 'Der übersetzt nur Namen in Adressen. Vergeben tut sie der Router per DHCP.'),
+    no('Der Drucker', 'Der ist nur ein Gerät im Netz. Die Adressen vergibt der Router per DHCP.'),
     no('Der Switch', 'Der Switch leitet nur weiter. Die Adressen vergibt der Router per DHCP.'),
     no('Jedes Gerät denkt sich selbst eine aus', 'Dann gäbe es doppelte Adressen. Deshalb vergibt sie der Router zentral per DHCP.'),
   ]),
@@ -114,23 +114,23 @@ const TASKS: TestTask[] = [
     ]),
     ausschnitt: IPCONFIG,
   },
-  frage('t5-13', 'Was macht der DNS-Server?', [
-    ok('Er übersetzt Namen wie wikipedia.org in die IP-Adresse', 'Richtig — wie ein Telefonbuch: Name rein, Nummer raus.'),
-    no('Er speichert alle Webseiten', 'Das machen die Webserver. Der DNS-Server übersetzt Namen in IP-Adressen.'),
-    no('Er verschlüsselt die Verbindung', 'Das macht https. Der DNS-Server übersetzt Namen in IP-Adressen.'),
-    no('Er gibt den Geräten im Heimnetz ihre Adresse', 'Das macht der Router per DHCP. Der DNS-Server übersetzt Namen.'),
+  frage('t5-13', 'ping zeigt: „Zeitüberschreitung der Anforderung.“ Was heißt das?', [
+    ok('Das Ziel hat nicht geantwortet, es ist gerade nicht erreichbar', 'Richtig — ping hat gefragt, aber keine Antwort bekommen.'),
+    no('Alles ist in Ordnung', 'Keine Antwort ist ein Problem: Das Ziel ist gerade nicht erreichbar.'),
+    no('Der eigene PC hat keine IP-Adresse', 'Das zeigt ipconfig. Zeitüberschreitung heißt: Das Ziel hat nicht geantwortet.'),
+    no('Die Leitung ist zu schnell', 'Das gibt es nicht. Zeitüberschreitung heißt: Das Ziel hat nicht geantwortet.'),
   ]),
-  frage('t5-14', 'Was bedeutet das „s“ in https?', [
-    ok('Die Verbindung ist verschlüsselt, Mitlesende sehen nur Zeichensalat', 'Genau — s steht für „secure“: Unterwegs kann niemand mitlesen.'),
-    no('Die Seite ist frei von Viren', 'https schützt nur den Weg, nicht den Inhalt. Es heißt: Die Verbindung ist verschlüsselt.'),
-    no('Die Seite lädt schneller', 's heißt „secure“, nicht „speed“. Die Verbindung ist verschlüsselt.'),
-    no('Der Staat hat die Seite geprüft', 'Jede Seite kann https haben. Es heißt nur: Die Verbindung ist verschlüsselt.'),
+  frage('t5-14', 'Welcher Befehl listet die anderen Geräte im Netz mit ihrer MAC-Adresse?', [
+    ok('arp -a', 'Genau — arp -a zeigt die Nachbarn im Netz mit IP- und MAC-Adresse.'),
+    no('ipconfig', 'ipconfig zeigt nur das eigene Gerät. Die Nachbarn zeigt arp -a.'),
+    no('ping', 'ping fragt ein einzelnes Ziel. Alle Nachbarn zeigt arp -a.'),
+    no('tracert', 'tracert zeigt den Weg ins Internet. Die Nachbarn zeigt arp -a.'),
   ]),
-  frage('t5-15', 'Welche Reihenfolge stimmt, wenn du eine Webseite aufrufst?', [
-    ok('Adresse eintippen → DNS fragen → Anfrage an den Webserver → Seite kommt zurück', 'Richtig — erst den Namen in eine IP übersetzen, dann den Webserver fragen, dann kommt die Seite.'),
-    no('Adresse eintippen → Anfrage an den Webserver → DNS fragen → Seite kommt zurück', 'Ohne DNS weiß der Browser die IP noch nicht — er kann den Webserver noch gar nicht fragen.'),
-    no('DNS fragen → Adresse eintippen → Anfrage an den Webserver → Seite kommt zurück', 'Der DNS-Server kann erst übersetzen, wenn du die Adresse eingetippt hast.'),
-    no('Adresse eintippen → DNS fragen → Seite kommt zurück → Anfrage an den Webserver', 'Die Seite kommt erst, nachdem der Browser den Webserver gefragt hat.'),
+  frage('t5-15', 'Welche Station steht bei tracert google.com ganz oben, an Nummer 1?', [
+    ok('Der eigene Router (Standardgateway)', 'Richtig — jedes Paket ins Internet geht zuerst durch deinen Router.'),
+    no('google.com', 'Das Ziel steht ganz unten. Ganz oben steht der eigene Router.'),
+    no('Der eigene PC', 'Der PC schickt los, er zählt nicht als Station. Nummer 1 ist der Router.'),
+    no('Der Switch', 'Switches tauchen bei tracert nicht auf. Nummer 1 ist der Router.'),
   ]),
   frage('t5-16', 'Warum wird eine große Datei in viele kleine Pakete zerlegt?', [
     ok('Kleine Pakete reisen einzeln; geht eins verloren, wird nur dieses neu geschickt', 'Genau — so muss nicht die ganze Datei noch einmal los, wenn unterwegs etwas fehlt.'),
@@ -145,7 +145,7 @@ export const t5MiniQuali: TestLesson = {
   id: 't5',
   module: 'T5',
   title: 'Mini-Quali Teil A',
-  quali: 'Alles aus M1 bis M6 auf einmal – so gemischt kommt es auch in der Quali.',
+  quali: 'Alles aus M1 bis M5 auf einmal – so gemischt kommt es auch in der Quali.',
   intro: {
     heading: 'Mini-Quali: Wo stehst du?',
     body: [
