@@ -223,6 +223,9 @@ Bold ones arrived with the scenario `umsaetze` (briefing:
 `docs/briefing-m10-umsaetze.md`). D9 is checked there with values rather than
 percentages.
 
+A sixth scenario, `klassenfahrt`, is not part of M10: it is Mini-Quali Teil B (lesson `t6`), a
+short practice of the basics — SUMME, a $-reference, WENN and conditional formatting.
+
 ---
 
 ## Running it

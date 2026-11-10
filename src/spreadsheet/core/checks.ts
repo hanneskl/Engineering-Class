@@ -140,7 +140,7 @@ export function usesOperator(op: string): Check {
  * The formula must pin a reference with `$`. When `a1` is given, that specific cell must be
  * fully absolute — this is skill C5, „Absoluter Bezug auf $B$8 ist Pflicht".
  */
-export function hasAbsoluteRef(a1?: string): Check {
+export function hasAbsoluteRef(a1?: string, message?: string): Check {
   const wanted = a1 ? parseA1(a1) : null
   return ({ sheet, target }) => {
     const ast = astOf(sheet, target)
@@ -159,6 +159,7 @@ export function hasAbsoluteRef(a1?: string): Check {
       }
     })
     if (found) return OK
+    if (message) return fail(message)
 
     return fail(
       wanted

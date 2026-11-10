@@ -660,7 +660,101 @@ const umsaetze: Scenario = {
   ],
 }
 
-export const SCENARIOS: readonly Scenario[] = [smvWahl, felderBerechnen, vermoegen, klima, umsaetze]
+/* -------------------------------------------------------------------------- */
+/* Klassenfahrt-Kasse — Mini-Quali Teil B: SUMME, $-Bezug, WENN, bedingte     */
+/* Formatierung. Rest 0 · 40 · 0 · 120 · 60 · 0 · 20 · 0, Summen 720 und 240. */
+/* -------------------------------------------------------------------------- */
+
+const STATUS = '=WENN(C5>0;"offen";"bezahlt")'
+
+const klassenfahrt: Scenario = {
+  id: 'klassenfahrt',
+  titleDe: 'Klassenfahrt-Kasse',
+  subtitleDe: 'Mini-Quali · Datenverarbeitung',
+  columns: 4,
+  rows: 13,
+  seed() {
+    const sheet = new Sheet('Klassenfahrt')
+    sheet.load({
+      A1: 'Klassenfahrt nach Berlin',
+      A2: 'Preis pro Person', B2: 120,
+      A4: 'Name', B4: 'Bezahlt', C4: 'Rest', D4: 'Status',
+      A5: 'Lena', B5: 120,
+      A6: 'Felix', B6: 80,
+      A7: 'Sophie', B7: 120,
+      A8: 'Jonas', B8: 0,
+      A9: 'Mia', B9: 60,
+      A10: 'Ben', B10: 120,
+      A11: 'Anna', B11: 100,
+      A12: 'Paul', B12: 120,
+      A13: 'Summe',
+    })
+    for (const a1 of ['A4', 'B4', 'C4', 'D4']) sheet.setStyle(a1, { bold: true })
+    return sheet
+  },
+  tasks: [
+    {
+      id: 'kf-summe',
+      skills: ['N1'],
+      promptDe: 'Berechne in B13 und C13 die Summen. Ziehe die Formel nach rechts.',
+      target: 'B13',
+      solution: '=SUMME(B5:B12)',
+      checks: [
+        isFormula(),
+        usesFunction('SUMME'),
+        matchesSolution(),
+        filledDown('B13:C13', '=SUMME(B5:B12)'),
+      ],
+      points: 1,
+    },
+    {
+      id: 'kf-rest',
+      skills: ['C5'],
+      promptDe:
+        'Berechne in C5, wie viel noch fehlt: Preis pro Person minus Bezahlt. ' +
+        'Ziehe die Formel bis C12 herunter.',
+      target: 'C5',
+      solution: '=$B$2-B5',
+      checks: [
+        isFormula(),
+        hasAbsoluteRef('B2', 'Beim Runterziehen rutscht B2 mit nach unten. Mit $B$2 bleibt der Preis fest.'),
+        matchesSolution(),
+        filledDown('C5:C12', '=$B$2-B5'),
+      ],
+      points: 2,
+    },
+    {
+      id: 'kf-status',
+      skills: ['N6'],
+      promptDe:
+        'Schreibe in D5 „offen", wenn noch etwas fehlt, sonst „bezahlt". Ziehe die Formel bis D12 herunter.',
+      target: 'D5',
+      solution: STATUS,
+      checks: [isFormula(), usesFunction('WENN'), matchesSolution(), filledDown('D5:D12', STATUS)],
+      points: 2,
+    },
+    {
+      id: 'kf-farbe',
+      skills: ['F17'],
+      promptDe:
+        'Lege für D5 - D12 eine bedingte Formatierung an: Steht dort „offen", soll die Zelle hellrot gefüllt sein.',
+      target: 'D5',
+      checks: [
+        hasConditionalFormat('D5:D12', { kind: 'equalText', text: 'offen' }, { fill: PALETTE.rot }),
+      ],
+      points: 1,
+    },
+  ],
+}
+
+export const SCENARIOS: readonly Scenario[] = [
+  smvWahl,
+  felderBerechnen,
+  vermoegen,
+  klima,
+  umsaetze,
+  klassenfahrt,
+]
 
 export function scenarioById(id: string): Scenario {
   const found = SCENARIOS.find((scenario) => scenario.id === id)

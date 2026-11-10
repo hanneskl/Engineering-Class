@@ -48,8 +48,12 @@ export function Home({
     [lessons, progress],
   )
 
-  const exercises = cards.filter((c) => c.lesson.kind !== 'test')
-  const tests = cards.filter((c) => c.lesson.kind === 'test')
+  // A T badge marks a test, including Mini-Quali Teil B, which is a spreadsheet
+  // task but belongs beside Teil A rather than among the exercises.
+  const isTest = (lesson: (typeof cards)[number]['lesson']) =>
+    lesson.kind === 'test' || lesson.module.startsWith('T')
+  const exercises = cards.filter((c) => !isTest(c.lesson))
+  const tests = cards.filter((c) => isTest(c.lesson))
   const shown = tab === 'tests' ? tests : exercises
 
   const totalSolved = exercises.reduce((n, c) => n + c.stats.solved, 0)

@@ -12,6 +12,8 @@ import { m10Tabellen } from './m10-tabellen'
 import { t1TestM1 } from './t1-test-m1'
 import { t2TestM2 } from './t2-test-m2'
 import { t3TestM3 } from './t3-test-m3'
+import { t5MiniQuali } from './t5-mini-quali'
+import { t6MiniQuali } from './t6-mini-quali'
 
 /**
  * Lessons are content, deliberately kept clear of the engine (ARCHITECTURE.md
@@ -30,6 +32,9 @@ import { t3TestM3 } from './t3-test-m3'
  * that day.
  */
 export const LESSONS: Lesson[] = [
+  // Mini-Quali nach den Herbstferien: Teil A (Fragen) und Teil B (Tabelle).
+  t5MiniQuali,
+  t6MiniQuali,
   t3TestM3,
   t2TestM2,
   t1TestM1,

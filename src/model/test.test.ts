@@ -21,8 +21,8 @@ const wrong = (task: typeof first) => task.frage.optionen.findIndex((o) => !o.ok
 const TESTS = LESSONS.filter((l): l is TestLesson => l.kind === 'test')
 
 describe.each(TESTS.map((t) => [t.title, t] as const))('%s content', (_, test) => {
-  it('has twelve questions, each with exactly one right option and a warum on every option', () => {
-    expect(test.tasks).toHaveLength(12)
+  it('has its questions, each with exactly one right option and a warum on every option', () => {
+    expect(test.tasks).toHaveLength(test.id === 't5' ? 16 : 12)
     for (const t of test.tasks) {
       expect(t.frage.optionen.filter((o) => o.ok)).toHaveLength(1)
       for (const o of t.frage.optionen) expect(o.warum.length).toBeGreaterThan(10)
@@ -32,7 +32,7 @@ describe.each(TESTS.map((t) => [t.title, t] as const))('%s content', (_, test) =
 
 describe('test modules', () => {
   it('are all found — the content checks above run on every one', () => {
-    expect(TESTS.map((t) => t.id)).toEqual(expect.arrayContaining(['t1', 't2', 't3']))
+    expect(TESTS.map((t) => t.id)).toEqual(expect.arrayContaining(['t1', 't2', 't3', 't5']))
   })
 
   it('use globally unique task ids, across every test', () => {
