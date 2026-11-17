@@ -32,7 +32,7 @@ describe.each(TESTS.map((t) => [t.title, t] as const))('%s content', (_, test) =
 
 describe('test modules', () => {
   it('are all found — the content checks above run on every one', () => {
-    expect(TESTS.map((t) => t.id)).toEqual(expect.arrayContaining(['t1', 't2', 't3', 't5']))
+    expect(TESTS.map((t) => t.id)).toEqual(expect.arrayContaining(['t1', 't2', 't3', 't4', 't5']))
   })
 
   it('use globally unique task ids, across every test', () => {

@@ -12,6 +12,7 @@ import { m10Tabellen } from './m10-tabellen'
 import { t1TestM1 } from './t1-test-m1'
 import { t2TestM2 } from './t2-test-m2'
 import { t3TestM3 } from './t3-test-m3'
+import { t4TestM5 } from './t4-test-m5'
 import { t5MiniQuali } from './t5-mini-quali'
 import { t6MiniQuali } from './t6-mini-quali'
 
@@ -28,10 +29,12 @@ import { t6MiniQuali } from './t6-mini-quali'
  *
  * The tests come first, newest on top: each is done at the start of the
  * lesson that follows its module (Test M2 at the start of M3, Test M3 at the
- * start of M5), so the current one should be the first thing on the screen
+ * start of M5, Test M5 at the start of M6), so the current one should be the first thing on the screen
  * that day.
  */
 export const LESSONS: Lesson[] = [
+  // Test M5 at the start of M6 — this week's test, so it goes on top.
+  t4TestM5,
   // Mini-Quali nach den Herbstferien: Teil A (Fragen) und Teil B (Tabelle).
   t5MiniQuali,
   t6MiniQuali,
