@@ -383,6 +383,11 @@ export type TestTask = {
 export type TestLesson = LessonBase & {
   kind: 'test'
   tasks: TestTask[]
+  /**
+   * Leave this test as written: no cut to ten, no repeated questions mixed in
+   * (`src/model/review.ts`). For a test that is itself a mixed stocktake.
+   */
+  ohneWiederholung?: true
 }
 
 export type Lesson =

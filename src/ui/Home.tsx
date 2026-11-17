@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import type { Lesson } from '../model/types'
+import type { Lesson, TestLesson } from '../model/types'
 import { taskIdsFor } from '../lessons'
+import { composeTest, weekOf } from '../model/review'
 import { isSubmitted, score } from '../model/test'
 import { Rosette, tierFor } from './Rosette'
 import {
@@ -30,9 +31,15 @@ export function Home({
   const [confirmingAll, setConfirmingAll] = useState(false)
   const [tab, setTab] = useState<Tab>('ueben')
 
-  const cards = useMemo(
-    () =>
-      lessons.map((lesson) => {
+  const cards = useMemo(() => {
+    // A test's card shows the test as this student would get it, repetitions included.
+    const tests = lessons.filter((l): l is TestLesson => l.kind === 'test')
+    const week = weekOf(new Date())
+    return lessons
+      .map((written) =>
+        written.kind === 'test' ? composeTest(written, tests, progress, week) : written,
+      )
+      .map((lesson) => {
         const ids = taskIdsFor(lesson, progress.seed)
         return {
           lesson,
@@ -44,9 +51,8 @@ export function Home({
               ? { submitted: isSubmitted(progress, lesson), ...score(progress, lesson) }
               : null,
         }
-      }),
-    [lessons, progress],
-  )
+      })
+  }, [lessons, progress])
 
   // A T badge marks a test, including Mini-Quali Teil B, which is a spreadsheet
   // task but belongs beside Teil A rather than among the exercises.

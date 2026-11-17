@@ -14,6 +14,7 @@ import type { Walk } from '../model/web'
 import type { Traces } from '../model/traces'
 import type { Matches } from '../model/match'
 import type { Work } from '../spreadsheet/SheetEditor'
+import type { LogEntry, TestPlan } from '../model/review'
 
 export type TaskProgress = {
   solved: boolean
@@ -50,6 +51,10 @@ export type Progress = {
   matches: Record<string, Matches>
   /** Spreadsheet work, one per sheet task. */
   sheets: Record<string, Work>
+  /** Every answer of every handed-in test, with its week — the spaced-repetition history. */
+  testLog: LogEntry[]
+  /** What each started test is made of, by test id. */
+  testPlans: Record<string, TestPlan>
 }
 
 // The tool outgrew its name when the spreadsheet module arrived, but these two
@@ -76,6 +81,8 @@ export function emptyProgress(studentName: string): Progress {
     traces: {},
     matches: {},
     sheets: {},
+    testLog: [],
+    testPlans: {},
   }
 }
 
@@ -100,6 +107,8 @@ export function load(studentName: string): Progress {
       traces: parsed.traces ?? {},
       matches: parsed.matches ?? {},
       sheets: parsed.sheets ?? {},
+      testLog: parsed.testLog ?? [],
+      testPlans: parsed.testPlans ?? {},
     }
   } catch {
     return emptyProgress(studentName)
@@ -252,6 +261,11 @@ export function resetTasks(progress: Progress, taskIds: string[]): Progress {
     traces: keep(progress.traces),
     matches: keep(progress.matches),
     sheets: keep(progress.sheets),
+    // A reset test is drawn up afresh next time. The log stays: it is the
+    // history the repetitions are scheduled from, not this test's answers.
+    testPlans: Object.fromEntries(
+      Object.entries(progress.testPlans).filter(([, plan]) => !plan.own.some((id) => ids.has(id))),
+    ),
   }
 }
 

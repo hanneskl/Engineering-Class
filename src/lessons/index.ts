@@ -1,4 +1,4 @@
-import type { Lesson } from '../model/types'
+import type { Lesson, TestLesson } from '../model/types'
 import { m1Geraete } from './m1-geraete'
 import { m2Netzwerk } from './m2-netzwerk'
 import { m3Adressen } from './m3-adressen'
@@ -49,6 +49,9 @@ export const LESSONS: Lesson[] = [
   m9Flussdiagramm,
   m10Tabellen,
 ]
+
+/** Every test, the question bank repetitions are drawn from. */
+export const TEST_LESSONS = LESSONS.filter((l): l is TestLesson => l.kind === 'test')
 
 export function lessonById(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id)

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { TestLesson } from '../model/types'
+import { TEST_LESSONS } from '../lessons'
+import { composeTest, logAnswers, startTest, weekOf } from '../model/review'
 import {
-  CELEBRATE_FROM,
   allAnswered,
+  celebrates,
   answer,
   chosenOption,
   isAnswered,
@@ -27,7 +29,7 @@ import { playFanfare } from './fanfare'
  * module again.
  */
 export function TestLessonView({
-  lesson,
+  lesson: written,
   progress,
   onProgress,
   onBack,
@@ -37,6 +39,13 @@ export function TestLessonView({
   onProgress: (next: Progress) => void
   onBack: () => void
 }) {
+  // The test as this student sees it: up to ten of its own questions and up to
+  // ten due ones from earlier tests, frozen once started (src/model/review.ts).
+  const week = weekOf(new Date())
+  const lesson = useMemo(
+    () => composeTest(written, TEST_LESSONS, progress, week),
+    [written, progress, week],
+  )
   const submitted = isSubmitted(progress, lesson)
   // Someone who answered a question and reloaded is mid-test, not at the start.
   const [started, setStarted] = useState(
@@ -58,9 +67,10 @@ export function TestLessonView({
   }, [lesson.module, lesson.id, task.id, submitted])
 
   function handIn() {
-    const next = submit(progress, lesson)
+    const next = logAnswers(submit(progress, lesson), lesson, week)
     onProgress(next)
-    if (score(next, lesson).correct >= CELEBRATE_FROM) {
+    const result = score(next, lesson)
+    if (celebrates(result.correct, result.total)) {
       setCelebrate(true)
       playFanfare()
     }
@@ -101,7 +111,7 @@ export function TestLessonView({
               {correct} von {total} richtig
             </strong>
             <p>
-              {correct >= CELEBRATE_FROM
+              {celebrates(correct, total)
                 ? 'Stark! Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'
                 : 'Unten siehst du jede Frage mit deiner Antwort und der Erklärung dazu.'}
             </p>
@@ -153,7 +163,13 @@ export function TestLessonView({
           <p className="task-note">
             {lesson.tasks.length} Fragen · Antworten kannst du bis zum Abgeben noch ändern · keine Hinweise
           </p>
-          <button className="primary" onClick={() => setStarted(true)}>
+          <button
+            className="primary"
+            onClick={() => {
+              onProgress(startTest(written, TEST_LESSONS, progress, week))
+              setStarted(true)
+            }}
+          >
             Test starten
           </button>
         </section>

@@ -145,6 +145,7 @@ export const t5MiniQuali: TestLesson = {
   id: 't5',
   module: 'T5',
   title: 'Mini-Quali Teil A',
+  ohneWiederholung: true,
   quali: 'Alles aus M1 bis M5 auf einmal – so gemischt kommt es auch in der Quali.',
   intro: {
     heading: 'Mini-Quali: Wo stehst du?',

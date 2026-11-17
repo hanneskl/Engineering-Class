@@ -67,5 +67,7 @@ export function score(progress: Progress, lesson: TestLesson): { correct: number
   return { correct, total: lesson.tasks.length }
 }
 
-/** Ten or more right: worth a little celebration. */
-export const CELEBRATE_FROM = 10
+/** Ten of twelve or better — whatever the length — is worth a little celebration. */
+export function celebrates(correct: number, total: number): boolean {
+  return total > 0 && correct / total >= 10 / 12
+}
