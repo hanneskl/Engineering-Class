@@ -94,7 +94,7 @@ export function orderedSteps(): WebRule {
     return miss(
       'WEB_ORDER',
       `Die Reihenfolge stimmt noch nicht — schau dir Platz ${firstWrong + 1} an.`,
-      'Denk an den Ablauf im Weg oben: erst der Name, dann die Adresse, dann die Seite.',
+      'Denk an den Weg, den du mit dem Paket gegangen bist: erst der Name, dann die Adresse, dann die Seite.',
     )
   }
 }

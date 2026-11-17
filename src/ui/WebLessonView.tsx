@@ -35,7 +35,18 @@ export function WebLessonView({
   })
   const task = lesson.tasks[index]!
 
-  const [walk, setWalk] = useState<Walk>(() => loadWalk(progress, task.id) ?? emptyWalk())
+  /** A task's own walk; a continuing one picks up where the task before it ended. */
+  function initialWalk(i: number): Walk {
+    const t = lesson.tasks[i]!
+    const before = lesson.tasks[i - 1]
+    return (
+      loadWalk(progress, t.id) ??
+      (t.fortsetzen && before ? loadWalk(progress, before.id) : undefined) ??
+      emptyWalk()
+    )
+  }
+
+  const [walk, setWalk] = useState<Walk>(() => initialWalk(index))
 
   const ctx = useMemo(
     () => contextFrom(plan, walk.host, walk.protocol),
@@ -69,7 +80,7 @@ export function WebLessonView({
     const next = lesson.tasks[i]
     if (!next) return
     setIndex(i)
-    setWalk(loadWalk(progress, next.id) ?? emptyWalk())
+    setWalk(initialWalk(i))
   }
 
   return (
@@ -87,8 +98,11 @@ export function WebLessonView({
       onProgress={onProgress}
       onBack={onBack}
     >
-      <PacketWalk ctx={ctx} walk={walk} seed={progress.seed} onWalk={change} />
-      {task.reihenfolge && <StepOrder walk={walk} seed={progress.seed} onWalk={change} />}
+      {task.reihenfolge ? (
+        <StepOrder walk={walk} seed={progress.seed} onWalk={change} />
+      ) : (
+        <PacketWalk ctx={ctx} walk={walk} seed={progress.seed} onWalk={change} />
+      )}
     </LessonShell>
   )
 }

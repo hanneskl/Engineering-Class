@@ -7,6 +7,7 @@ import {
   frageById,
   frageKey,
   framesFor,
+  openFrage,
   restart,
   stationsFor,
   stepTo,
@@ -79,6 +80,7 @@ export function PacketWalk({
   const isLast = walk.frame >= frames.length - 1
   const frage = frame?.frage ? frageById(frame.frage) : undefined
   const chosen = frage ? walk.answers[frageKey(frage, ctx)] : undefined
+  const blocked = openFrage(walk, ctx) !== undefined
 
   const alle: Station[] = [...stations, DNS_STATION]
 
@@ -286,10 +288,11 @@ export function PacketWalk({
             </span>
             <button
               className="primary"
-              disabled={isLast}
+              disabled={isLast || blocked}
+              title={blocked ? 'Beantworte zuerst die Frage richtig.' : undefined}
               onClick={() => onWalk(stepTo(walk, ctx, walk.frame + 1))}
             >
-              {isLast ? 'Am Ziel' : 'Weiter →'}
+              {isLast ? 'Am Ziel' : blocked ? 'Erst die Frage' : 'Weiter →'}
             </button>
           </div>
         </div>

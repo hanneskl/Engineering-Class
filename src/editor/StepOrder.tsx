@@ -70,7 +70,7 @@ export function StepOrder({
         <p className={richtig ? 'order-verdict ok' : 'order-verdict bad'}>
           {richtig
             ? 'Die Reihenfolge stimmt.'
-            : 'Noch nicht ganz. Geh den Weg oben noch einmal durch und vergleich.'}
+            : 'Noch nicht ganz. Denk an den Weg, den du mit dem Paket gegangen bist.'}
         </p>
       )}
     </section>

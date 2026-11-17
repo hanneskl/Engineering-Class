@@ -15,6 +15,7 @@ import {
   type Protocol,
   type Walk,
   type WalkContext,
+  openFrage,
 } from './web'
 import {
   answered,
@@ -217,5 +218,29 @@ describe('the lesson can actually be solved', () => {
     for (const task of m6Internetseite.tasks) {
       expect(isWebSolved({ walk }, webTaskRules(task)), task.id).toBe(true)
     }
+  })
+})
+
+describe('a question blocks the way on', () => {
+  it('until it is answered right — a wrong answer does not open it', () => {
+    const ctx = ctxFor()
+    const at = framesFor(ctx).findIndex((f) => f.frage)
+    const frame = framesFor(ctx)[at]!
+    const frage = frageById(frame.frage!)!
+    let walk = stepTo(emptyWalk(), ctx, at)
+    expect(openFrage(walk, ctx)).toBe(frage)
+
+    walk = answerFrage(walk, ctx, frage, frage.optionen.find((o) => !o.ok(ctx))!)
+    expect(openFrage(walk, ctx)).toBe(frage)
+
+    walk = answerFrage(walk, ctx, frage, frage.optionen.find((o) => o.ok(ctx))!)
+    expect(openFrage(walk, ctx)).toBeUndefined()
+  })
+
+  it('never at a station without a question, nor before the walk starts', () => {
+    const ctx = ctxFor()
+    expect(openFrage(emptyWalk(), ctx)).toBeUndefined()
+    const free = framesFor(ctx).findIndex((f) => !f.frage)
+    expect(openFrage(stepTo(emptyWalk(), ctx, free), ctx)).toBeUndefined()
   })
 })

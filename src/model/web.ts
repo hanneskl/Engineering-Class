@@ -497,6 +497,20 @@ export function stepTo(walk: Walk, ctx: WalkContext, index: number): Walk {
   return { ...walk, frame: at, seen: remember(walk.seen, ...marks) }
 }
 
+/**
+ * The question at the current station, while it is not yet answered right.
+ * Until then the walk does not go on — a student who clicks past a question
+ * has not learned what it asks.
+ */
+export function openFrage(walk: Walk, ctx: WalkContext): Frage | undefined {
+  if (walk.frame < 0) return undefined
+  const frames = framesFor(ctx)
+  const frame = frames[Math.min(walk.frame, frames.length - 1)]
+  const frage = frame?.frage ? frageById(frame.frage) : undefined
+  if (!frage) return undefined
+  return walk.seen.includes(`richtig:${frageKey(frage, ctx)}`) ? undefined : frage
+}
+
 export function answerFrage(
   walk: Walk,
   ctx: WalkContext,

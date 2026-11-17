@@ -84,28 +84,55 @@ export const m6Internetseite: WebLesson = {
           'IP-Adresse zu einem Namen — nicht die Seite selbst.',
       },
     },
+    // The whole way used to be one task, with the ordering exercise under the
+    // walk. On the school's 15-inch laptops that left the step itself a strip
+    // of a few lines, so it is three tasks now: there, back, and the order.
     {
-      id: 'm6-ablauf',
-      title: 'Der ganze Weg, Schritt für Schritt',
+      id: 'm6-hin',
+      title: 'Hin zum Webserver',
       brief:
-        'Begleite ein Paket einmal komplett: von der Adresszeile bis zur fertigen Seite. ' +
-        'Bring danach die sieben Schritte unten in die richtige Reihenfolge.',
-      reihenfolge: true,
+        'Begleite ein Paket von der Adresszeile bis zum Webserver. Unterwegs kommen ' +
+        'Fragen — erst wenn du sie richtig beantwortet hast, geht es weiter.',
+      ziele: [{ text: 'Das Paket bis zum Webserver begleitet', rules: [visitedSites(1)] }],
+      hints: {
+        stups: 'Drück auf "Seite aufrufen" und dann so lange auf "Weiter", bis das Paket beim Webserver ist.',
+        hinweis:
+          'Erst klärt der Browser den Namen (Schritte 1–3), dann schickt er die Anfrage ' +
+          'hin (Schritte 4–5). Der Webserver ist die letzte Station ganz rechts.',
+        loesung:
+          '1. URL eingeben, 2. DNS fragen, 3. DNS antwortet mit der IP-Adresse, ' +
+          '4. HTTP-Request an diese IP, 5. über Router und Provider zum Server.',
+      },
+    },
+    {
+      id: 'm6-zurueck',
+      title: 'Zurück zur fertigen Seite',
+      brief:
+        'Das Paket ist beim Webserver. Geh weiter mit, bis die fertige Seite in deinem ' +
+        'Browser steht.',
+      fortsetzen: true,
       ziele: [
-        {
-          text: 'Das Paket bis zum Webserver begleitet',
-          rules: [
-            visitedSites(1),
-          ],
-        },
         {
           text: 'Alle sieben Schritte durchlaufen',
           rules: [sawStep(7, 'Am Ende stellt der Browser die HTML-Seite dar.')],
         },
-        { text: 'Die sieben Schritte richtig sortiert', rules: [orderedSteps()] },
       ],
       hints: {
         stups: 'Klick so lange auf "Weiter", bis oben "Schritt 7 von 7" steht.',
+        hinweis: 'Der Webserver schickt seine Antwort denselben Weg zurück, bis zu deinem Browser.',
+        loesung: '6. Der Server antwortet mit der HTML-Seite, 7. der Browser stellt sie dar.',
+      },
+    },
+    {
+      // Kept under its old id: this is the part a student who solved the old
+      // combined task has demonstrably done.
+      id: 'm6-ablauf',
+      title: 'Die sieben Schritte in der richtigen Reihenfolge',
+      brief: 'Bring die sieben Schritte, die du mit dem Paket gegangen bist, in die richtige Reihenfolge.',
+      reihenfolge: true,
+      ziele: [{ text: 'Die sieben Schritte richtig sortiert', rules: [orderedSteps()] }],
+      hints: {
+        stups: 'Was muss der Browser wissen, bevor er überhaupt etwas losschicken kann?',
         hinweis:
           'Merk dir die Reihenfolge als drei Blöcke: erst den Namen klären (1–3), dann ' +
           'die Anfrage hinschicken (4–5), dann die Antwort bekommen und anzeigen (6–7).',

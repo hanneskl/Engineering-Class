@@ -219,8 +219,10 @@ export type WebTask = {
   brief: string
   ziele: WebZiel[]
   hints: Hints
-  /** Also show the "put the seven steps in order" exercise below the walk. */
+  /** The "put the seven steps in order" exercise, in place of the walk. */
   reihenfolge?: boolean
+  /** Start from where the previous task's walk ended, instead of an empty one. */
+  fortsetzen?: boolean
 }
 
 export type WebLesson = LessonBase & {

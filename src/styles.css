@@ -803,6 +803,9 @@ button.choice.sel { background: var(--accent-wash); }
 .seg.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 
 .walk-map { display: block; width: 100%; background: var(--bg); user-select: none; }
+/* On a 15-inch laptop the full-width map alone took 300px of 740 and pushed the
+   step under the fold. Capped, it scales down and the step gets the room. */
+.walk-map { max-height: 34vh; }
 .walk-map .zone { fill: var(--surface); stroke: var(--line); }
 .walk-map .zone.wan { fill: var(--bg); }
 .walk-map .zone-label {
@@ -890,6 +893,10 @@ button.choice.sel { background: var(--accent-wash); }
 .walk-controls {
   display: flex; align-items: center; justify-content: space-between;
   gap: .6rem; margin-top: 1rem;
+  /* Weiter stays in reach however long the step runs: the walk scrolls, this doesn't. */
+  position: sticky; bottom: 0; z-index: 1;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: .6rem 0;
 }
 .walk-count { color: var(--muted); font-size: .85rem; }
 
