@@ -85,8 +85,13 @@ export function App() {
    *   is a genuinely fresh device with nothing local yet), pull it down and
    *   make it the new local baseline.
    */
+  const onTeacherRoute = view.kind === 'teacher'
   useEffect(() => {
-    if (!progress) return
+    // On the teacher's page the auth session is the teacher's, not this
+    // student's: joining Presence here would list the teacher as the last
+    // student who used this browser, and would occupy the very channel the
+    // dashboard needs to listen on.
+    if (!progress || onTeacherRoute) return
     void joinPresence(progress.studentName)
     void pushChangedTaskProgress(progress.seed, {}, progress.tasks)
     void hydrateFromSnapshot(progress).then((hydrated) => {
@@ -96,7 +101,7 @@ export function App() {
       prevTasksRef.current = hydrated.tasks
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress?.studentName])
+  }, [progress?.studentName, onTeacherRoute])
 
   const update = useCallback((next: Progress) => {
     setProgress(next)

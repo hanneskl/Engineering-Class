@@ -87,12 +87,37 @@ export function subscribePresence(
   onState: (state: Record<string, ActiveTask[]>) => void,
 ): () => void {
   if (!backend) return () => {}
+  const client = backend
 
-  const dashboardChannel = backend.channel(CHANNEL_NAME)
-  dashboardChannel.on('presence', { event: 'sync' }, () => {
-    onState(dashboardChannel.presenceState<ActiveTask>())
-  })
-  dashboardChannel.subscribe()
+  let listening: RealtimeChannel | null = null
+  let stopped = false
 
-  return () => void backend!.removeChannel(dashboardChannel)
+  void (async () => {
+    // `channel()` hands back any channel already open under the same name, and
+    // one that is already subscribed refuses presence callbacks ("cannot add
+    // presence callbacks … after subscribe()"). That is the student side of
+    // this same browser, or this dashboard's own previous mount still closing.
+    // Close those first, so the dashboard always gets a channel of its own.
+    for (const open of client.getChannels()) {
+      if (open.topic !== `realtime:${CHANNEL_NAME}`) continue
+      if (open === channel) {
+        channel = null
+        joinedAs = null
+      }
+      await client.removeChannel(open)
+    }
+    if (stopped) return
+
+    const dashboardChannel = client.channel(CHANNEL_NAME)
+    dashboardChannel.on('presence', { event: 'sync' }, () => {
+      onState(dashboardChannel.presenceState<ActiveTask>())
+    })
+    dashboardChannel.subscribe()
+    listening = dashboardChannel
+  })()
+
+  return () => {
+    stopped = true
+    if (listening) void client.removeChannel(listening)
+  }
 }
