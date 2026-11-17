@@ -26,12 +26,24 @@ export async function signOutTeacher(): Promise<void> {
 }
 
 /**
- * Is a real (non-anonymous) session currently signed in? A student's
- * anonymous session also lives in this same browser's auth state, so this
- * has to check `is_anonymous`, not just whether a session exists at all.
+ * Is the teacher signed in — not just anyone?
+ *
+ * This used to accept any non-anonymous session, from when students signed
+ * in anonymously. Since 0006 they have real accounts too, so on a browser a
+ * student last used, `#/lehrer` opened the dashboard under the student's
+ * session: no password asked, and RLS handed back only that student's own
+ * row and answers, so the class list and the statistics came up empty. The
+ * teacher is whoever owns a class; a student's session finds none.
  */
 export async function isTeacherSignedIn(): Promise<boolean> {
   if (!backend) return false
   const { data } = await backend.auth.getSession()
-  return Boolean(data.session && !data.session.user.is_anonymous)
+  const user = data.session?.user
+  if (!user || user.is_anonymous) return false
+  const { data: classes } = await backend
+    .from('engineering_class_classes')
+    .select('id')
+    .eq('teacher_id', user.id)
+    .limit(1)
+  return (classes?.length ?? 0) > 0
 }
